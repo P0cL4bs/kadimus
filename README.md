@@ -2,9 +2,47 @@
 LFI Scan &amp; Exploit Tool
 
 ## Compile:
+### Installing libcurl:
+* CentOS/Fedora
 
-You need install libcurl, libpcre and libssh
+```sh
+# yum install libcurl-devel
+```
 
+* Debian based
+```sh
+# apt-get install libcurl4-openssl-dev
+```
+### Installing libpcre:
+* CentOS/Fedora
+
+```sh
+# yum install libpcre-devel
+```
+
+* Debian based
+```sh
+# apt-get install libpcre3-dev
+```
+
+### Installing libssh:
+
+* CentOS/Fedora
+
+```sh
+# yum install libssh-devel
+```
+
+* Debian based
+```sh
+# apt-get install libssh-dev
+```
+### And finally:
+```sh
+$ git clone https://github.com/P0cL4bs/Kadimus.git
+$ cd Kadimus
+$ make
+```
 ## Options:
 ```
   -h, --help                    Display this help menu
