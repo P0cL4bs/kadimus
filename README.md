@@ -1,2 +1,56 @@
 # Kadimus
 LFI Scan &amp; Exploit Tool
+
+## Compile:
+
+You need install libcurl, libpcre and libssh
+
+## Options:
+```
+  -h, --help                    Display this help menu
+
+  Request:
+    -B, --cookie STRING         Set custom HTTP Cookie header
+    -A, --user-agent STRING     User-Agent to send to server
+    --connect-timeout SECONDS   Maximum time allowed for connection
+    --retry-times NUMBER        number of times to retry if connection fails
+
+  Scanner:
+    -u, --url STRING            Single URI to scan
+    -U, --url-list FILE         File contains URIs to scan
+    -o, --output FILE           File to save output results
+    --threads NUMBER            Number of threads (2..1000)
+
+  Explotation:
+    -t, --target STRING         Vulnerable Target to exploit
+    --injec-at STRING           Parameter name to inject exploit
+                                (only need with RCE data and source disclosure)
+
+  RCE:
+    -X, --rce-technique=TECH    LFI to RCE technique to use
+    -C, --code STRING           Custom PHP code to execute, with php brackets
+    -c, --cmd STRING            Execute system command on vulnerable target system
+    -s, --shell                 Simple command shell interface through HTTP Request
+
+    -r, --reverse-shell         Try spawn a reverse shell connection.
+    -l, --listen                port to listen
+
+    -b, --bind-shell            Try connect to a bind-shell
+    -i, --connect-to STRING     Ip/Hostname to connect
+    -p, --port NUMBER           Port number to connect
+
+    --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)
+    --ssh-target STRING         Set the SSH Host (Default: Target URI hostname)
+
+    RCE Available techniques
+
+      environ                   Try run PHP Code using /proc/self/environ
+      input                     Try run PHP Code using php://input
+      auth                      Try run PHP Code using /var/log/auth.log
+      data                      Try run PHP Code using data://text
+
+    Source Disclosure:
+      -G, --get-source          Try get the source files using filter://
+      -f, --filename STRING     Set filename to grab source [REQUIRED]
+      -O FILE                   Set output file (Default: stdout)
+```
