@@ -308,7 +308,7 @@ void help(void){
     -s, --shell                 Simple command shell interface through HTTP Request\n\
 \n\
     -r, --reverse-shell         Try spawn a reverse shell connection.\n\
-    -l, --listen                port to listen\n\
+    -l, --listen NUMBER         Port to listen\n\
 \n\
     -b, --bind-shell            Try connect to a bind-shell\n\
     -i, --connect-to STRING     Ip/Hostname to connect\n\
