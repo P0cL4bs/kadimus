@@ -1,8 +1,7 @@
 ####
-# 
-#
-#
-#
+# Files to check
+# sintaxe>>>
+# filename_colon_regex
 ####
 
 ../../../../../../../../../../../../etc/passwd%00:root:.*:0
