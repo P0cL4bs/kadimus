@@ -1,8 +1,8 @@
 // Coded by MMxM (@hc0d3r)
 // P0cl4bs Team: Mh4x0f, N4sss , Kwrnel, MovCode, joridos, Brenords
 // Greetz to:
-// Cyclone, xstpl, rafiki, Dennis, susp3it0virtual, kodo no kami, chuck kill
-
+// Cyclone, xstpl, rafiki, Dennis, susp3it0virtual, kodo no kami, chuck kill, Wulf
+// janissaries team
 
 #include <stdio.h>
 #include <string.h>
@@ -21,6 +21,7 @@
 #include "kadimus_socket.h"
 #include "kadimus_io.h"
 
+#define VERSION "1.0"
 #define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
 #define OPTS "hB:A:u:U:t:X:C:F:c:srbi:p:Gf:o:nl:O:"
 
@@ -277,7 +278,7 @@ void banner(void){
 	printf("| . \\ (_| | (_| | | | | | | | |_| \\__ \\\n");
 	printf("|_|\\_\\__,_|\\__,_|_|_| |_| |_|\\__,_|___/\n");
 	printf("\n");
-	printf("  LFI Scan & Exploit Tool (@hc0d3r - P0cL4bs Team)\n\n");
+	printf("  v%s - LFI Scan & Exploit Tool (@hc0d3r - P0cL4bs Team)\n\n",VERSION);
 }
 
 void help(void){
