@@ -111,7 +111,7 @@ $ make
 
 ### Execute command:
 ```
-./kadimus -t localhost/?pg=/var/log/auth.log -X auth -c 'ls -lah'
+./kadimus -t localhost/?pg=/var/log/auth.log -X auth -c 'ls -lah' --ssh-target localhost
 ```
 ### Checking for RFI:
 
