@@ -316,7 +316,7 @@ void help(void){
     -p, --port NUMBER           Port number to connect\n\
 \n\
     --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)\n\
-    --ssh-target STRING         Set the SSH Host (Default: Target URI hostname)\n\
+    --ssh-target STRING         Set the SSH Host\n\
 \n\
     RCE Available techniques\n\
 \n\
