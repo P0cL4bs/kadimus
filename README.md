@@ -91,7 +91,7 @@ $ make
     -p, --port NUMBER           Port number to connect
 
     --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)
-    --ssh-target STRING         Set the SSH Host (Default: Target URI hostname)
+    --ssh-target STRING         Set the SSH Host
 
     RCE Available techniques
 
