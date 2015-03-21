@@ -1,5 +1,18 @@
 # Kadimus
 LFI Scan &amp; Exploit Tool
+--
+Kadimus is a tool to check sites to lfi vulnerability , and also exploit it
+
+Features:
+
+- [x] Check all url parameters
+- [x] /var/log/auth.log RCE
+- [x] /proc/self/environ RCE
+- [x] php://input RCE
+- [x] data://text RCE
+- [x] Source code disclosure
+- [x] Multi thread scanner
+- [x] Command shell interface through HTTP Request
 
 ## Compile:
 ### Installing libcurl:
