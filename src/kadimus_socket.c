@@ -40,20 +40,38 @@ void start_listen(int *sock_fd, int port){
 }
 
 void reverse_shell(int port){
-	int sock, i;
+	int sock, i, ret;
 	struct sockaddr cli_addr;
 	struct pollfd pfds[2];
+	struct timeval timeout;
 	char ip_connection[INET6_ADDRSTRLEN] = {0};
 	char buf[1024];
+	fd_set fd;
 
+	FD_ZERO(&fd);
+	//FD_SET(sock, &fd);
 
 	socklen_t sockaddr_len = sizeof(struct sockaddr_in);
 	start_listen(&sock, port);
 
+	FD_SET(sock, &fd);
 
 	int sock_con = 0;
 
 	printf("Listen in background, port: %d, pid: %lld\nWaiting connection ...\n", port, (long long int) getpid());
+
+	timeout.tv_sec = LISTEN_TIMEOUT;
+	timeout.tv_usec = 0;
+	ret = select(sock+1, &fd, NULL, NULL, &timeout);
+
+	if(ret == -1)
+		die("select() error",1);
+	else if(!ret){
+		printf("Connection timeout %d !!!\n",LISTEN_TIMEOUT);
+		exit(0);
+	}
+
+	//printf("%d\n",ret);
 
 	if( (sock_con = accept(sock, (struct sockaddr *) &cli_addr, &sockaddr_len)) == -1 )
 		die("accept() error",1);

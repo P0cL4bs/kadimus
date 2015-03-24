@@ -11,6 +11,8 @@
 
 #include "kadimus_common.h"
 
+#define LISTEN_TIMEOUT 120
+
 int valid_ip_hostname(const char *hostname);
 void start_listen(int *sock_fd, int port);
 void reverse_shell(int port);
