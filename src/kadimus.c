@@ -80,6 +80,8 @@ static struct option long_options[] = {
 	{"threads", required_argument, 0, 0},
 	{"inject-at", required_argument, 0, 0},
 
+	{"proxy", required_argument, 0, 0},
+
 	{0, 0, 0, 0}
 };
 
@@ -137,6 +139,13 @@ void parser_opts(int argc, char **argv){
 
 				else if(!strcmp(long_options[option_index].name, "inject-at")){
 					xpl.p_name = optarg;
+				}
+
+				else if(!strcmp(long_options[option_index].name, "proxy")){
+					if( regex_match(PROXY_REGEX, optarg, 0, 0) )
+						proxy = optarg;
+					else
+						die("--proxy invalid syntax",0);
 				}
 
 			break;
@@ -264,8 +273,6 @@ void parser_opts(int argc, char **argv){
 	if(!xpl.p_name && xpl.tech == DATA)
 		die("error: RCE data type required --inject-at option",0);
 
-	//if(
-
 	if(!options.url && !options.url_list && !xpl.vuln_uri)
 		die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help",0);
 
@@ -290,6 +297,7 @@ void help(void){
     -A, --user-agent STRING     User-Agent to send to server\n\
     --connect-timeout SECONDS   Maximum time allowed for connection\n\
     --retry-times NUMBER        number of times to retry if connection fails\n\
+    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port\n\
 \n\
   Scanner:\n\
     -u, --url STRING            Single URI to scan\n\

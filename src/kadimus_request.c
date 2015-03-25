@@ -1,6 +1,6 @@
 #include "kadimus_request.h"
 
-char *UA, *cookies;
+char *UA, *cookies, *proxy;
 size_t timeout, retry_times;
 
 bool HttpRequest(CURL *curl){
@@ -46,17 +46,18 @@ CURL *init_curl(void *ptr, bool write_on){
 	if(!curl)
 		die("curl_easy_init() error",0);
 
-	
+
 	if(write_on){
 		curl_easy_setopt(curl, CURLOPT_WRITEDATA, ptr);
 		curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, (curl_write_callback) writefunc);
 	}
-	
+
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, UA);
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-	
-	curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 1000000);
+	curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
+
+	//curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 1000000);
 
 	if(cookies)
 		curl_easy_setopt(curl, CURLOPT_COOKIE, cookies);

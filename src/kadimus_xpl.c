@@ -10,7 +10,7 @@ bool check_auth_poison(const char *target){
 	bool ret = false;
 	CURL *curl=NULL;
 	FILE *x=NULL;
-	
+
 	if( (x = get_random_file(10, random_file)) == NULL)
 		die("error while generate tmp file",0);
 
@@ -47,7 +47,7 @@ bool check_auth_poison(const char *target){
 
 	curl_easy_cleanup(curl);
 	xfree(php_code);
-	
+
 	unlink(random_file);
 	return ret;
 

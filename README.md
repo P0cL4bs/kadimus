@@ -13,6 +13,7 @@ Features:
 - [x] Source code disclosure
 - [x] Multi thread scanner
 - [x] Command shell interface through HTTP Request
+- [x] Proxy support (socks4://, socks4a://, socks5:// ,socks5h:// and http://)
 
 ## Compile:
 ### Installing libcurl:
@@ -65,6 +66,7 @@ $ make
     -A, --user-agent STRING     User-Agent to send to server
     --connect-timeout SECONDS   Maximum time allowed for connection
     --retry-times NUMBER        number of times to retry if connection fails
+    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port
 
   Scanner:
     -u, --url STRING            Single URI to scan

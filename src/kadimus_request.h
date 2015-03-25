@@ -10,13 +10,15 @@
 #include "kadimus_mem.h"
 #include "kadimus_common.h"
 
-extern char *UA, *cookies;
+extern char *UA, *cookies, *proxy;
 extern size_t timeout, retry_times;
 
 struct request {
 	char *ptr;
 	size_t len;
 };
+
+#define PROXY_REGEX "^.+:\\/\\/.+\\:(\\d+)$"
 
 bool HttpRequest(CURL *curl);
 void init_str(struct request *x);
