@@ -21,7 +21,7 @@
 #include "kadimus_socket.h"
 #include "kadimus_io.h"
 
-#define VERSION "1.0"
+#define VERSION "1.1"
 #define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
 #define OPTS "hB:A:u:U:t:X:C:F:c:srbi:p:Gf:o:nl:O:"
 
