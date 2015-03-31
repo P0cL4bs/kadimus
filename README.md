@@ -16,6 +16,14 @@ Features:
 - [x] Proxy support (socks4://, socks4a://, socks5:// ,socks5h:// and http://)
 
 ## Compile:
+You can run the configure file:
+
+```
+./configure
+```
+
+Or follow this steps:
+
 ### Installing libcurl:
 * CentOS/Fedora
 
@@ -31,7 +39,7 @@ Features:
 * CentOS/Fedora
 
 ```sh
-# yum install libpcre-devel
+# yum install pcre-devel
 ```
 
 * Debian based
