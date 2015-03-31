@@ -16,9 +16,15 @@ Features:
 - [x] Proxy support (socks4://, socks4a://, socks5:// ,socks5h:// and http://)
 
 ## Compile:
+
+```sh
+$ git clone https://github.com/P0cL4bs/Kadimus.git
+$ cd Kadimus
+```
+
 You can run the configure file:
 
-```
+```sh
 ./configure
 ```
 
@@ -61,8 +67,6 @@ Or follow this steps:
 ```
 ### And finally:
 ```sh
-$ git clone https://github.com/P0cL4bs/Kadimus.git
-$ cd Kadimus
 $ make
 ```
 ## Options:
