@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -O3 -g
-LDFLAGS=-lcurl -lpcre -lpthread -lssh
+LDFLAGS=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 SRC_DIR=src
 
 SRC_OBJECTS =	$(SRC_DIR)/kadimus_common.o \
