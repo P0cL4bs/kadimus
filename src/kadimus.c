@@ -34,11 +34,13 @@ struct all_opts {
 	char *url;
 	char *ip_addr;
 	char *filename;
+	char *b_proxy;
 	FILE *url_list;
 	FILE *source_output;
 	size_t port;
 	size_t listen;
 	size_t threads;
+	int b_port;
 	bool bind_shell;
 	bool reverse_shell;
 	bool shell;
@@ -81,6 +83,8 @@ static struct option long_options[] = {
 	{"inject-at", required_argument, 0, 0},
 
 	{"proxy", required_argument, 0, 0},
+	{"b-proxy", required_argument, 0, 0},
+	{"b-port", required_argument, 0, 0},
 
 	{0, 0, 0, 0}
 };
@@ -145,7 +149,19 @@ void parser_opts(int argc, char **argv){
 					if( regex_match(PROXY_REGEX, optarg, 0, 0) )
 						proxy = optarg;
 					else
-						die("--proxy invalid syntax",0);
+						die("--proxy invalid syntax", 0);
+				}
+
+				else if(!strcmp(long_options[option_index].name, "b-proxy")){
+					options.b_proxy = optarg;
+				}
+
+				else if(!strcmp(long_options[option_index].name, "b-port")){
+					tmp = (int) strtol(optarg, NULL, 10);
+					if( !IN_RANGE(tmp, 1, 65535) )
+						die("--r-port error: set a valide port (1 .. 65535)",0);
+					else
+						options.b_port = tmp;
 				}
 
 			break;
@@ -322,6 +338,8 @@ void help(void){
     -b, --bind-shell            Try connect to a bind-shell\n\
     -i, --connect-to STRING     Ip/Hostname to connect\n\
     -p, --port NUMBER           Port number to connect\n\
+    --b-proxy STRING            IP/Hostname of socks5 proxy\n\
+    --b-port NUMBER             Port number of socks5 proxy\n\
 \n\
     --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)\n\
     --ssh-target STRING         Set the SSH Host\n\
@@ -477,7 +495,7 @@ int main(int argc, char **argv){
 	}
 
 	if(options.bind_shell && options.ip_addr && options.port){
-		bind_shell(options.ip_addr, options.port);
+		bind_shell(options.ip_addr, options.port, options.b_proxy, options.b_port);
 	}
 
 	if(options.reverse_shell){
