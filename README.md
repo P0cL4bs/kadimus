@@ -14,6 +14,7 @@ Features:
 - [x] Multi thread scanner
 - [x] Command shell interface through HTTP Request
 - [x] Proxy support (socks4://, socks4a://, socks5:// ,socks5h:// and http://)
+- [x] Proxy socks5 support for bind connections
 
 ## Compile:
 
@@ -103,6 +104,8 @@ $ make
     -b, --bind-shell            Try connect to a bind-shell
     -i, --connect-to STRING     Ip/Hostname to connect
     -p, --port NUMBER           Port number to connect
+    --b-proxy STRING            IP/Hostname of socks5 proxy
+    --b-port NUMBER             Port number of socks5 proxy
 
     --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)
     --ssh-target STRING         Set the SSH Host
