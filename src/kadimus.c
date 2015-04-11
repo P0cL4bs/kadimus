@@ -388,7 +388,7 @@ int main(int argc, char **argv){
 
 	if(options.url_list){
 		max_len = get_max_len(options.url_list);
-		line = xmalloc( (max_len+1)* sizeof(char) );
+		line = xmalloc( max_len+1 );
 
 		while( readline(options.url_list, line, max_len) ){
 			if( regex_match(URL_REGEX, line, 0, 0) ) {

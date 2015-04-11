@@ -4,8 +4,7 @@ static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 
 static const int nbytes[] = { 3, 1, 1, 2 };
 
-static void xlate(unsigned char *in, unsigned char *out)
-{
+static void xlate(unsigned char *in, unsigned char *out){
 	out[0] = in[0] << 2 | in[1] >> 4;
 	out[1] = in[1] << 4 | in[2] >> 2;
 	out[2] = in[2] << 6 | in[3] >> 0;
@@ -18,7 +17,7 @@ char *b64_encode(const char *x){
 
 	size_str = strlen(x);
 
-	encoded_str = xmalloc( ( ((size_str * 4)/3) + (size_str/96) + 10 ) * sizeof(char) );
+	encoded_str = xmalloc( ((size_str * 4)/3) + (size_str/96) + 10 );
 
 	b[0]=0; b[1]=0; b[2]=0;
 
@@ -100,7 +99,7 @@ bool b64_decode(const char *encode, char **output){
 		len_str--;
 
 	alloc_size = (size_t)len_str*0.75;
-	(*output) = xmalloc( (alloc_size+1) * sizeof(char) );
+	(*output) = xmalloc( alloc_size+1 );
 
 	while(*encode){
 		if(*encode == '='){
@@ -169,8 +168,8 @@ static void alloc_elements(GET_DATA * GetParameters, const char *str){
 
 	for(i=0; str[i]; i++){
 		if(str[i] == '&'){
-			GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key * sizeof(char) );
-			GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value * sizeof(char) );
+			GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key );
+			GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value );
 			GetParameters[p].equal = false;
 			p++;
 		}
@@ -192,8 +191,8 @@ static void alloc_elements(GET_DATA * GetParameters, const char *str){
 
 	}
 
-	GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key * sizeof(char) );
-	GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value * sizeof(char) );
+	GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key );
+	GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value );
 	GetParameters[p].equal = false;
 
 }
@@ -313,7 +312,7 @@ char *make_url(
 		alloc_size += GetParameters[i].alloc_size_value-1;
 	}
 
-	new_url = xmalloc( alloc_size * sizeof(char) );
+	new_url = xmalloc( alloc_size );
 	strncpy(new_url, base_uri , len);
 
 	new_url[len] = '?';
@@ -364,10 +363,10 @@ void extract_url(const char *url, char **base_uri, char **parameters){
 	if(end == 0 || end == len-1)
 		return;
 
-	*base_uri = strncpy( xmalloc( (end+1) * sizeof(char) ) , url, end );
+	*base_uri = strncpy( xmalloc( end+1 ) , url, end );
 	(*base_uri)[end] = 0x0;
 
-	*parameters = xmalloc( (len-end) * sizeof(char) );
+	*parameters = xmalloc( len-end );
 
 	end++;
 
@@ -400,7 +399,7 @@ char *diff(const char *x, const char *y){
 
 	alloc_size = 1+tmp2-tmp;
 
-	ret = xmalloc( alloc_size * sizeof(char) );
+	ret = xmalloc( alloc_size );
 
 	for( i=tmp, j=0; i < tmp2 ; i++, j++)
 		ret[j] = y[i];
@@ -431,7 +430,7 @@ void trim_string(char **diff_str){
 	if(end-start == 0)
 		return;
 
-	aux = xmalloc( (1+end-start)* sizeof(char) );
+	aux = xmalloc( 1+end-start );
 
 	for(i=start, j=0; i < end; i++, j++)
 		aux[j] = (*diff_str)[i];
@@ -458,7 +457,7 @@ void chomp_all(char *str){
 char *cookie_append(const char *x, const char *y){
 	char *ret = NULL;
 	size_t i,j;
-	ret = xmalloc( (strlen(x)+strlen(y)+2) * sizeof(char) );
+	ret = xmalloc( strlen(x)+strlen(y)+2 );
 
 	for(i=0, j=0; x[i]; i++, j++)
 		ret[j] = x[i];
@@ -496,11 +495,11 @@ char *make_code(const char *mark, const char *code, bool auth){
 	size_t len = 0,encode_auth_len;
 
 	if(!auth){
-		len = (strlen(mark)*2+strlen(code)+2)* sizeof(char);
+		len = strlen(mark)*2+strlen(code)+2;
 		ret = xmalloc( len );
 		snprintf(ret, len, "%s%s%s",mark,code,mark);
 	} else {
-		ret = xmalloc( (strlen(mark)*2+17*2+strlen(code)+2)*sizeof(char) );
+		ret = xmalloc( strlen(mark)*2+17*2+strlen(code)+2 );
 		sprintf(ret, "<?php echo \"%s\"; ?>%s<?php echo \"%s\"; ?>", mark, code, mark);
 		lol = b64_encode(ret);
         encode_auth_len  = strlen(lol);

@@ -31,7 +31,7 @@ char **regex_extract(const char *regex, const char *data, int size_data, int Opt
 		B = A-1;
 
 		alloc = vet[A]-vet[B];
-		matches[(i-1)] = xmalloc( (alloc+1)*sizeof(char));
+		matches[(i-1)] = xmalloc( alloc+1 );
 
 		for(j=vet[B],y=0; j<vet[A]; j++,y++)
 			matches[(i-1)][y] = data[j];
