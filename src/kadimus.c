@@ -92,6 +92,7 @@ static struct option long_options[] = {
 
 void parser_opts(int argc, char **argv){
 
+	char *opt_ptr=NULL;
 	int Getopts, option_index = 0;
 	int tmp;
 
@@ -99,10 +100,11 @@ void parser_opts(int argc, char **argv){
 	retry_times = 5;
 
 	while( (Getopts = getopt_long(argc, argv, OPTS, long_options, &option_index)) != -1){
+		opt_ptr = (char *) long_options[option_index].name;
 		switch(Getopts){
 
 			case 0:
-				if(!strcmp(long_options[option_index].name, "connect-timeout")){
+				if(!strcmp(opt_ptr, "connect-timeout")){
 					tmp = (int) strtol(optarg, NULL, 10);
 					if( !IN_RANGE(tmp, 5, 120) )
 						die("--connect-timeout error: please set a value between 5 and 120 seconds",0);
@@ -110,7 +112,7 @@ void parser_opts(int argc, char **argv){
 						timeout = (size_t) tmp;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "ssh-port")){
+				else if(!strcmp(opt_ptr, "ssh-port")){
 					tmp = (int) strtol(optarg, NULL, 10);
 					if( !IN_RANGE(tmp, 1, 65535) )
 						die("--ssh-port error: set a valide port (1 .. 65535)",0);
@@ -118,14 +120,14 @@ void parser_opts(int argc, char **argv){
 						xpl.ssh_port = (size_t) tmp;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "ssh-target")){
+				else if(!strcmp(opt_ptr, "ssh-target")){
 					if( valid_ip_hostname(optarg) )
 						xpl.ssh_host = optarg;
 					else
 						die("--ssh-target error: invalid ip/hostname",0);
 				}
 
-				else if(!strcmp(long_options[option_index].name, "retry-times")){
+				else if(!strcmp(opt_ptr, "retry-times")){
 					tmp = (int) strtol(optarg, NULL, 10);
 					if( !IN_RANGE(tmp, 0, 10) )
 						die("--retry-times error: value must be between 0 and 10",0);
@@ -133,7 +135,7 @@ void parser_opts(int argc, char **argv){
 						retry_times = (size_t) tmp;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "threads")){
+				else if(!strcmp(opt_ptr, "threads")){
 					tmp = (int) strtol(optarg, NULL, 10);
 					if( !IN_RANGE(tmp, 2, 1000) )
 						die("--threads error: set a valide value (2..1000)",0);
@@ -141,22 +143,22 @@ void parser_opts(int argc, char **argv){
 						options.threads = (size_t) tmp;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "inject-at")){
+				else if(!strcmp(opt_ptr, "inject-at")){
 					xpl.p_name = optarg;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "proxy")){
+				else if(!strcmp(opt_ptr, "proxy")){
 					if( regex_match(PROXY_REGEX, optarg, 0, 0) )
 						proxy = optarg;
 					else
 						die("--proxy invalid syntax", 0);
 				}
 
-				else if(!strcmp(long_options[option_index].name, "b-proxy")){
+				else if(!strcmp(opt_ptr, "b-proxy")){
 					options.b_proxy = optarg;
 				}
 
-				else if(!strcmp(long_options[option_index].name, "b-port")){
+				else if(!strcmp(opt_ptr, "b-port")){
 					tmp = (int) strtol(optarg, NULL, 10);
 					if( !IN_RANGE(tmp, 1, 65535) )
 						die("--r-port error: set a valide port (1 .. 65535)",0);
