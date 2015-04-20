@@ -40,6 +40,7 @@ void build_regex(char regex[], char *r_str, char *middle);
 char *make_code(const char *mark, const char *code, bool auth);
 void print_uri(GET_DATA *GetParameters, const char *base_uri, size_t p_len);
 bool get_element_pos(GET_DATA **pp, size_t *pp_len, char **b_uri, const char *uri, const char *p_name, size_t *i_j);
+char *urlencode(const char *enc);
 
 #endif
 
