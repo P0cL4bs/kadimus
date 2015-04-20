@@ -158,7 +158,8 @@ char *urlencode(const char *enc){
 		ret = xrealloc(ret, len);
 
 		if( (x >= 'a' && x <= 'z') ||
-		    (x >= 'A' && x <= 'Z')
+		    (x >= 'A' && x <= 'Z') ||
+		    (x >= '0' && x <= '9')
 		){
 			ret[j] = x;
 		}
