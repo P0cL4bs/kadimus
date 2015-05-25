@@ -17,5 +17,7 @@ SRC_OBJECTS =	$(SRC_DIR)/kadimus_common.o \
 kadimus: $(SRC_OBJECTS)
 	@$(CC) $(SRC_DIR)/kadimus.c -o kadimus $(SRC_OBJECTS) $(LDFLAGS) $(CFLAGS)
 	@echo [+] Ok
-	@rm $(SRC_DIR)/*.o
+clean:
+	rm $(SRC_DIR)/*.o
+	rm kadimus
 
