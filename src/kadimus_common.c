@@ -14,7 +14,7 @@ void hex_print(const char *x){
 	aux = 0, count = 0, tot = 0;
 
 	while(1){
-		print_all("\t0x%03d0: ",count);
+		print_all("\t0x%03d0: ",(int)count);
 
 		(tot+16 > size) ? (tot = size) : (tot += 16);
 
@@ -26,7 +26,7 @@ void hex_print(const char *x){
 			}
 		}
 
-		print_all("%-*s",42-pf,"");
+		print_all("%-*s",42-(int)pf,"");
 
 		for(i=aux;i<tot;i++){
 			print_all("%c",(x[i] > 32 && x[i] < 127) ? x[i] : '.');
