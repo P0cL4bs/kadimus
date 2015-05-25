@@ -21,31 +21,9 @@
 #include "kadimus_socket.h"
 #include "kadimus_io.h"
 
-#define VERSION "1.1"
-#define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
-#define OPTS "hB:A:u:U:t:X:C:F:c:srbi:p:Gf:o:nl:O:"
-
-void help(void);
-void banner(void);
+#include "kadimus.h"
 
 static xpl_parameters xpl;
-
-struct all_opts {
-	char *url;
-	char *ip_addr;
-	char *filename;
-	char *b_proxy;
-	FILE *url_list;
-	FILE *source_output;
-	size_t port;
-	size_t listen;
-	size_t threads;
-	int b_port;
-	bool bind_shell;
-	bool reverse_shell;
-	bool shell;
-	bool get_source;
-};
 
 static struct all_opts options;
 
