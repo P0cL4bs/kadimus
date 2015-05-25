@@ -11,11 +11,12 @@ SRC_OBJECTS =	$(SRC_DIR)/kadimus_common.o \
 		$(SRC_DIR)/kadimus_regex.o \
 		$(SRC_DIR)/kadimus_socket.o \
 		$(SRC_DIR)/kadimus_io.o \
+		$(SRC_DIR)/kadimus.o \
 
 .PHONY = kadimus
 
 kadimus: $(SRC_OBJECTS)
-	@$(CC) $(SRC_DIR)/kadimus.c -o kadimus $(SRC_OBJECTS) $(LDFLAGS) $(CFLAGS)
+	@$(CC) -o kadimus $(SRC_OBJECTS) $(LDFLAGS) $(CFLAGS)
 	@echo [+] Ok
 clean:
 	rm $(SRC_DIR)/*.o
