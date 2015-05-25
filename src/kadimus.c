@@ -350,6 +350,7 @@ int main(int argc, char **argv){
 	parser_opts(argc, argv);
 
 	curl_global_init(CURL_GLOBAL_ALL);
+	srand(time(NULL));
 
 	if(options.url){
 		scan(options.url);

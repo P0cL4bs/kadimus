@@ -303,7 +303,6 @@ void free_get_parameters(GET_DATA *GetParameters, size_t elements){
 }
 
 char *gen_random(char *s, const size_t len){
-	srand(time(NULL));
 	//(void)rand();
 	static const char alphanum[] =
 	"0123456789"
