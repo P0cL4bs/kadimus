@@ -19,6 +19,6 @@ kadimus: $(SRC_OBJECTS)
 	@$(CC) -o kadimus $(SRC_OBJECTS) $(LDFLAGS) $(CFLAGS)
 	@echo [+] Ok
 clean:
-	rm $(SRC_DIR)/*.o
+	rm $(SRC_OBJECTS)
 	rm kadimus
 
