@@ -1,24 +1,26 @@
 CC=gcc
-CFLAGS=-Wall -Wextra -O3 -g
+CFLAGS=-Wall -Wextra -O3
 LDFLAGS=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 SRC_DIR=src
+OBJ_DIR=bin
 
-SRC_OBJECTS =	$(SRC_DIR)/kadimus_common.o \
-		$(SRC_DIR)/kadimus_mem.o \
-		$(SRC_DIR)/kadimus_request.o \
-		$(SRC_DIR)/kadimus_str.o \
-		$(SRC_DIR)/kadimus_xpl.o \
-		$(SRC_DIR)/kadimus_regex.o \
-		$(SRC_DIR)/kadimus_socket.o \
-		$(SRC_DIR)/kadimus_io.o \
-		$(SRC_DIR)/kadimus.o \
+OBJS =		$(OBJ_DIR)/kadimus_common.o \
+		$(OBJ_DIR)/kadimus_mem.o \
+		$(OBJ_DIR)/kadimus_request.o \
+		$(OBJ_DIR)/kadimus_str.o \
+		$(OBJ_DIR)/kadimus_xpl.o \
+		$(OBJ_DIR)/kadimus_regex.o \
+		$(OBJ_DIR)/kadimus_socket.o \
+		$(OBJ_DIR)/kadimus_io.o \
+		$(OBJ_DIR)/kadimus.o
 
-.PHONY = kadimus
+kadimus: $(OBJS)
+	$(CC) -o kadimus $(OBJS) $(LDFLAGS) $(CFLAGS)
 
-kadimus: $(SRC_OBJECTS)
-	@$(CC) -o kadimus $(SRC_OBJECTS) $(LDFLAGS) $(CFLAGS)
-	@echo [+] Ok
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+
 clean:
-	rm $(SRC_OBJECTS)
-	rm kadimus
+	rm -f $(OBJS) kadimus
 
