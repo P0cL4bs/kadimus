@@ -46,12 +46,14 @@ int kadimus_connect(const char *hostname, unsigned short port, char **ip){
 
 	if(i){
 		if(ip != NULL){
-			*ip = xmalloc(INET_ADDRSTRLEN);
+
 			if(i->ai_family == AF_INET){
+				*ip = xmalloc(INET_ADDRSTRLEN);
 				inet_ntop(AF_INET, &((struct sockaddr_in *)(i->ai_addr))->sin_addr, *ip, INET_ADDRSTRLEN);
 			}
 
 			else if(i->ai_family == AF_INET6){
+				*ip = xmalloc(INET6_ADDRSTRLEN);
 				inet_ntop(AF_INET6, &((struct sockaddr_in6 *)(i->ai_addr))->sin6_addr, *ip, INET6_ADDRSTRLEN);
 			}
 
