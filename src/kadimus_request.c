@@ -56,6 +56,8 @@ CURL *init_curl(void *ptr, bool write_on){
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
 	curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
 
 	//curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 1000000);
 
