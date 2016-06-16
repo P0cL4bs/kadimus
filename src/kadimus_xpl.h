@@ -7,7 +7,11 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/io.h>
+#ifdef __APPLE__
+	#include <sys/uio.h>
+#else
+	#include <sys/io.h>
+#endif
 #include <sys/mman.h>
 
 
@@ -62,4 +66,3 @@ bool ssh_log_poison(const char *target, int port);
 bool check_auth_poison(const char *target);
 
 #endif
-
