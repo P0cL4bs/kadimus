@@ -45,7 +45,7 @@ Or follow this steps:
 
 * Mac OS X based
 ```sh
-# brew install openssl
+$ brew install openssl
 ```
 
 ### Installing libpcre:
@@ -62,7 +62,7 @@ Or follow this steps:
 
 * Mac OS X based
 ```sh
-# brew install pcre
+$ brew install pcre
 ```
 
 ### Installing libssh:
@@ -80,7 +80,7 @@ Or follow this steps:
 
 * Mac OS X based
 ```sh
-# brew install libssh
+$ brew install libssh
 ```
 
 ### And finally:
