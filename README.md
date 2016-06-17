@@ -42,6 +42,7 @@ Or follow this steps:
 ```sh
 # apt-get install libcurl4-openssl-dev
 ```
+
 ### Installing libpcre:
 * CentOS/Fedora
 
