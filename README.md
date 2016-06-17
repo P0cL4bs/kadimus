@@ -43,6 +43,11 @@ Or follow this steps:
 # apt-get install libcurl4-openssl-dev
 ```
 
+* Mac OS X based
+```sh
+# brew install openssl
+```
+
 ### Installing libpcre:
 * CentOS/Fedora
 
@@ -53,6 +58,11 @@ Or follow this steps:
 * Debian based
 ```sh
 # apt-get install libpcre3-dev
+```
+
+* Mac OS X based
+```sh
+# brew install pcre
 ```
 
 ### Installing libssh:
@@ -67,6 +77,12 @@ Or follow this steps:
 ```sh
 # apt-get install libssh-dev
 ```
+
+* Mac OS X based
+```sh
+# brew install libssh
+```
+
 ### And finally:
 ```sh
 $ make
