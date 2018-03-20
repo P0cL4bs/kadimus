@@ -34,7 +34,12 @@ int kadimus_connect(const char *hostname, unsigned short port, char **ip){
 		if((sockfd = socket(i->ai_family, i->ai_socktype, i->ai_protocol)) == -1)
 			continue;
 
-		((struct sockaddr_in *)i->ai_addr)->sin_port = htons(port);
+		void *ai_addr = i->ai_addr;
+		if(i->ai_family == AF_INET){
+			((struct sockaddr_in *)ai_addr)->sin_port = htons(port);
+		} else {
+			((struct sockaddr_in6 *)ai_addr)->sin6_port = htons(port);
+		}
 
 		if( connect(sockfd, i->ai_addr, i->ai_addrlen) == -1){
 			close(sockfd);
