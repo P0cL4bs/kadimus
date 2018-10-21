@@ -1,3 +1,7 @@
+ [![Rawsec's CyberSecurity Inventory](https://inventory.rawsec.ml/img/badges/Rawsec-inventoried-FF5050_flat.svg)](https://inventory.rawsec.ml/tools.html#Kadimus)
+ [![GitHub stars](https://img.shields.io/github/stars/P0cL4bs/Kadimus.svg)](https://github.com/P0cL4bs/Kadimus/stargazers)
+ [![GitHub license](https://img.shields.io/github/license/P0cL4bs/Kadimus.svg)](https://github.com/P0cL4bs/Kadimus/blob/master/license.txt)
+
 # Kadimus
 LFI Scan &amp; Exploit Tool
 --
