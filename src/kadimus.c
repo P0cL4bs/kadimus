@@ -275,13 +275,16 @@ void parser_opts(int argc, char **argv){
 }
 
 void banner(void){
-    printf(" _  __         _ _                     \n");
-    printf("| |/ /__ _  __| (_)_ __ ___  _   _ ___ \n");
-    printf("| ' // _` |/ _` | | '_ ` _ \\| | | / __|\n");
-    printf("| . \\ (_| | (_| | | | | | | | |_| \\__ \\\n");
-    printf("|_|\\_\\__,_|\\__,_|_|_| |_| |_|\\__,_|___/\n");
-    printf("\n");
-    printf("  v%s - LFI Scan & Exploit Tool (@hc0d3r - P0cL4bs Team)\n\n",VERSION);
+    static const char banner_msg[]=
+        " _  __         _ _                     \n"
+        "| |/ /__ _  __| (_)_ __ ___  _   _ ___ \n"
+        "| ' // _` |/ _` | | '_ ` _ \\| | | / __|\n"
+        "| . \\ (_| | (_| | | | | | | | |_| \\__ \\\n"
+        "|_|\\_\\__,_|\\__,_|_|_| |_| |_|\\__,_|___/\n"
+        "\n"
+        "  v" VERSION " - LFI Scan & Exploit Tool (@hc0d3r - P0cL4bs Team)\n";
+
+    puts(banner_msg);
 }
 
 void help(void){
