@@ -342,11 +342,66 @@ void help(void){
 exit(0);
 }
 
-int main(int argc, char **argv){
-
-    size_t max_len = 0, thread_count = 0, i = 0;
+void scan_url_list(void){
+    size_t n = 0, i, thread_count = 0;
     pthread_t *thrs = NULL;
     char *line = NULL;
+    ssize_t nread;
+
+    if(options.threads){
+        if((thrs = calloc(options.threads, sizeof(pthread_t))) == NULL)
+            die("calloc() error",1);
+
+        init_locks();
+        thread_on = true;
+    }
+
+    while((nread = getline(&line, &n, options.url_list)) != -1){
+        if(nread == -1)
+            break;
+
+        if(nread <= 1)
+            continue;
+
+        if(line[nread-1] == '\n')
+            line[nread-1] = 0x0;
+
+        if(!regex_match(URL_REGEX, line, 0, 0))
+            continue;
+
+        if(!options.threads){
+            scan(line);
+            continue;
+        }
+
+        pthread_create(&thrs[thread_count], 0, thread_scan, (void *) xstrdup(line));
+        thread_count++;
+
+        if(thread_count == options.threads){
+            for(i=0; i < options.threads; i++){
+                pthread_join(thrs[i], NULL);
+                thrs[i] = 0;
+            }
+            thread_count = 0;
+        }
+    }
+
+    if(options.threads){
+        for(i=0; i<options.threads; i++){
+            if(thrs[i])
+                pthread_join(thrs[i], NULL);
+        }
+        xfree(thrs);
+        kill_locks();
+    }
+
+    xfree(line);
+    fclose(options.url_list);
+}
+
+
+
+int main(int argc, char **argv){
     pid_t bg_listen = 0;
 
     banner();
@@ -359,61 +414,8 @@ int main(int argc, char **argv){
         scan(options.url);
     }
 
-    if(options.threads){
-        if( (thrs = calloc(options.threads, sizeof(pthread_t)) ) == NULL)
-            die("calloc() error",1);
-
-        init_locks();
-        thread_on = true;
-
-    } else {
-        thread_on = false;
-    }
-
     if(options.url_list){
-        max_len = get_max_len(options.url_list);
-        line = xmalloc( max_len+1 );
-
-        while( readline(options.url_list, line, max_len) ){
-            if( regex_match(URL_REGEX, line, 0, 0) ) {
-                if(!options.threads){
-                    scan(line);
-                } else {
-                    pthread_create(&thrs[thread_count], 0, thread_scan, (void *) xstrdup(line));
-                    thread_count++;
-
-                    if(thread_count == options.threads){
-
-                        for(i=0; i < options.threads; i++){
-                            pthread_join(thrs[i], NULL);
-                            thrs[i] = 0;
-                        }
-
-                        thread_count = 0;
-                    }
-
-                }
-            }
-        }
-
-        xfree(line);
-        fclose(options.url_list);
-    }
-
-    if(options.threads){
-
-        for(i=0; i<options.threads; i++){
-            if(thrs[i] == 0)
-                continue;
-            else
-                pthread_join(thrs[i], NULL);
-        }
-
-        xfree(thrs);
-        kill_locks();
-    }
-
-    if(options.url_list){
+        scan_url_list();
         printf("\n[~] Scan Complete !!!\n\n");
     }
 
