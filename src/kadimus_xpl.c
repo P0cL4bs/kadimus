@@ -149,7 +149,7 @@ bool check_error(const char *body){
             continue;
 
         if( regex_match(line, body, 0, 0) ){
-            print_single("[+] Regex match: ( %s )\n", line);
+            good_single("regex match: ( %s )\n", line);
             ret = true;
             break;
         }
@@ -245,21 +245,21 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     build_regex(regex, random_str, "Vulnerable");
     php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
 
-    print_single("[+] php://input Tests\n");
+    info_single("testing php://input ...\n");
     for(i=0; input_t[i] != NULL; i++){
         init_str(&body);
         rce_uri = make_url(GetParameters, p_len, base_uri, input_t[i], p, REPLACE);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
         build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
+        info_single("requesting: %s\n", rce_uri);
 
         if(!HttpRequest(curl)){
-            print_single("[-] Request error\n");
+            error_single("request error\n");
         } else {
-            if( regex_match(regex, body.ptr, 0, 0) ){
+            if(regex_match(regex, body.ptr, 0, 0)){
                 print_thread("[RCE-INPUT] %s\n", rce_uri);
-                print_single("[~] %s\n", rce_uri);
-                print_single("[+] Vulnerable !!!\n");
+                good_single("target vulnerable: %s !!!\n", rce_uri);
 
                 ret = 1;
                 xfree(rce_uri);
@@ -273,32 +273,31 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
         xfree(body.ptr);
     }
 
-    if(!ret) print_single("[-] probably not vulnerable\n");
-    print_single("[*] php://input test finish\n\n");
+    if(!ret) warn_single("probably not vulnerable\n");
+    info_single("php://input test finish\n");
 
     curl_easy_cleanup(curl);
     ret = 0;
 
     /* proc/self/environ test */
-
-    print_single("[+] /proc/self/environ tests\n");
+    info_single("testing /proc/self/environ ...\n");
 
     curl = init_curl(&body, true);
 
     for(i=0; environ_t[i]!=NULL; i++){
         init_str(&body);
         rce_uri = make_url(GetParameters, p_len, base_uri, environ_t[i], p, REPLACE);
+        info_single("requesting: %s\n", rce_uri);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
         build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
 
         if(!HttpRequest(curl)){
-            print_single("[-] Request error\n");
+            error_single("request error\n");
         } else {
             if( regex_match(regex, body.ptr, 0, 0) ){
                 print_thread("[RCE-ENVIRON] %s\n", rce_uri);
-                print_single("[~] %s\n", rce_uri);
-                print_single("[+] Vulnerable !!!\n");
+                good_single("target vulnerable !!!\n");
 
                 ret = 1;
                 xfree(body.ptr);
@@ -312,8 +311,8 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
         xfree(rce_uri);
     }
 
-    if(!ret) print_single("[-] probably not vulnerable\n");
-    print_single("[*] /proc/self/environ test finish\n\n");
+    if(!ret) warn_single("probably not vulnerable\n");
+    info_single("/proc/self/environ test finish\n");
 
     curl_easy_cleanup(curl);
 
@@ -322,13 +321,14 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     curl = init_curl(&body, true);
     init_str(&body);
 
-    print_single("[+] data wrap test\n");
+    info_single("testing data wrap ...\n");
 
     build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, p_len, (size_t)p);
 
     if(!HttpRequest(curl)){
-        print_single("[-] Request error\n");
-        print_single("[-] probably not vulnerable\n");
+        error_single("request error\n");
+        //print_single("[-] Request error\n");
+        //print_single("[-] probably not vulnerable\n");
     } else {
         if( regex_match(regex, body.ptr, 0, 0) ){
 
@@ -338,15 +338,14 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
             print_uri(GetParameters, base_uri, p_len);
 
             print_all(" | %s\n", GetParameters[p].key);
-            print_single("[+] Vulnerable !!!\n");
+            good_single("target vulnerable !!!\n");
 
         } else {
-            print_single("[-] probably not vulnerable\n");
+            warn_single("probably not vulnerable\n");
         }
     }
 
-
-    print_single("[*] data wrap test finish\n\n");
+    info_single("data wrap test finish\n");
 
     curl_easy_cleanup(curl);
     xfree(body.ptr);
@@ -357,7 +356,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     curl = init_curl(NULL, false);
     ret = 0;
 
-    print_single("[+] /var/log/auth.log tests\n");
+    info_single("testing /var/log/auth.log ...\n");
     char *mmap_str = NULL;
     //struct stat s;
     //int size_porra,fd;
@@ -372,8 +371,9 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)auth_scan_file);
 
+        info_single("requesting: %s\n", rce_uri);
         if(!HttpRequest(curl)){
-            print_single("[-] Request error\n");
+            error_single("request error\n");
         } else {
             fflush(auth_scan_file);
             fd = readonly(random_file);
@@ -399,8 +399,8 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
         if(ret) break;
     }
 
-    if(!ret) print_single("[-] probably not vulnerable\n");
-        print_single("[*] /var/log/auth.log test finish\n\n");
+    if(!ret) warn_single("probably not vulnerable\n");
+    info_single("/var/log/auth.log test finish\n\n");
 
     curl_easy_cleanup(curl);
     xfree(php_code);
@@ -522,13 +522,16 @@ int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
         file_uri = make_url(GetParameters, p_len, base_uri, file, p, REPLACE);
         curl_easy_setopt(ch, CURLOPT_URL, file_uri);
 
+        info_single("requesting: %s\n", file_uri);
+
         if(!HttpRequest(ch)){
-            print_single("[-] Request Failed\n");
+            error_single("no connection with the target URL, exiting ...\n");
         } else {
-            if( regex_match(regex, body.ptr, body.len, 0) ){
+            if(regex_match(regex, body.ptr, body.len, 0)){
                 print_thread("[FILE] %s | (%s)\n", file_uri, regex);
-                print_single("[~] %s\n", file_uri);
-                print_single("[+] Regex match: %s\n", regex);
+                //print_single("[~] %s\n", file_uri);
+                good_single("regex match: %s\n", regex);
+                good_single("check the url: %s\n", file_uri);
             }
         }
 
@@ -843,7 +846,7 @@ int disclosure_check(const char *uri, const char *xuri){
         result = 1;
 
         if(!thread_on){
-            print_all("[~] Target probably vulnerable\n\n");
+            good_all("target probably vulnerable\n\n");
             hex_print(b64_dec);
             print_all("\n");
         }
@@ -881,28 +884,28 @@ void scan(const char *target_uri){
     xfree(parameters);
 
 
-    print_all("[+] %s\n\n",target_uri);
-    print_all("[*] Testing if URI have dynamic content\n");
+    info_all("starting scanning the URL: %s\n", target_uri);
+    info_all("testing if URL have dynamic content ...\n");
     result = is_dynamic(target_uri);
 
     if(result == -1){
-        print_all("[-] No connection with the target URI, exiting ...\n\n");
+        error_all("no connection with the target URL, exiting ...\n");
         goto end;
     }
 
     else if(result == 0 || result == 2){
-        print_all("[~] URI dont have dynamic content\n\n");
+        info_all("URL dont have dynamic content\n");
         dynamic = false;
     }
 
     else if(result == 1){
-        print_all("[-] URI have dynamic content\n");
-        print_all("[-] Skipping source disclosure test\n\n");
+        warn_all("URL have dynamic content\n");
+        warn_all("skipping source disclosure test\n\n");
         dynamic = true;
     }
 
     if(result == 2){
-        print_all("[-] Common error found, common error checking will be skip\n\n");
+        good_all("common error found, common error checking will be skipped\n\n");
         previous_error = true;
     }
 
@@ -911,12 +914,12 @@ void scan(const char *target_uri){
         if(GetParameters[i].key[0] == 0x0)
             continue;
 
-        print_all("[CHECKING] parameter: %s\n\n",GetParameters[i].key);
+        info_all("analyzing '%s' parameter ...\n",GetParameters[i].key);
 
         if(!previous_error && GetParameters[i].equal){
-            print_all("[*] Checking Commom Errors\n");
+            info_all("checking for common error messages\n");
             error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
-            print_all("[~] %s\n",error_uri);
+            info_all("using random url: %s\n",error_uri);
             result = common_error_check(error_uri);
 
             if(result == -1){
@@ -924,18 +927,18 @@ void scan(const char *target_uri){
             }
 
             else if(result == 1){
-                print_all("[+] Error Found !!!\n\n");
+                info_all("error found !!!\n");
             }
 
             else {
-                print_all("[-] No errors Found\n\n");
+                warn_all("no errors found\n");
             }
 
             xfree(error_uri);
         }
 
         if(!dynamic && GetParameters[i].value[0] != 0x0){
-            print_all("[*] Source Disclosure Test\n");
+            info_all("starting source disclosure test ...\n");
 
             source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
             result = disclosure_check(target_uri, source_disc);
@@ -945,19 +948,19 @@ void scan(const char *target_uri){
             else if(result == 1){
 
             } else {
-                print_all("[-] Not vulnerable\n\n");
+                warn_all("parameter does not seem vulnerable to source disclosure\n");
             }
 
             xfree(source_disc);
         }
 
-        print_all("[*] Checking Files\n");
+        info_all("checking common files ...\n");
         check_files(GetParameters, parameters_len, base_uri, i);
-        print_all("[~] Ok\n\n");
+        info_all("common files check finished\n");
 
-        print_all("[*] RCE Scan\n\n");
+        info_all("checking for RCE ...\n");
         rce_scan(GetParameters, parameters_len, base_uri, i);
-        print_all("[~] Ok\n\n");
+        info_all("RCE check finished\n");
 
 
     }
@@ -971,7 +974,7 @@ void scan(const char *target_uri){
         if(parameters_len)
             free_get_parameters(GetParameters, parameters_len);
 
-        print_all("[~] Single scan finish !!!\n\n");
+        info_all("scan finish !!!\n\n");
         return;
 
 }

@@ -11,7 +11,7 @@ bool HttpRequest(CURL *curl){
         res = curl_easy_perform(curl);
 
         if(res != CURLE_OK){
-            print_single("[-] Request failed: %s\n",curl_easy_strerror(res));
+            error_single("request failed: %s\n", curl_easy_strerror(res));
             continue;
         }
 

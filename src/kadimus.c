@@ -416,7 +416,6 @@ int main(int argc, char **argv){
 
     if(options.url_list){
         scan_url_list();
-        printf("\n[~] Scan Complete !!!\n\n");
     }
 
     if(options.get_source && xpl.vuln_uri && options.filename && xpl.p_name){
