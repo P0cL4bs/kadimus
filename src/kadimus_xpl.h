@@ -8,9 +8,9 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #ifdef __APPLE__
-	#include <sys/uio.h>
+    #include <sys/uio.h>
 #else
-	#include <sys/io.h>
+    #include <sys/io.h>
 #endif
 #include <sys/mman.h>
 
@@ -23,28 +23,28 @@
 #include "kadimus_io.h"
 
 typedef enum {
-	INPUT = 1,
-	ENVIRON,
-	AUTH,
-	DATA
+    INPUT = 1,
+    ENVIRON,
+    AUTH,
+    DATA
 } rce_type;
 
 /*typedef enum {
-	SCAN,
-	PHP_CODE,
-	CMD_CODE,
-	SHELL
+    SCAN,
+    PHP_CODE,
+    CMD_CODE,
+    SHELL
 } op_type;*/
 
 typedef struct {
-	char *ssh_host;
-	char *vuln_uri;
-	char *p_name;
-	char *code;
-	char *cmd;
-	size_t ssh_port;
-	rce_type tech;
-	bool cmdx;
+    char *ssh_host;
+    char *vuln_uri;
+    char *p_name;
+    char *code;
+    char *cmd;
+    size_t ssh_port;
+    rce_type tech;
+    bool cmdx;
 } xpl_parameters;
 
 #define FILTER_WRAP "php://filter/convert.base64-encode/resource="

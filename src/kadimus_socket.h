@@ -15,14 +15,14 @@
 #define LISTEN_TIMEOUT 120
 
 enum {
-	SOCKS_SUCCESS,
-	SOCKS_SEND_ERROR,
-	SOCKS_RECV_ERROR,
-	SOCKS_VERSION_ERROR,
-	SOCKS_AUTH_REQUIRED,
-	SOCKS_CON_ERROR,
-	SOCKS_GETHOST_ERROR,
-	SOCKS_TOTAL
+    SOCKS_SUCCESS,
+    SOCKS_SEND_ERROR,
+    SOCKS_RECV_ERROR,
+    SOCKS_VERSION_ERROR,
+    SOCKS_AUTH_REQUIRED,
+    SOCKS_CON_ERROR,
+    SOCKS_GETHOST_ERROR,
+    SOCKS_TOTAL
 };
 
 int valid_ip_hostname(const char *hostname);
@@ -31,4 +31,3 @@ void reverse_shell(int port);
 void bind_shell(const char *con, int port, const char *proxy, int proxy_port);
 
 #endif
-

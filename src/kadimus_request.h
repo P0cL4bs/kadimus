@@ -14,8 +14,8 @@ extern char *UA, *cookies, *proxy;
 extern size_t timeout, retry_times;
 
 struct request {
-	char *ptr;
-	size_t len;
+    char *ptr;
+    size_t len;
 };
 
 #define PROXY_REGEX "^.+:\\/\\/.+\\:(\\d+)$"

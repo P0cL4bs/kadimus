@@ -12,17 +12,17 @@
 #define VULN_SIZE (R_SIZE-1)*2+11
 
 typedef struct {
-	char *key;
-	size_t alloc_size_key;
-	char *value;
-	size_t alloc_size_value;
-	bool equal;
+    char *key;
+    size_t alloc_size_key;
+    char *value;
+    size_t alloc_size_value;
+    bool equal;
 } GET_DATA;
 
 typedef enum {
-	REPLACE = 1,
-	AFTER,
-	BEFORE
+    REPLACE = 1,
+    AFTER,
+    BEFORE
 } M;
 
 GET_DATA *ParserGet(const char *str, size_t *get_data_size);
@@ -43,4 +43,3 @@ bool get_element_pos(GET_DATA **pp, size_t *pp_len, char **b_uri, const char *ur
 char *urlencode(const char *enc);
 
 #endif
-
