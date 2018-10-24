@@ -223,7 +223,7 @@ int is_dynamic(const char *url){
     return result;
 }
 
-int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p){
+int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     static const char *environ_t[] = {
         "/proc/self/environ",
@@ -266,7 +266,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     info_single("testing php://input ...\n");
     for(i=0; input_t[i] != NULL; i++){
         init_str(&body);
-        rce_uri = make_url(GetParameters, p_len, base_uri, input_t[i], p, REPLACE);
+        rce_uri = build_url(base, plist, p, input_t[i], replace_string);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
         build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
@@ -304,7 +304,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
 
     for(i=0; environ_t[i]!=NULL; i++){
         init_str(&body);
-        rce_uri = make_url(GetParameters, p_len, base_uri, environ_t[i], p, REPLACE);
+        rce_uri = build_url(base, plist, p, environ_t[i], replace_string);
         info_single("requesting: %s\n", rce_uri);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
@@ -341,7 +341,8 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
 
     info_single("testing data wrap ...\n");
 
-    build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, p_len, (size_t)p);
+    char *datawrap = build_datawrap_url(base, plist, p, php_code);
+    curl_easy_setopt(curl, CURLOPT_URL, datawrap);
 
     if(!HttpRequest(curl)){
         error_single("request error\n");
@@ -350,12 +351,8 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     } else {
         if( regex_match(regex, body.ptr, 0, 0) ){
 
-            print_thread("[RCE-DATA-WRAP] ");
-            print_single("[~] ");
-
-            print_uri(GetParameters, base_uri, p_len);
-
-            print_all(" | %s\n", GetParameters[p].key);
+            print_thread("[RCE-DATA-WRAP] %s\n", datawrap);
+            good_single("%s\n", datawrap);
             good_single("target vulnerable !!!\n");
 
         } else {
@@ -367,6 +364,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
 
     curl_easy_cleanup(curl);
     xfree(body.ptr);
+    free(datawrap);
 
     /* auth.log scan */
     //curl = init_curl(&body);
@@ -381,7 +379,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     char random_file[20];
 
     for(i=0; auth_t[i]!=NULL; i++){
-        rce_uri = make_url(GetParameters, p_len, base_uri, auth_t[i], p, REPLACE);
+        rce_uri = build_url(base, plist, p, auth_t[i], replace_string);
 
         if( (auth_scan_file = get_random_file(10, random_file)) == NULL)
             die("error while generate tmp file",0);
@@ -499,7 +497,7 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
     xfree(body2.ptr);
 }
 
-int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
+int check_files(char *base, struct parameter_list *plist, int p){
     char *line = NULL, *file, *regex, *file_uri = NULL;
     struct request body;
     int result = 0;
@@ -530,7 +528,7 @@ int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
 
         init_str(&body);
 
-        file_uri = make_url(GetParameters, p_len, base_uri, file, p, REPLACE);
+        file_uri = build_url(base, plist, p, file, replace_string);
         curl_easy_setopt(ch, CURLOPT_URL, file_uri);
 
         info_single("requesting: %s\n", file_uri);
@@ -863,21 +861,21 @@ int disclosure_check(const char *uri, const char *xuri){
 }
 
 void scan(const char *target_uri){
-    GET_DATA *GetParameters = NULL;
     char *base_uri = NULL, *parameters = NULL;
     char *source_disc = NULL, *error_uri = NULL;
     char random_str[R_SIZE];
 
     int result = 0;
-    size_t parameters_len = 0, i = 0;
+    size_t i = 0;
     bool dynamic = false, previous_error = false;
+    struct parameter_list plist = { .len = 0, .parameter = 0, .trash = 0};
 
     extract_url(target_uri, &base_uri, &parameters);
 
     if(!base_uri || !parameters)
         goto end;
 
-    GetParameters = ParserGet(parameters, &parameters_len);
+    tokenize(parameters, &plist);
     xfree(parameters);
 
 
@@ -906,16 +904,15 @@ void scan(const char *target_uri){
         previous_error = true;
     }
 
-    for(i=0; i < parameters_len; i++){
-
-        if(GetParameters[i].key[0] == 0x0)
+    for(i=0; i<plist.len; i++){
+        if(!plist.parameter[i].key[0])
             continue;
 
-        info_all("analyzing '%s' parameter ...\n",GetParameters[i].key);
+        info_all("analyzing '%s' parameter ...\n", plist.parameter[i].key);
 
-        if(!previous_error && GetParameters[i].equal){
+        if(!previous_error && plist.parameter[i].value){
             info_all("checking for common error messages\n");
-            error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
+            error_uri = build_url(base_uri, &plist, i, gen_random(random_str, R_SIZE-1), replace_string);
             info_all("using random url: %s\n",error_uri);
             result = common_error_check(error_uri);
 
@@ -934,10 +931,10 @@ void scan(const char *target_uri){
             xfree(error_uri);
         }
 
-        if(!dynamic && GetParameters[i].value[0] != 0x0){
+        if(!dynamic && plist.parameter[i].value){
             info_all("starting source disclosure test ...\n");
 
-            source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
+            source_disc = build_url(base_uri, &plist, i, FILTER_WRAP, append_before);
             result = disclosure_check(target_uri, source_disc);
 
             if(result == -1)
@@ -952,24 +949,23 @@ void scan(const char *target_uri){
         }
 
         info_all("checking common files ...\n");
-        check_files(GetParameters, parameters_len, base_uri, i);
+        check_files(base_uri, &plist, i);
         info_all("common files check finished\n");
 
         info_all("checking for RCE ...\n");
-        rce_scan(GetParameters, parameters_len, base_uri, i);
+        rce_scan(base_uri, &plist, i);
         info_all("RCE check finished\n");
 
 
     }
 
     end:
+        free(plist.trash);
+        free(plist.parameter);
         xfree(base_uri);
         xfree(parameters);
         xfree(error_uri);
         xfree(source_disc);
-
-        if(parameters_len)
-            free_get_parameters(GetParameters, parameters_len);
 
         info_all("scan finish !!!\n\n");
         return;
@@ -977,14 +973,14 @@ void scan(const char *target_uri){
 }
 
 void *thread_scan(void *url){
-    GET_DATA *GetParameters = NULL;
     char *target_uri = ((char *) url);
     char *base_uri = NULL, *parameters = NULL;
     char *source_disc = NULL, *error_uri = NULL;
     char random_str[R_SIZE];
+    struct parameter_list plist = { .len = 0, .parameter = 0, .trash = 0};
 
     int result = 0;
-    size_t parameters_len = 0, i = 0;
+    size_t i = 0;
     bool dynamic = false, previous_error = false;
 
     extract_url(target_uri, &base_uri, &parameters);
@@ -992,7 +988,7 @@ void *thread_scan(void *url){
     if(!base_uri || !parameters)
         goto end;
 
-    GetParameters = ParserGet(parameters, &parameters_len);
+    tokenize(parameters, &plist);
     xfree(parameters);
 
     printf("[SCANNING] %s\n",target_uri);
@@ -1013,13 +1009,12 @@ void *thread_scan(void *url){
         print_thread("[PREV-LFI-ERROR] %s\n",target_uri);
     }
 
-    for(i=0; i < parameters_len; i++){
-
-        if(GetParameters[i].key[0] == 0x0)
+    for(i=0; i <plist.len; i++){
+        if(!plist.parameter[i].key[0])
             continue;
 
-        if(!previous_error && GetParameters[i].equal){
-            error_uri = make_url(GetParameters, parameters_len, base_uri, gen_random(random_str, R_SIZE-1), i, REPLACE);
+        if(!previous_error && plist.parameter[i].value){
+            error_uri = build_url(base_uri, &plist, i, gen_random(random_str, R_SIZE-1), replace_string);
             result = common_error_check(error_uri);
 
             //if(result == -1)
@@ -1030,33 +1025,34 @@ void *thread_scan(void *url){
             xfree(error_uri);
         }
 
-        if(!dynamic && GetParameters[i].value[0] != 0x0){
-            source_disc = make_url(GetParameters, parameters_len, base_uri, FILTER_WRAP, i, BEFORE);
+        if(!dynamic && plist.parameter[i].value){
+            source_disc = build_url(base_uri, &plist, i, FILTER_WRAP, append_before);
             result = disclosure_check(target_uri, source_disc);
 
             //if(result == -1)
             //    goto end;
             if(result == 1)
-                print_thread("[RSD] %s | %s\n", target_uri, GetParameters[i].key);
+                print_thread("[RSD] %s | %s\n", target_uri, plist.parameter[i].key);
 
             xfree(source_disc);
 
         }
 
-        check_files(GetParameters, parameters_len, base_uri, i);
-        rce_scan(GetParameters, parameters_len, base_uri, i);
+        check_files(base_uri, &plist, i);
+        rce_scan(base_uri, &plist, i);
 
     }
 
     end:
+        free(plist.trash);
+        free(plist.parameter);
+
         xfree(target_uri);
         xfree(base_uri);
         xfree(parameters);
         //xfree(error_uri);
         //xfree(source_disc);
 
-        if(parameters_len)
-            free_get_parameters(GetParameters, parameters_len);
 
     return (void *)0;
 }
