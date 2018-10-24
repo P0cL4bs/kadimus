@@ -11,6 +11,19 @@
 #define M_ALL_SIZE (R_SIZE-1)*2+5
 #define VULN_SIZE (R_SIZE-1)*2+11
 
+struct parameter_list {
+    size_t len;
+    struct parameter *parameter;
+    void *trash;
+};
+
+struct parameter {
+    char *key;
+    int key_size;
+    char *value;
+    int value_size;
+};
+
 typedef struct {
     char *key;
     size_t alloc_size_key;
@@ -18,6 +31,12 @@ typedef struct {
     size_t alloc_size_value;
     bool equal;
 } GET_DATA;
+
+enum {
+    replace_string,
+    append_after,
+    append_before
+};
 
 typedef enum {
     REPLACE = 1,
@@ -41,5 +60,7 @@ char *make_code(const char *mark, const char *code, bool auth);
 void print_uri(GET_DATA *GetParameters, const char *base_uri, size_t p_len);
 bool get_element_pos(GET_DATA **pp, size_t *pp_len, char **b_uri, const char *uri, const char *p_name, size_t *i_j);
 char *urlencode(const char *enc);
+char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
+void tokenize(const char *parameters, struct parameter_list *plist);
 
 #endif

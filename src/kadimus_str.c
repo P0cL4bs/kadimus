@@ -291,6 +291,37 @@ GET_DATA *ParserGet(const char *str, size_t *get_data_size){
 
 }
 
+void tokenize(const char *parameters, struct parameter_list *plist){
+    struct parameter *aux;
+    char *next, *prev;
+
+    prev = strdup(parameters);
+    plist->trash = prev;
+
+    do {
+        next = strchr(prev, '&');
+        if(next){
+            *next = 0x0;
+            next++;
+        }
+
+        plist->parameter = realloc(plist->parameter, (plist->len+1)*sizeof(struct parameter));
+        aux = plist->parameter+plist->len;
+        aux->key = prev;
+        if((aux->value = strchr(prev, '='))){
+            *(aux->value) = 0x0;
+            aux->value++;
+            aux->value_size = strlen(aux->value);
+        } else {
+            aux->value_size = 0x0;
+        }
+
+        aux->key_size = strlen(aux->key);
+
+        plist->len++;
+    } while((prev = next));
+}
+
 void free_get_parameters(GET_DATA *GetParameters, size_t elements){
     size_t i = 0;
 
@@ -609,4 +640,80 @@ bool get_element_pos(GET_DATA **pp, size_t *pp_len, char **b_uri, const char *ur
 
     return false;
 
+}
+
+char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action){
+    size_t baselen, newlen, total, i;
+    int j;
+    char *ret;
+
+    total = baselen = strlen(base);
+    newlen = strlen(new);
+
+    total += newlen;
+
+    for(i=0; i<plist->len; i++){
+        total++;
+        total += plist->parameter[i].key_size;
+        if(plist->parameter[i].value_size){
+            total++;
+
+            if(i == pos && action == replace_string)
+                continue;
+
+            total += plist->parameter[i].value_size;
+        } else if(i == pos) {
+            total++;
+        }
+    }
+
+    ret = malloc(total+1);
+    memcpy(ret, base, baselen);
+    ret[baselen] = '?';
+    j = baselen;
+
+    for(i=0; i<plist->len; i++){
+        j++;
+
+        memcpy(ret+j, plist->parameter[i].key, plist->parameter[i].key_size);
+        j += plist->parameter[i].key_size;
+
+        if(i == pos){
+            ret[j++] = '=';
+
+            switch(action){
+                case replace_string:
+                    memcpy(ret+j, new, newlen);
+                    j += newlen;
+                break;
+                case append_before:
+                    memcpy(ret+j, new, newlen);
+                    j += newlen;
+
+                    memcpy(ret+j, plist->parameter[i].value, plist->parameter[i].value_size);
+                    j += plist->parameter[i].value_size;
+                break;
+                case append_after:
+                    memcpy(ret+j, plist->parameter[i].value, plist->parameter[i].value_size);
+                    j += plist->parameter[i].value_size;
+
+                    memcpy(ret+j, new, newlen);
+                    j += newlen;
+                break;
+            }
+        } else {
+            if(plist->parameter[i].value){
+                ret[j++] = '=';
+                memcpy(ret+j, plist->parameter[i].value, plist->parameter[i].value_size);
+                j += plist->parameter[i].value_size;
+            }
+        }
+
+        ret[j] = '&';
+    }
+
+    ret[j] = 0x0;
+
+
+    return ret;
 }
