@@ -787,15 +787,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 int common_error_check(const char *uri){
     int result = 0;
     struct request body;
-    char *error = NULL;
-    size_t alloc_size = 0;
     CURL *ch = init_curl(&body, true);
-
-    FILE *fh_error = xfopen(ERROR_FILE, "r");
-
-    alloc_size = get_max_len(fh_error);
-
-    error = xmalloc( alloc_size+1 );
 
     init_str(&body);
 
@@ -810,9 +802,6 @@ int common_error_check(const char *uri){
 
     curl_easy_cleanup(ch);
     xfree(body.ptr);
-    xfree(error);
-    fclose(fh_error);
-
     return result;
 }
 
