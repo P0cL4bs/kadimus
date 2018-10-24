@@ -347,6 +347,7 @@ void scan_url_list(void){
     pthread_t *thrs = NULL;
     char *line = NULL;
     ssize_t nread;
+    pcre *re;
 
     if(options.threads){
         if((thrs = calloc(options.threads, sizeof(pthread_t))) == NULL)
@@ -355,6 +356,8 @@ void scan_url_list(void){
         init_locks();
         thread_on = true;
     }
+
+    re = xpcre_compile(URL_REGEX, PCRE_NO_AUTO_CAPTURE);
 
     while((nread = getline(&line, &n, options.url_list)) != -1){
         if(nread == -1)
@@ -366,7 +369,7 @@ void scan_url_list(void){
         if(line[nread-1] == '\n')
             line[nread-1] = 0x0;
 
-        if(!regex_match(URL_REGEX, line, 0, 0))
+        if(regex_match_v2(re, line, nread-1, 0))
             continue;
 
         if(!options.threads){
@@ -396,6 +399,7 @@ void scan_url_list(void){
     }
 
     xfree(line);
+    pcre_free(re);
     fclose(options.url_list);
 }
 

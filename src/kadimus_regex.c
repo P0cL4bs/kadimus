@@ -60,6 +60,20 @@ int regex_match(const char *regex, const char *data, int data_size, int Options)
 
 }
 
+pcre *xpcre_compile(const char *pattern, int options){
+    const char *error;
+    int offset;
+    pcre *re = pcre_compile(pattern, options, &error, &offset, NULL);
+    if(!re)
+        die(error, 0);
+
+    return re;
+}
+
+int regex_match_v2(pcre *re, const char *data, int length, int opts){
+    return (pcre_exec(re, NULL, data, length, 0, opts, NULL, 0) < 0);
+}
+
 void regex_free(char **regex_match){
     size_t i;
 
