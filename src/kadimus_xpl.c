@@ -135,20 +135,20 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 
 bool check_error(const char *body){
     bool ret = false;
-
     char *line = NULL;
     size_t len = 0;
-    FILE *regex_file = xfopen(ERROR_FILE, "r");
+    ssize_t nread;
 
-    len = get_max_len(regex_file);
+    FILE *fh = xfopen(ERROR_FILE, "r");
 
-    line = xmalloc( len+1 );
-
-    while( readline(regex_file, line, len) ){
-        if(!line[0])
+    while((nread = getline(&line, &len, fh)) != -1){
+        if(nread <= 1)
             continue;
 
-        if( regex_match(line, body, 0, 0) ){
+        if(line[nread-1] == '\n')
+            line[nread-1] = 0x0;
+
+        if(regex_match(line, body, 0, 0)){
             good_single("regex match: ( %s )\n", line);
             ret = true;
             break;
@@ -156,11 +156,10 @@ bool check_error(const char *body){
     }
 
 
-    fclose(regex_file);
+    fclose(fh);
     xfree(line);
 
     return ret;
-
 }
 
 int is_dynamic(const char *url){
