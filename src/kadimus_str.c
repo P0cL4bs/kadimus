@@ -143,40 +143,42 @@ bool b64_decode(const char *encode, char **output){
     return true;
 }
 
-char *urlencode(const char *enc){
-    int i, j, len;
-    char *ret, x;
+static inline int isokay(const char ch){
+    return ((ch >= 'a' && ch <= 'z') ||
+        (ch >= 'A' && ch <= 'Z') ||
+        (ch >= '0' && ch <= '9'));
+}
 
+char *urlencode(const char *str){
     static const char hextable[]="0123456789abcdef";
 
-    ret=xmalloc(1);
-    len=1;
+    char *ret, ch;
+    int i, j = 0;
 
-    for(i=0, j=0; enc[i]; i++, j++){
-        x = enc[i];
-        len++;
-        ret = xrealloc(ret, len);
+    for(i=0; (ch = str[i]); i++){
+        if(isokay(ch))
+            j++;
 
-        if( (x >= 'a' && x <= 'z') ||
-            (x >= 'A' && x <= 'Z') ||
-            (x >= '0' && x <= '9')
-        ){
-            ret[j] = x;
-        }
+        else
+            j += 3;
+    }
 
-        else {
-            len += 2;
-            ret = xrealloc(ret, len);
-            ret[j] = '%';
+    ret = malloc(j+1);
+    i = 0;
 
-            ret[j+1] = hextable[((x/16)%16)];
-            ret[j+2] = hextable[x%16];
+    while((ch = *str++)){
+        if(isokay(ch)){
+            ret[i++] = ch;
+        } else {
+            ret[i] = '%';
+            ret[i+1] = hextable[((ch/16)%16)];
+            ret[i+2] = hextable[ch%16];
 
-            j+=2;
+            i+=3;
         }
     }
 
-    ret[j] = 0x0;
+    ret[i] = 0x0;
 
     return ret;
 
