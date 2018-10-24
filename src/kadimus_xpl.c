@@ -399,7 +399,7 @@ int rce_scan(GET_DATA *GetParameters, size_t p_len, const char *base_uri, int p)
     }
 
     if(!ret) warn_single("probably not vulnerable\n");
-    info_single("/var/log/auth.log test finish\n\n");
+    info_single("/var/log/auth.log test finish\n");
 
     curl_easy_cleanup(curl);
     xfree(php_code);
@@ -824,7 +824,7 @@ int disclosure_check(const char *uri, const char *xuri){
         result = 1;
 
         if(!thread_on){
-            good_all("target probably vulnerable\n\n");
+            good_all("target probably vulnerable\n");
             hex_print(b64_dec);
             print_all("\n");
         }
@@ -878,12 +878,12 @@ void scan(const char *target_uri){
 
     else if(result == 1){
         warn_all("URL have dynamic content\n");
-        warn_all("skipping source disclosure test\n\n");
+        warn_all("skipping source disclosure test\n");
         dynamic = true;
     }
 
     if(result == 2){
-        good_all("common error found, common error checking will be skipped\n\n");
+        good_all("common error found, common error checking will be skipped\n");
         previous_error = true;
     }
 
