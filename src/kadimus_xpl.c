@@ -481,39 +481,32 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
 }
 
 int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
-    int result = 0;
+    char *line = NULL, *file, *regex, *file_uri = NULL;
     struct request body;
-    size_t alloc_len = 0, i = 0, j = 0;
-    char *line = NULL, *file = NULL, *regex = NULL,
-    *file_uri = NULL;
+    int result = 0;
+    size_t n = 0;
+    ssize_t nread;
 
-    FILE *file_check = xfopen(CHECK_FILES, "r");
+    FILE *fh = xfopen(CHECK_FILES, "r");
     CURL *ch = init_curl(&body, true);
 
-
-    alloc_len = get_max_len(file_check);
-
-    line = xmalloc( alloc_len+1 );
-    file = xmalloc( alloc_len+1 );
-    regex = xmalloc( alloc_len+1 );
-
-
-    while( readline( file_check, line, alloc_len ) ){
-        for(j=0,i=0; line[i] != ':' && line[i]; i++,j++)
-            file[j] = line[i];
-        file[j] = 0x0;
-
-        if(!line[i])
+    while((nread = getline(&line, &n, fh)) != -1){
+        if(nread < 3 || line[0] == '#' || line[0] == ':')
             continue;
 
-        i++;
+        if(line[nread-1] == '\n')
+            line[nread-1] = 0x0;
 
-        for(j=0; line[i]; i++, j++)
-            regex[j] = line[i];
 
-        regex[j] = 0x0;
+        file = line;
+        regex = strchr(line, ':');
+        if(!regex)
+            continue;
 
-        if(!line[0] || !regex[0])
+        *regex = 0;
+        regex++;
+
+        if(regex[0] == 0x0)
             continue;
 
         init_str(&body);
@@ -539,13 +532,10 @@ int check_files(GET_DATA *GetParameters, size_t p_len, char *base_uri, int p){
     }
 
     xfree(line);
-    xfree(regex);
-    xfree(file);
-    fclose(file_check);
+    fclose(fh);
     curl_easy_cleanup(ch);
 
     return result;
-
 }
 
 void exec_php(xpl_parameters xpl){
