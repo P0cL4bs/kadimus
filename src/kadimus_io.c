@@ -10,50 +10,12 @@ FILE *xfopen(const char *file, const char *mode){
     return x;
 }
 
-
-size_t get_max_len(FILE *fh){
-    char c;
-    size_t count = 0, max = 0;
-
-    while( (c = fgetc(fh)) != EOF){
-        if(c == '\n'){
-            if(max < count)
-                max = count;
-            count = 0;
-
-        }
-        else
-            count++;
-    }
-
-    fseek(fh,0,SEEK_SET);
-
-    return max;
-
-}
-
-int readline(FILE *fh, char *line, size_t len){
-    size_t p = 0;
-    char c;
-
-    while( (c = fgetc(fh)) != EOF ){
-        if(c == '\n' || p == len)
-            break;
-        line[p] = c;
-        p++;
-    }
-
-    line[p] = 0x0;
-
-    return (c == EOF) ? 0 : 1;
-}
-
 FILE *get_random_file(size_t retry, char tmp_name[]){
     FILE *x=NULL;
     size_t i=0;
     int check;
     strcpy(tmp_name, "/tmp/kadimus-XXXXXX");
-    
+
     for(i=0;i<=retry;i++){
         check = mkstemp(tmp_name);
         if(check){

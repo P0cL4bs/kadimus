@@ -61,7 +61,5 @@ extern bool thread_on;
 void die(const char *err, int x);
 //FILE *xfopen(const char *file, const char *mode);
 void hex_print(const char *x);
-//size_t get_max_len(FILE *fh);
-//int readline(FILE *fh, char *line, size_t len);
 
 #endif
