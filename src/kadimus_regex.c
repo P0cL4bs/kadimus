@@ -46,18 +46,15 @@ char **regex_extract(const char *regex, const char *data, int size_data, int Opt
 
 }
 
-int regex_match(const char *regex, const char *data, int data_size, int Options){
+int regex_match(const char *regex, const char *data, int length, int opts){
     pcre *re;
-    const char *error;
-    int errornumber = 0, rc = 0, vet[VET_SIZE] = {0};
+    int rc = 0, vet[VET_SIZE] = {0};
 
-    re = pcre_compile(regex,Options,&error,&errornumber,NULL);
-    if(!re) die(error,0);
-    rc = pcre_exec(re,NULL,data,(data_size) ? data_size : (int)strlen(data),0,0,vet,VET_SIZE);
+    re = xpcre_compile(regex, opts);
+    rc = pcre_exec(re, NULL, data, (length) ? length : (int)strlen(data), 0, 0, vet, VET_SIZE);
     pcre_free(re);
 
     return (rc >= 0) ? 1 : 0;
-
 }
 
 pcre *xpcre_compile(const char *pattern, int options){
