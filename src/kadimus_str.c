@@ -430,11 +430,11 @@ char *build_url(const char *base, struct parameter_list *plist, int pos, const c
         if(plist->parameter[i].value_size){
             total++;
 
-            if(i == pos && action == replace_string)
+            if(i == (size_t)pos && action == replace_string)
                 continue;
 
             total += plist->parameter[i].value_size;
-        } else if(i == pos) {
+        } else if(i == (size_t)pos) {
             total++;
         }
     }
@@ -450,7 +450,7 @@ char *build_url(const char *base, struct parameter_list *plist, int pos, const c
         memcpy(ret+j, plist->parameter[i].key, plist->parameter[i].key_size);
         j += plist->parameter[i].key_size;
 
-        if(i == pos){
+        if(i == (size_t)pos){
             ret[j++] = '=';
 
             switch(action){
