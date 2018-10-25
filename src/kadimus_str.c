@@ -161,115 +161,6 @@ char *urlencode(const char *str){
 
 }
 
-static size_t GetElements(const char *str){
-    size_t elements = 1, i = 0;
-
-    for(i=0;str[i];i++)
-        if(str[i] == '&')
-            elements++;
-
-    return elements;
-}
-
-static void init_elements(GET_DATA *GetParameters, size_t elements){
-    size_t i;
-
-    for(i=0; i < elements; i++){
-        GetParameters[i].key = NULL;
-        GetParameters[i].alloc_size_key = 1;
-        GetParameters[i].value = NULL;
-        GetParameters[i].alloc_size_value = 1;
-        GetParameters[i].equal = false;
-    }
-
-}
-
-static void alloc_elements(GET_DATA * GetParameters, const char *str){
-    size_t i = 0, p = 0;
-
-    for(i=0; str[i]; i++){
-        if(str[i] == '&'){
-            GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key );
-            GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value );
-            GetParameters[p].equal = false;
-            p++;
-        }
-
-        else if(str[i] == '=') {
-            if(GetParameters[p].equal)
-                GetParameters[p].alloc_size_value++;
-            else
-                GetParameters[p].equal = true;
-
-        }
-
-        else {
-            if(GetParameters[p].equal)
-                GetParameters[p].alloc_size_value++;
-            else
-                GetParameters[p].alloc_size_key++;
-        }
-
-    }
-
-    GetParameters[p].key = xmalloc( GetParameters[p].alloc_size_key );
-    GetParameters[p].value = xmalloc( GetParameters[p].alloc_size_value );
-    GetParameters[p].equal = false;
-
-}
-
-static void write_struct(GET_DATA *GetParameters, const char *str){
-    size_t i = 0, p = 0, j = 0;
-
-    for(i=0; str[i]; i++){
-        if(str[i] == '&'){
-
-            GetParameters[p].key[ GetParameters[p].alloc_size_key-1 ] = 0x0;
-            GetParameters[p].value[ GetParameters[p].alloc_size_value-1 ] = 0x0;
-            j = 0;
-            p++;
-
-        } else if(str[i] == '='){
-
-            if(GetParameters[p].equal){
-                GetParameters[p].value[j] = str[i];
-                j++;
-            } else {
-                j = 0;
-                GetParameters[p].equal = true;
-            }
-
-        } else {
-
-            if(GetParameters[p].equal)
-                GetParameters[p].value[j] = str[i];
-            else
-                GetParameters[p].key[j] = str[i];
-            j++;
-        }
-    }
-
-    GetParameters[p].key[ GetParameters[p].alloc_size_key-1 ] = 0x0;
-    GetParameters[p].value[ GetParameters[p].alloc_size_value-1 ] = 0x0;
-
-}
-
-GET_DATA *ParserGet(const char *str, size_t *get_data_size){
-    size_t elements = 0;
-    GET_DATA *GetParameters = NULL;
-
-    elements = GetElements(str);
-    GetParameters = xmalloc( elements * sizeof(GET_DATA));
-
-    init_elements(GetParameters, elements);
-    alloc_elements(GetParameters, str);
-    write_struct(GetParameters, str);
-
-    *get_data_size = elements;
-    return GetParameters;
-
-}
-
 void tokenize(const char *parameters, struct parameter_list *plist){
     struct parameter *aux;
     char *next, *prev;
@@ -301,17 +192,6 @@ void tokenize(const char *parameters, struct parameter_list *plist){
     } while((prev = next));
 }
 
-void free_get_parameters(GET_DATA *GetParameters, size_t elements){
-    size_t i = 0;
-
-    for(i=0; i < elements; i++){
-        xfree(GetParameters[i].key);
-        xfree(GetParameters[i].value);
-    }
-
-    xfree(GetParameters);
-}
-
 char *gen_random(char *s, const size_t len){
     //(void)rand();
     static const char alphanum[] =
@@ -329,75 +209,6 @@ char *gen_random(char *s, const size_t len){
     s[i] = 0x0;
 
     return s;
-}
-
-char *make_url(
-    GET_DATA *GetParameters,
-    size_t elements,
-    const char *base_uri,
-    const char *xpl,
-    size_t position,
-    M m){
-
-    char *new_url = NULL;
-    size_t alloc_size = 2 , i = 0, len = 0, xpl_len = 0;
-
-    len = strlen(base_uri);
-    xpl_len = strlen(xpl);
-
-    alloc_size += len+xpl_len;
-
-    for(i=0; i < elements; i++){
-        alloc_size += GetParameters[i].alloc_size_key-1;
-
-        if(i != elements-1)
-            alloc_size++;
-
-        if(GetParameters[i].equal)
-            alloc_size++;
-
-        if(i == position && m == REPLACE){
-                continue;
-        }
-
-        alloc_size += GetParameters[i].alloc_size_value-1;
-    }
-
-    new_url = xmalloc( alloc_size );
-    strncpy(new_url, base_uri , len);
-
-    new_url[len] = '?';
-    new_url[len+1] = 0x0;
-
-    for(i=0; i < elements ; i++){
-        if(GetParameters[i].alloc_size_key-1 != 0)
-            strncat(new_url, GetParameters[i].key, GetParameters[i].alloc_size_key-1);
-
-        if(GetParameters[i].equal)
-            strncat(new_url, "=", 1);
-
-        if(i == position) {
-            if(m == REPLACE){
-                strncat(new_url, xpl, xpl_len);
-            } else if(m == AFTER){
-                strncat(new_url, GetParameters[i].value, GetParameters[i].alloc_size_value-1);
-                strncat(new_url, xpl, xpl_len);
-            } else if(m == BEFORE){
-                strncat(new_url, xpl, xpl_len);
-                strncat(new_url, GetParameters[i].value, GetParameters[i].alloc_size_value-1);
-            }
-        } else {
-            if(GetParameters[i].alloc_size_value-1 != 0)
-                strncat(new_url, GetParameters[i].value, GetParameters[i].alloc_size_value-1);
-        }
-
-        if( i != elements-1 )
-            strncat(new_url, "&", 1);
-
-    }
-
-    return new_url;
-
 }
 
 void extract_url(const char *url, char **base_uri, char **parameters){
@@ -569,27 +380,6 @@ char *make_code(const char *mark, const char *code, bool auth){
     }
 
     return ret;
-}
-
-void print_uri(GET_DATA *GetParameters, const char *base_uri, size_t p_len){
-    size_t i;
-
-    print_all("%s?",base_uri);
-
-    for(i=0; i < p_len; i++){
-        print_all("%s", GetParameters[i].key);
-
-        if(GetParameters[i].equal) {
-            print_all("=");
-        }
-
-        else {
-            continue;
-        }
-
-        print_all("%s", GetParameters[i].value);
-    }
-
 }
 
 bool get_element_pos(struct parameter_list *plist, char **base, const char *url,

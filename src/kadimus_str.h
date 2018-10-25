@@ -44,10 +44,7 @@ typedef enum {
     BEFORE
 } M;
 
-GET_DATA *ParserGet(const char *str, size_t *get_data_size);
-void free_get_parameters(GET_DATA *GetParameters, size_t elements);
 char *gen_random(char *s, const size_t len);
-char *make_url(GET_DATA *GetParameters, size_t elements, const char *base_uri, const char *xpl, size_t position, M m);
 void extract_url(const char *url, char **base_uri, char **parameters);
 char *diff(const char *x, const char *y);
 void trim_string(char **diff_str);
@@ -57,7 +54,6 @@ void chomp_all(char *str);
 char *cookie_append(const char *x, const char *y);
 void build_regex(char regex[], char *r_str, char *middle);
 char *make_code(const char *mark, const char *code, bool auth);
-void print_uri(GET_DATA *GetParameters, const char *base_uri, size_t p_len);
 bool get_element_pos(struct parameter_list *plist, char **base, const char *url, const char *parameter, size_t *pos);
 char *urlencode(const char *str);
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
