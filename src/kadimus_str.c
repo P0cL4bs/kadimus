@@ -59,6 +59,67 @@ char *b64encode(const char *data, int len){
     return ret;
 }
 
+bool b64_decode(const char *encode, char **output){
+    int phase = 0, i;
+    unsigned char in[4], out[3];
+    size_t len_str = 0, alloc_size = 0 , j = 0;
+    char *p;
+
+    *out = (unsigned char) 0;
+    *in = (unsigned char) 0;
+
+    len_str = strlen(encode);
+
+    if(len_str % 4 != 0 || len_str == 0)
+        return false;
+
+    if(encode[len_str-1] == '=' && encode[len_str-2] == '=')
+        len_str -= 2;
+    else if(encode[len_str-1] == '=')
+        len_str--;
+
+    alloc_size = (size_t)len_str*0.75;
+    (*output) = xmalloc( alloc_size+1 );
+
+    while(*encode){
+        if(*encode == '='){
+            xlate(in, out);
+            for(i=0; i <nbytes[phase]; i++,j++)
+                (*output)[j] = (char) out[i];
+            break;
+        }
+
+        p = strchr(b64, *encode);
+
+        if(p){
+
+            in[phase] = p-b64;
+            phase = (phase+1)%4;
+
+            if(phase == 0){
+                xlate(in, out);
+                in[0]=in[1]=in[2]=in[3]=0;
+
+                for(i=0; i < nbytes[phase]; i++, j++)
+                    (*output)[j] = (char) out[i];
+            }
+
+        } else {
+            break;
+        }
+
+        encode++;
+    }
+
+    if(j != alloc_size){
+        xfree(*output);
+        return false;
+    }
+
+    (*output)[j] = 0x0;
+    return true;
+}
+
 static inline int isokay(const char ch){
     return ((ch >= 'a' && ch <= 'z') ||
         (ch >= 'A' && ch <= 'Z') ||
