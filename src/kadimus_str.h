@@ -24,25 +24,11 @@ struct parameter {
     int value_size;
 };
 
-typedef struct {
-    char *key;
-    size_t alloc_size_key;
-    char *value;
-    size_t alloc_size_value;
-    bool equal;
-} GET_DATA;
-
 enum {
     replace_string,
     append_after,
     append_before
 };
-
-typedef enum {
-    REPLACE = 1,
-    AFTER,
-    BEFORE
-} M;
 
 char *gen_random(char *s, const size_t len);
 void extract_url(const char *url, char **base_uri, char **parameters);
