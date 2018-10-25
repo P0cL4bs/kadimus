@@ -592,30 +592,33 @@ void print_uri(GET_DATA *GetParameters, const char *base_uri, size_t p_len){
 
 }
 
-bool get_element_pos(GET_DATA **pp, size_t *pp_len, char **b_uri, const char *uri, const char *p_name, size_t *i_j){
+bool get_element_pos(struct parameter_list *plist, char **base, const char *url,
+    const char *parameter, size_t *pos){
     char *parameters=NULL;
     size_t i;
 
-    extract_url(uri, &(*b_uri), &parameters);
+    extract_url(url, base, &parameters);
 
-    if(!*b_uri || !parameters){
-        xfree(*b_uri);
+    if(!*base || !parameters){
+        xfree(*base);
         xfree(parameters);
         return false;
     }
 
-    *pp = ParserGet(parameters, pp_len);
+    tokenize(parameters, plist);
     xfree(parameters);
 
-    for(i=0; i < (*pp_len); i++){
-        if(!strcmp(p_name, pp[i]->key) && pp[i]->equal){
-            *i_j = i;
+    for(i=0; i<plist->len; i++){
+        if(!strcmp(parameter, plist->parameter[i].key) &&
+            plist->parameter[i].value){
+            *pos = i;
             return true;
         }
     }
 
-    xfree(*b_uri);
-    free_get_parameters(*pp, *pp_len);
+    xfree(*base);
+    free(plist->trash);
+    free(plist->parameter);
 
     return false;
 

