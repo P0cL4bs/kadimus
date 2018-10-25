@@ -10,137 +10,53 @@ static void xlate(unsigned char *in, unsigned char *out){
     out[2] = in[2] << 6 | in[3] >> 0;
 }
 
-char *b64_encode(const char *x){
-    char *encoded_str = NULL, *ret = NULL;
-    size_t size_str = 0, n = 0, pos = 0, i = 0;
-    uint8_t b[3], c[4];
+char *b64encode(const char *data, int len){
+    static const char *b64=
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789+/";
 
-    size_str = strlen(x);
+    char ch[3], *ret = NULL, *aux;
+    int i = 0, j = 0, pad;
 
-    encoded_str = xmalloc( ((size_str * 4)/3) + (size_str/96) + 10 );
+    if(!len)
+        goto end;
 
-    b[0]=0; b[1]=0; b[2]=0;
+    aux = malloc(((len+2)/3)*4+1);
 
-    while(x[i]){
-        n = 0;
-        b[0]=x[i];
-        i++;
-        n++;
+    while(i<len){
+        ch[1] = ch[2] = 0;
+        ch[0] = data[i++];
 
-        if(x[i]){
-            b[1]=x[i];
-            i++;
-            n++;
-        }
-
-        if(x[i]){
-            b[2]=x[i];
-            x++;
-            n++;
-        }
-
-        c[0] = b64[((b[0] & 0xFC) >> 2)];
-        c[1] = b64[(b[0] & 0x03) << 4 | (b[1] & 0xF0) >> 4];
-        c[2] = b64[(b[1] & 0x0F) << 2 | (b[2] & 0xC0) >> 6];
-        c[3] = b64[b[2] & 0x3F];
-
-        encoded_str[pos] = c[0];
-        pos++;
-
-        encoded_str[pos] = c[1];
-        pos++;
-
-        if( n == 1 ){
-            encoded_str[pos] = '=';
-            pos++;
-            encoded_str[pos] = '=';
-            pos++;
-        }
-
-        else if( n == 2 ){
-            encoded_str[pos] = c[2];
-            pos++;
-            encoded_str[pos] = '=';
-            pos++;
-        }
-
-        else {
-            encoded_str[pos] = c[2];
-            pos++;
-            encoded_str[pos] = c[3];
-            pos++;
-        }
-
-        b[0]=0;b[1]=0;b[2]=0;
-    }
-
-    encoded_str[pos] = 0x0;
-    ret = urlencode(encoded_str);
-    xfree(encoded_str);
-
-    return ret;
-
-}
-
-bool b64_decode(const char *encode, char **output){
-    int phase = 0, i;
-    unsigned char in[4], out[3];
-    size_t len_str = 0, alloc_size = 0 , j = 0;
-    char *p;
-
-    *out = (unsigned char) 0;
-    *in = (unsigned char) 0;
-
-    len_str = strlen(encode);
-
-    if(len_str % 4 != 0 || len_str == 0)
-        return false;
-
-    if(encode[len_str-1] == '=' && encode[len_str-2] == '=')
-        len_str -= 2;
-    else if(encode[len_str-1] == '=')
-        len_str--;
-
-    alloc_size = (size_t)len_str*0.75;
-    (*output) = xmalloc( alloc_size+1 );
-
-    while(*encode){
-        if(*encode == '='){
-            xlate(in, out);
-            for(i=0; i <nbytes[phase]; i++,j++)
-                (*output)[j] = (char) out[i];
-            break;
-        }
-
-        p = strchr(b64, *encode);
-
-        if(p){
-
-            in[phase] = p-b64;
-            phase = (phase+1)%4;
-
-            if(phase == 0){
-                xlate(in, out);
-                in[0]=in[1]=in[2]=in[3]=0;
-
-                for(i=0; i < nbytes[phase]; i++, j++)
-                    (*output)[j] = (char) out[i];
+        if(i < len){
+            ch[1] = data[i++];
+            if(i < len){
+                ch[2] = data[i++];
             }
-
-        } else {
-            break;
         }
 
-        encode++;
+        aux[j] = b64[ch[0] >> 2];
+        aux[j+1] = b64[(ch[0] & 3) << 4 | ch[1] >> 4];
+        aux[j+2] = b64[(ch[1] & 0xf) << 2 | ch[2] >> 6];
+        aux[j+3] = b64[ch[2] & 0x3f];
+
+        j += 4;
     }
 
-    if(j != alloc_size){
-        xfree(*output);
-        return false;
+    pad = len%3;
+
+    if(pad){
+        aux[j-1] = '=';
+        if(pad == 1)
+            aux[j-2] = '=';
     }
 
-    (*output)[j] = 0x0;
-    return true;
+    aux[j] = 0x0;
+    ret = urlencode(aux);
+    free(aux);
+
+    end:
+    return ret;
 }
 
 static inline int isokay(const char ch){
@@ -575,7 +491,7 @@ char *make_code(const char *mark, const char *code, bool auth){
     } else {
         ret = xmalloc( strlen(mark)*2+17*2+strlen(code)+2 );
         sprintf(ret, "<?php echo \"%s\"; ?>%s<?php echo \"%s\"; ?>", mark, code, mark);
-        b64x = b64_encode(ret);
+        b64x = b64encode(ret, strlen(ret));
 
         //encode_auth_len  = strlen(lol);
         //encode_auth = urlencode(lol);

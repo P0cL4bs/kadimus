@@ -111,7 +111,7 @@ void build_rce_exploit(CURL *curl, const char *php_code, rce_type tech, GET_DATA
 
     } else if(tech == DATA){
 
-        b64x = b64_encode(php_code);
+        b64x = b64encode(php_code);
         //uri_encode = urlencode(b64x);
         base_64_xpl = xmalloc( strlen(b64x)+ strlen(DATA_WRAP) + 1 );
 
@@ -136,7 +136,7 @@ char *build_datawrap_url(const char *base, struct parameter_list *plist, int p, 
     char *b64, *xpl, *ret;
     size_t b64_len;
 
-    b64 = b64_encode(phpcode);
+    b64 = b64encode(phpcode);
     b64_len = strlen(b64);
 
     xpl = xmalloc(b64_len + DATAWRAPLEN + 1);

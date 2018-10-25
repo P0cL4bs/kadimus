@@ -52,7 +52,7 @@ void extract_url(const char *url, char **base_uri, char **parameters);
 char *diff(const char *x, const char *y);
 void trim_string(char **diff_str);
 bool b64_decode(const char *encode, char **output);
-char *b64_encode(const char *x);
+char *b64encode(const char *data, int len);
 void chomp_all(char *str);
 char *cookie_append(const char *x, const char *y);
 void build_regex(char regex[], char *r_str, char *middle);
