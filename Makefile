@@ -1,6 +1,5 @@
-CC=gcc
-CFLAGS=-Wall -Wextra -O3
-LDFLAGS=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
+CFLAGS+=-Wall -Wextra -O2
+LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 SRC_DIR=src
 OBJ_DIR=bin
 
@@ -23,4 +22,3 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 
 clean:
 	rm -f $(OBJS) kadimus
-
