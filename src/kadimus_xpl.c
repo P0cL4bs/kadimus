@@ -460,7 +460,7 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
 
     trim_string(&b64);
 
-    if(b64_decode(b64, &b64_dec)){
+    if(b64decode(b64, &b64_dec)){
         printf("[+] Possible source code returned\n");
         if(out_file){
             fprintf(out_file, "%s", b64_dec);
@@ -827,7 +827,7 @@ int disclosure_check(const char *uri, const char *xuri){
 
     trim_string(&b64);
 
-    if(b64_decode(b64, &b64_dec)){
+    if(b64decode(b64, &b64_dec)){
         result = 1;
 
         if(!thread_on){

@@ -1,21 +1,9 @@
 #include "kadimus_str.h"
+#define b64pos(ch) (strchr(b64, ch)-b64)
 
 static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-static const int nbytes[] = { 3, 1, 1, 2 };
-
-static void xlate(unsigned char *in, unsigned char *out){
-    out[0] = in[0] << 2 | in[1] >> 4;
-    out[1] = in[1] << 4 | in[2] >> 2;
-    out[2] = in[2] << 6 | in[3] >> 0;
-}
-
 char *b64encode(const char *data, int len){
-    static const char *b64=
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789+/";
-
     char ch[3], *ret = NULL, *aux;
     int i = 0, j = 0, pad;
 
@@ -59,66 +47,80 @@ char *b64encode(const char *data, int len){
     return ret;
 }
 
-bool b64_decode(const char *encode, char **output){
-    int phase = 0, i;
-    unsigned char in[4], out[3];
-    size_t len_str = 0, alloc_size = 0 , j = 0;
-    char *p;
+int b64decode(const char *encoded, char **out){
+    size_t i = 0, j = 0, length;
 
-    *out = (unsigned char) 0;
-    *in = (unsigned char) 0;
+    length = strlen(encoded);
+    if(!isb64valid(encoded, length))
+        return 0;
 
-    len_str = strlen(encode);
+    *out = malloc((length*0.75)+1);
 
-    if(len_str % 4 != 0 || len_str == 0)
-        return false;
+    while(i<length){
+        (*out)[j++] = b64pos(encoded[i]) << 2 | b64pos(encoded[i+1]) >> 4;
 
-    if(encode[len_str-1] == '=' && encode[len_str-2] == '=')
-        len_str -= 2;
-    else if(encode[len_str-1] == '=')
-        len_str--;
-
-    alloc_size = (size_t)len_str*0.75;
-    (*output) = xmalloc( alloc_size+1 );
-
-    while(*encode){
-        if(*encode == '='){
-            xlate(in, out);
-            for(i=0; i <nbytes[phase]; i++,j++)
-                (*output)[j] = (char) out[i];
+        if(encoded[i+2] == '=')
             break;
-        }
 
-        p = strchr(b64, *encode);
+        (*out)[j++] = b64pos(encoded[i+1]) << 4 | b64pos(encoded[i+2]) >> 2;
 
-        if(p){
-
-            in[phase] = p-b64;
-            phase = (phase+1)%4;
-
-            if(phase == 0){
-                xlate(in, out);
-                in[0]=in[1]=in[2]=in[3]=0;
-
-                for(i=0; i < nbytes[phase]; i++, j++)
-                    (*output)[j] = (char) out[i];
-            }
-
-        } else {
+        if(encoded[i+3] == '=')
             break;
-        }
 
-        encode++;
+        (*out)[j++] = b64pos(encoded[i+2]) << 6 | b64pos(encoded[i+3]);
+
+        i += 4;
     }
 
-    if(j != alloc_size){
-        xfree(*output);
-        return false;
-    }
+    (*out)[j] = 0x0;
 
-    (*output)[j] = 0x0;
-    return true;
+    return 1;
 }
+
+int isb64valid(const char *encoded, size_t length){
+    size_t i;
+    int ret = 0;
+    int pos;
+
+    if(!length || length%4)
+        goto end;
+
+    for(i=0; i<length; i+=4){
+        if(!(strchr(b64, encoded[i])) || !(strchr(b64, encoded[i+1]))){
+            goto end;
+        }
+
+        if(length != i+4){
+            if(!(strchr(b64, encoded[i+2])) || !(strchr(b64, encoded[i+3]))){
+                goto end;
+            }
+        }
+    }
+
+    if(encoded[i-2] == '='){
+        if(encoded[i-1] != '='){
+            goto end;
+        }
+
+        /* check if the first 4 bits are set */
+        pos = strchr(b64, encoded[i-3])-b64;
+
+        if(pos & 0xf)
+            goto end;
+
+    } else if(encoded[i-1] == '='){
+        pos = strchr(b64, encoded[i-2])-b64;
+        if(pos & 3)
+            goto end;
+    }
+
+
+    ret = 1;
+
+    end:
+    return ret;
+}
+
 
 static inline int isokay(const char ch){
     return ((ch >= 'a' && ch <= 'z') ||
