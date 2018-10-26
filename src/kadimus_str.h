@@ -30,7 +30,7 @@ enum {
     append_before
 };
 
-char *gen_random(char *s, const size_t len);
+char *random_string(char *s, const size_t len);
 void extract_url(const char *url, char **base_uri, char **parameters);
 char *diff(const char *x, const char *y);
 void trim_string(char **diff_str);

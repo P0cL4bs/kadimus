@@ -194,17 +194,18 @@ void tokenize(const char *parameters, struct parameter_list *plist){
     } while((prev = next));
 }
 
-char *gen_random(char *s, const size_t len){
-    //(void)rand();
+char *random_string(char *s, const size_t len){
     static const char alphanum[] =
-    "0123456789"
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-    "abcdefghijklmnopqrstuvwxyz";
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789";
 
     size_t i;
 
-    for(i=0; i<len; i++){
-        //srand(time(NULL));
+    if(!len)
+        return s;
+
+    for(i=0; i<len-1; i++){
         s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
     }
 

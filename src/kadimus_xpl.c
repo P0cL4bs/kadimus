@@ -22,7 +22,7 @@ bool check_auth_poison(const char *target){
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
     curl_easy_setopt(curl, CURLOPT_URL, target);
 
-    gen_random(r_str, R_SIZE-1);
+    random_string(r_str, R_SIZE);
     build_regex(regex, r_str, "Vulnerable");
     php_code = make_code(r_str, "<?php echo \"Vulnerable\"; ?>", true);
 
@@ -245,7 +245,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     CURL *curl = init_curl(&body, true);
 
-    gen_random(random_str, R_SIZE-1);
+    random_string(random_str, R_SIZE);
     build_regex(regex, random_str, "Vulnerable");
     php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
 
@@ -576,7 +576,7 @@ void exec_php(xpl_parameters xpl){
     chunk = curl_slist_append(chunk, "Connection: Close");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
-    gen_random(r_str, R_SIZE-1);
+    random_string(r_str, R_SIZE);
     build_regex(regex, r_str, "(.*)");
 
     if(xpl.cmdx){
@@ -688,7 +688,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 
     }
 
-    gen_random(ran_str, R_SIZE-1);
+    random_string(ran_str, R_SIZE);
     build_regex(regex, ran_str, "(.*)");
 
     while(1){
@@ -898,7 +898,7 @@ void scan(const char *target_uri){
 
         if(!previous_error && plist.parameter[i].value){
             info_all("checking for common error messages\n");
-            error_uri = build_url(base_uri, &plist, i, gen_random(random_str, R_SIZE-1), replace_string);
+            error_uri = build_url(base_uri, &plist, i, random_string(random_str, R_SIZE), replace_string);
             info_all("using random url: %s\n",error_uri);
             result = common_error_check(error_uri);
 
@@ -1000,7 +1000,7 @@ void *thread_scan(void *url){
             continue;
 
         if(!previous_error && plist.parameter[i].value){
-            error_uri = build_url(base_uri, &plist, i, gen_random(random_str, R_SIZE-1), replace_string);
+            error_uri = build_url(base_uri, &plist, i, random_string(random_str, R_SIZE), replace_string);
             result = common_error_check(error_uri);
 
             //if(result == -1)
