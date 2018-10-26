@@ -1,20 +1,16 @@
 #include "kadimus_regex.h"
 
-char **regex_extract(const char *regex, const char *data, int size_data, int Options, int *len){
+char **regex_extract(const char *regex, const char *data, int size, int opts, int *len){
     pcre *re;
-    //data_size = strlen(data)
-    int vet[VET_SIZE] = {0},
-    y = 0, j = 0, errornumber = 0, rc = 0, alloc = 0;
-    *len = 0;
-    int A = 0,B = 0;
+    int vet[VETSIZE] = {0}, errnb, i, j = 0, alloc, start, end, rc;
 
     const char *error;
 
-    re = pcre_compile(regex,Options,&error,&errornumber,NULL);
-    if(!re) return NULL;
-//die(error);
+    re = pcre_compile(regex, opts, &error, &errnb, NULL);
+    if(!re)
+        return NULL;
 
-    rc = pcre_exec(re,NULL,data,(size_data) ? size_data : (int)strlen(data) ,0,0,vet,VET_SIZE);
+    rc = pcre_exec(re, NULL, data, size, 0, 0, vet, VETSIZE);
 
     if(rc <= 0){
         pcre_free(re);
@@ -24,34 +20,32 @@ char **regex_extract(const char *regex, const char *data, int size_data, int Opt
     *len = rc;
 
     char **matches = xmalloc(rc * sizeof(char *));
-    int i = 0;
 
     for(i=1;i<rc;i++){
-        A = i*2+1;
-        B = A-1;
+        start = vet[i*2];
+        end = vet[i*2+1];
 
-        alloc = vet[A]-vet[B];
-        matches[(i-1)] = xmalloc( alloc+1 );
+        alloc = end-start;
 
-        for(j=vet[B],y=0; j<vet[A]; j++,y++)
-            matches[(i-1)][y] = data[j];
-        matches[(i-1)][y] = 0x0;
+        matches[j] = xmalloc(alloc+1);
+        memcpy(matches[j], data+start, alloc);
+        matches[j][alloc] = 0x0;
+        j++;
     }
 
-    matches[rc-1] = NULL;
+    matches[j] = NULL;
 
     pcre_free(re);
 
     return matches;
-
 }
 
 int regex_match(const char *regex, const char *data, int length, int opts){
     pcre *re;
-    int rc = 0, vet[VET_SIZE] = {0};
+    int rc = 0, vet[VETSIZE] = {0};
 
     re = xpcre_compile(regex, opts);
-    rc = pcre_exec(re, NULL, data, (length) ? length : (int)strlen(data), 0, 0, vet, VET_SIZE);
+    rc = pcre_exec(re, NULL, data, (length) ? length : (int)strlen(data), 0, 0, vet, VETSIZE);
     pcre_free(re);
 
     return (rc >= 0) ? 1 : 0;
