@@ -69,7 +69,7 @@ CURL *init_curl(void *ptr, bool write_on){
 
 static pthread_mutex_t *lockarray;
 
-static void lock_callback(int mode, int type, char *file, int line){
+void lock_callback(int mode, int type, char *file, int line){
     (void)file;
     (void)line;
 
@@ -83,7 +83,7 @@ static void lock_callback(int mode, int type, char *file, int line){
 
 }
 
-static unsigned long thread_id(void){
+unsigned long thread_id(void){
     unsigned long ret;
     ret=(unsigned long)pthread_self();
     return(ret);
@@ -98,8 +98,8 @@ void init_locks(void){
         pthread_mutex_init(&(lockarray[i]),NULL);
     }
 
-    CRYPTO_set_id_callback((unsigned long (*)())thread_id);
-    CRYPTO_set_locking_callback((void (*)())lock_callback);
+    CRYPTO_set_id_callback(thread_id);
+    CRYPTO_set_locking_callback(lock_callback);
 }
 
 void kill_locks(void){
