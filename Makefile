@@ -1,4 +1,4 @@
-CFLAGS+=-Wall -Wextra -O2
+CFLAGS+=-Wall -Wextra -O2 -Isrc/include
 LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 SRC_DIR=src
 OBJ_DIR=bin
