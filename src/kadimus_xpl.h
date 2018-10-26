@@ -61,7 +61,7 @@ int common_error_check(const char *uri);
 int disclosure_check(const char *uri, const char *xuri);
 void scan(const char *target_uri);
 void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name);
-void exec_php(xpl_parameters xpl);
+void exec_phpcode(const char *url, const char *parameter, const char *code, int type);
 void *thread_scan(void *url);
 void source_disclosure_get(const char *uri, const char *filename, const char *p_name, FILE *out_file);
 bool ssh_log_poison(const char *target, int port);

