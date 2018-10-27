@@ -27,7 +27,7 @@ enum {
 
 int valid_ip_hostname(const char *hostname);
 void start_listen(int *sock_fd, int port);
-void reverse_shell(int port);
-void bind_shell(const char *con, int port, const char *proxy, int proxy_port);
+void start_bind_shell(int port);
+void remote_connect(const char *con, int port, const char *proxy, int proxy_port);
 
 #endif

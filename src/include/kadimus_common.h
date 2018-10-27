@@ -39,6 +39,7 @@
     time_t t = time(NULL); \
     now = localtime(&t); \
     printf(color "[%02d:%02d:%02d] [" msg "] " fmt "\033[0m", now->tm_hour, now->tm_min, now->tm_sec, ##args); \
+    fflush(stdout); \
     if(output) \
         fprintf(output, "[%02d:%02d:%02d] [" msg "] " fmt ,  \
             now->tm_hour, now->tm_min, now->tm_sec, ##args); \

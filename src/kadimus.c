@@ -456,7 +456,7 @@ int kadimus(struct kadimus_opts *opts){
     if(opts->listen){
         pid = fork();
         if(pid == 0){
-            reverse_shell(opts->port);
+            start_bind_shell(opts->port);
             exit(0);
         } else if(pid == -1){
             die("fork() error", 1);
@@ -475,7 +475,7 @@ int kadimus(struct kadimus_opts *opts){
 
     if(opts->connect){
         /* do some modifications */
-        bind_shell(opts->connect, opts->port, NULL, 0);
+        remote_connect(opts->connect, opts->port, NULL, 0);
     }
 
     if(opts->listen)

@@ -1,5 +1,9 @@
 #include "kadimus_socket.h"
 
+void pollfd_proxy(struct pollfd *pfds);
+int socks5_connection(int proxyfd, const char *host, unsigned short port);
+const char *socks5_str_error(int status);
+
 int valid_ip_hostname(const char *hostname){
     struct addrinfo *servinfo, hints;
     int rv;
@@ -99,35 +103,33 @@ void start_listen(int *sock_fd, int port){
 
 }
 
-void reverse_shell(int port){
-    int sock, i, ret, sock_con = 0;
+void start_bind_shell(int port){
+    char ip_connection[INET6_ADDRSTRLEN];
     struct sockaddr cli_addr;
+    int sock, ret, sockfd;
     struct pollfd pfds[2];
-    struct timeval timeout;
-    char ip_connection[INET6_ADDRSTRLEN] = {0};
-    char buf[1024];
-    fd_set fd;
+    pid_t pid;
 
     socklen_t sockaddr_len = sizeof(struct sockaddr_in);
     start_listen(&sock, port);
 
-    FD_ZERO(&fd);
-    FD_SET(sock, &fd);
+    pfds[0].fd = sock;
+    pfds[0].events = POLLIN;
 
-    printf("Listen in background, port: %d, pid: %lld\nWaiting connection ...\n", port, (long long int) getpid());
+    pid = getpid();
+    info_all("[pid: %d] listen on port: %d\n", pid, port);
+    info_all("[pid: %d] waiting connection ...\n", pid);
 
-    timeout.tv_sec = LISTEN_TIMEOUT;
-    timeout.tv_usec = 0;
-    ret = select(sock+1, &fd, NULL, NULL, &timeout);
+    ret = poll(pfds, 1, LISTEN_TIMEOUT*1000);
 
     if(ret == -1)
-        die("select() error",1);
+        die("poll() error",1);
     else if(!ret){
-        printf("Connection timeout %d !!!\n",LISTEN_TIMEOUT);
+        error_all("[pid: %d] connection timeout %d !!!\n", pid, LISTEN_TIMEOUT);
         exit(0);
     }
 
-    if( (sock_con = accept(sock, (struct sockaddr *) &cli_addr, &sockaddr_len)) == -1 )
+    if((sockfd = accept(sock, (struct sockaddr *) &cli_addr, &sockaddr_len)) == -1 )
         die("accept() error",1);
 
     if(cli_addr.sa_family == AF_INET){
@@ -138,37 +140,88 @@ void reverse_shell(int port){
         strcpy(ip_connection, "unknow");
     }
 
-    printf("Connection from: %s\n\n", ip_connection);
+    good_all("[pid: %d] new connection from: %s\n", pid, ip_connection);
 
+    pfds[0].fd = sockfd;
+    pfds[0].events = POLLIN;
     pfds[1].fd = 0;
     pfds[1].events = POLLIN;
-    pfds[0].fd = sock_con;
-    pfds[0].events = POLLIN;
 
-    while(1){
-        poll(pfds, 2, -1);
+    pollfd_proxy(pfds);
 
-        if(pfds[1].revents & POLLIN){
-            i = read(0, buf, 1023);
+    exit(0);
+}
 
-            if(!i)
-                break;
 
-            write(sock_con, buf, i);
+void remote_connect(const char *con, int port, const char *proxy, int proxy_port){
+    struct pollfd pfds[2];
+    int sockfd, status;
+    char *ip;
 
+    if( proxy != NULL && proxy_port != 0 ){
+        printf("[~] Trying connect to proxy server %s:%d\n", proxy, proxy_port);
+
+        if( (sockfd = kadimus_connect(proxy, (unsigned short)proxy_port, &ip)) == -1){
+            die("connect() error",1);
         }
 
-        if(pfds[0].revents & POLLIN){
-            i = read(sock_con, buf, 1023);
-            if(!i)
-                break;
+        printf("[~] Connected to proxy server !!!\n");
+        printf("[~] IP: %s\n", ip);
 
-            write(1, buf, i);
+        printf("[~] Trying connect to target\n");
+
+        if( (status = socks5_connection(sockfd, con, (unsigned short)port)) != SOCKS_SUCCESS ){
+            fprintf(stderr, "[-] socks5 connection error: %s\n\n", socks5_str_error(status));
+            close(sockfd);
+            exit(1);
         }
+
+        printf("[~] Successfully connect to the target\n\n");
 
     }
 
-    exit(0);
+    else {
+
+        info_all("trying connect to %s:%d\n", con, port);
+
+        if((sockfd = kadimus_connect(con, (unsigned short)port, &ip)) == -1){
+            die("connect() error", 1);
+        }
+
+        good_all("connected, ip: %s!!!\n", ip);
+    }
+
+    pfds[1].fd = 0;
+    pfds[1].events = POLLIN;
+    pfds[0].fd = sockfd;
+    pfds[0].events = POLLIN;
+
+    pollfd_proxy(pfds);
+
+    close(sockfd);
+    free(ip);
+}
+
+void pollfd_proxy(struct pollfd *pfds){
+    char buf[1024];
+    ssize_t nbytes;
+    int i, ok = 1;
+
+    while(ok){
+        if(poll(pfds, 2, -1) == -1)
+            break;
+
+        for(i=0; i<2; i++){
+            if(pfds[i].revents & POLLIN){
+                if((nbytes = read(pfds[i].fd, buf, sizeof(buf))) <= 0){
+                    ok = 0;
+                    break;
+                }
+
+                write(pfds[(i+1)%2].fd, buf, nbytes);
+            }
+        }
+    }
 }
 
 int socks5_connection(int proxyfd, const char *host, unsigned short port){
@@ -235,78 +288,4 @@ const char *socks5_str_error(int status){
         return NULL;
 
     return errors[status-1];
-}
-
-
-void bind_shell(const char *con, int port, const char *proxy, int proxy_port){
-    struct pollfd pfds[2];
-    int sockfd, i, status;
-    char buf[1024], *ip;
-
-    if( proxy != NULL && proxy_port != 0 ){
-        printf("[~] Trying connect to proxy server %s:%d\n", proxy, proxy_port);
-
-        if( (sockfd = kadimus_connect(proxy, (unsigned short)proxy_port, &ip)) == -1){
-            die("connect() error",1);
-        }
-
-        printf("[~] Connected to proxy server !!!\n");
-        printf("[~] IP: %s\n", ip);
-
-        printf("[~] Trying connect to target\n");
-
-        if( (status = socks5_connection(sockfd, con, (unsigned short)port)) != SOCKS_SUCCESS ){
-            fprintf(stderr, "[-] socks5 connection error: %s\n\n", socks5_str_error(status));
-            close(sockfd);
-            exit(1);
-        }
-
-        printf("[~] Successfully connect to the target\n\n");
-
-    }
-
-    else {
-
-        printf("[~] Trying connect to %s:%d\n", con, port);
-
-        if( (sockfd = kadimus_connect(con, (unsigned short)port, &ip)) == -1){
-            die("connect() error", 1);
-        }
-
-        printf("[~] Connected !!!\n");
-        printf("[~] IP: %s\n\n", ip);
-
-    }
-
-    pfds[1].fd = 0;
-    pfds[1].events = POLLIN;
-    pfds[0].fd = sockfd;
-    pfds[0].events = POLLIN;
-
-    while(1){
-        poll(pfds, 2, -1);
-
-        if(pfds[1].revents & POLLIN){
-            i = read(0, buf, 1023);
-
-            if(!i)
-                break;
-
-            write(sockfd, buf, i);
-
-        }
-
-        if(pfds[0].revents & POLLIN){
-            i = read(sockfd, buf, 1023);
-            if(!i)
-                break;
-
-            write(1, buf, i);
-        }
-
-    }
-
-    close(sockfd);
-    xfree(ip);
-
 }
