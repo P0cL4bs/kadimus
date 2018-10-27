@@ -23,127 +23,106 @@
 
 #include "kadimus.h"
 
-static xpl_parameters xpl;
+static const struct option long_options[] = {
+    {"help", no_argument, 0, 'h'},
 
-static struct all_opts options;
+    {"cookie", required_argument, 0, 'B'},
+    {"user-agent", required_argument, 0, 'A'},
+    {"connect-timeout", required_argument, 0, 0},
+    {"retry-times", required_argument, 0, 0},
+    {"proxy", required_argument, 0, 0},
 
-static struct option long_options[] = {
-    {"help", no_argument, 0, 'h'}, // ok
-    {"cookie", required_argument, 0, 'B'}, //ok
-    {"user-agent", required_argument, 0, 'A'}, //ok
-    {"connect-timeout", required_argument, 0, 0}, //ok
-    {"url", required_argument, 0, 'u'}, // fazer chegagem
-    {"url-list", required_argument, 0, 'U'}, //ok
-    {"target", required_argument, 0, 't'}, //ok
-    {"rce-technique", required_argument, 0, 'X'}, //ok
-    {"code", required_argument, 0, 'C'}, //ok
+    {"url", required_argument, 0, 'u'},
+    {"url-list", required_argument, 0, 'U'},
+    {"output", required_argument, 0, 'o'},
+    {"threads", required_argument, 0, 't'},
 
-    {"cmd", required_argument, 0, 'c'}, //ok
-    {"shell", no_argument, 0, 's'}, //ok
+    {"parameter", required_argument, 0, 0},
 
-    {"reverse-shell", no_argument, 0, 'r'}, //ok
+    {"technique", required_argument, 0, 'T'},
+    {"code", required_argument, 0, 'C'},
+    {"cmd", required_argument, 0, 'c'},
+    {"shell", no_argument, 0, 's'},
+
+    {"connect", required_argument, 0, 0},
+    {"port", required_argument, 0, 'p'},
     {"listen", required_argument, 0, 'l'},
 
-    {"bind-shell", no_argument, 0, 'b'}, //ok
-
-    {"connect-to", required_argument, 0, 'i'}, //ok
-    {"port", required_argument, 0, 'p'}, //ok
-    //ok
-    {"ssh-port", required_argument, 0, 0}, //ok
+    {"ssh-port", required_argument, 0, 0},
     {"ssh-target", required_argument, 0, 0},
-    {"retry-times", required_argument, 0, 0}, //ok
 
-    {"get-source", no_argument, 0, 'G'}, //ok
-    {"filename", required_argument, 0, 'f'}, //ok
-    {"output", required_argument, 0, 'o'}, // quase_ok
-
-    {"threads", required_argument, 0, 0},
-    {"inject-at", required_argument, 0, 0},
-
-    {"proxy", required_argument, 0, 0},
-    {"b-proxy", required_argument, 0, 0},
-    {"b-port", required_argument, 0, 0},
+    {"get-source", no_argument, 0, 'S'},
+    {"filename", required_argument, 0, 'f'},
 
     {0, 0, 0, 0}
 };
 
 
-void parser_opts(int argc, char **argv){
+void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
+    char *optname;
+    int optc, option_index = 0;
+    int tmp = 0;
 
-    char *opt_ptr=NULL;
-    int Getopts, option_index = 0;
-    int tmp;
+    memset(opts, 0x0, sizeof(struct kadimus_opts));
+    opts->connection_timeout = 10;
+    opts->retry = 5;
 
-    timeout = 10;
-    retry_times = 5;
+    while((optc = getopt_long(argc, argv, OPTS, long_options, &option_index))
+        != -1){
 
-    while( (Getopts = getopt_long(argc, argv, OPTS, long_options, &option_index)) != -1){
-        opt_ptr = (char *) long_options[option_index].name;
-        switch(Getopts){
 
+        switch(optc){
             case 0:
-                if(!strcmp(opt_ptr, "connect-timeout")){
+                optname = (char *) long_options[option_index].name;
+
+                if(!strcmp(optname, "connect-timeout")){
                     tmp = (int) strtol(optarg, NULL, 10);
-                    if( !IN_RANGE(tmp, 5, 120) )
-                        die("--connect-timeout error: please set a value between 5 and 120 seconds",0);
+                    if(tmp < 0)
+                        die("--connect-timeout error: value must be between bigger than -1",0);
                     else
-                        timeout = (size_t) tmp;
+                        opts->connection_timeout = (long)tmp;
                 }
 
-                else if(!strcmp(opt_ptr, "ssh-port")){
+                else if(!strcmp(optname, "retry-times")){
                     tmp = (int) strtol(optarg, NULL, 10);
-                    if( !IN_RANGE(tmp, 1, 65535) )
-                        die("--ssh-port error: set a valide port (1 .. 65535)",0);
+                    if(tmp < 0)
+                        die("--retry-times error: value must be between bigger than -1",0);
                     else
-                        xpl.ssh_port = (size_t) tmp;
+                        opts->retry = tmp;
                 }
 
-                else if(!strcmp(opt_ptr, "ssh-target")){
-                    if( valid_ip_hostname(optarg) )
-                        xpl.ssh_host = optarg;
-                    else
-                        die("--ssh-target error: invalid ip/hostname",0);
-                }
-
-                else if(!strcmp(opt_ptr, "retry-times")){
-                    tmp = (int) strtol(optarg, NULL, 10);
-                    if( !IN_RANGE(tmp, 0, 10) )
-                        die("--retry-times error: value must be between 0 and 10",0);
-                    else
-                        retry_times = (size_t) tmp;
-                }
-
-                else if(!strcmp(opt_ptr, "threads")){
-                    tmp = (int) strtol(optarg, NULL, 10);
-                    if( !IN_RANGE(tmp, 2, 1000) )
-                        die("--threads error: set a valide value (2..1000)",0);
-                    else
-                        options.threads = (size_t) tmp;
-                }
-
-                else if(!strcmp(opt_ptr, "inject-at")){
-                    xpl.p_name = optarg;
-                }
-
-                else if(!strcmp(opt_ptr, "proxy")){
+                else if(!strcmp(optname, "proxy")){
                     if( regex_match(PROXY_REGEX, optarg, 0, 0) )
-                        proxy = optarg;
+                        opts->proxy = optarg;
                     else
                         die("--proxy invalid syntax", 0);
                 }
 
-                else if(!strcmp(opt_ptr, "b-proxy")){
-                    options.b_proxy = optarg;
-                }
-
-                else if(!strcmp(opt_ptr, "b-port")){
-                    tmp = (int) strtol(optarg, NULL, 10);
-                    if( !IN_RANGE(tmp, 1, 65535) )
-                        die("--r-port error: set a valide port (1 .. 65535)",0);
+                else if(!strcmp(optname, "connect")){
+                    if( valid_ip_hostname(optarg) )
+                        opts->connect = optarg;
                     else
-                        options.b_port = tmp;
+                        die("-i, --connect-to error: Invalid IP/Hostname",0);
                 }
 
+                else if(!strcmp(optname, "parameter")){
+                    opts->parameter = optarg;
+                }
+
+                else if(!strcmp(optname, "ssh-port")){
+                    tmp = (int) strtol(optarg, NULL, 10);
+                    if(!IN_RANGE(tmp, 1, 65535))
+                        die("--ssh-port error: set a valide port (1 .. 65535)",0);
+                    else
+                        opts->ssh_port = tmp;
+                }
+
+                else if(!strcmp(optname, "ssh-target")){
+                    if(valid_ip_hostname(optarg))
+                        opts->ssh_target = optarg;
+                    else
+                        die("--ssh-target error: invalid ip/hostname",0);
+                }
             break;
 
             case 'h':
@@ -151,69 +130,63 @@ void parser_opts(int argc, char **argv){
             break;
 
             case 'B':
-                cookies = optarg;
+                opts->cookies = optarg;
             break;
 
             case 'A':
-                UA = optarg;
+                opts->useragent = optarg;
             break;
 
             case 'u':
                 if( regex_match(URL_REGEX, optarg, 0, 0) )
-                    options.url = optarg;
+                    opts->url = optarg;
                 else
                     die("-u, --url URL Have invalid syntax",0);
             break;
 
             case 'U':
-                options.url_list = xfopen(optarg,"r");
+                opts->list = xfopen(optarg,"r");
+            break;
+
+            case 'o':
+                opts->output = xfopen(optarg,"a");
+                setlinebuf(output);
             break;
 
             case 't':
-                xpl.vuln_uri = optarg;
+                opts->threads = strtol(optarg, NULL, 10);
+                if(opts->threads < 2)
+                    die("--threads error: set a valide value (>= 2)",0);
             break;
 
-            case 'X':
-                if(!strcmp("environ",optarg))
-                    xpl.tech = ENVIRON;
-                else if(!strcmp("auth",optarg))
-                    xpl.tech = AUTH;
-                else if (!strcmp("input",optarg))
-                    xpl.tech = INPUT;
+            case 'T':
+                if(!strcmp("environ", optarg))
+                    tmp = ENVIRON;
+                else if(!strcmp("auth", optarg))
+                    tmp = AUTH;
+                else if (!strcmp("input", optarg))
+                    tmp = INPUT;
                 else if (!strcmp("data", optarg))
-                    xpl.tech = DATA;
+                    tmp = DATA;
                 else
-                    die("-X, --rce-technique Invalid RCE technique",0);
+                    die("-T, --technique invalid",0);
+
+                opts->technique = tmp;
             break;
 
             case 'C':
-                if( regex_match("^\\s*?\\<\\?.+\\?\\>\\s*?$",optarg,0,PCRE_DOTALL) )
-                    xpl.code = optarg;
+                if(regex_match("^\\s*?\\<\\?.+\\?\\>\\s*?$", optarg, 0, PCRE_DOTALL))
+                    opts->phpcode = optarg;
                 else
                     die("-C, --code parameter must contain php brackets",0);
             break;
 
             case 'c':
-                xpl.cmd = optarg;
+                opts->cmd = optarg;
             break;
 
             case 's':
-                options.shell = true;
-            break;
-
-            case 'r':
-                options.reverse_shell = true;
-            break;
-
-            case 'b':
-                options.bind_shell = true;
-            break;
-
-            case 'i':
-                if( valid_ip_hostname(optarg) )
-                    options.ip_addr = optarg;
-                else
-                    die("-i, --connect-to error: Invalid IP/Hostname",0);
+                opts->shell = 1;
             break;
 
             case 'p':
@@ -221,56 +194,83 @@ void parser_opts(int argc, char **argv){
                 if( !IN_RANGE(tmp, 1, 65535) )
                     die("-p, --port error: set a valide port (1 .. 65535)",0);
                 else
-                    options.port = (size_t) tmp;
-            break;
-
-            case 'G':
-                options.get_source = true;
-            break;
-
-            case 'f':
-                options.filename = optarg;
-            break;
-
-            case 'o':
-                output = xfopen(optarg,"a");
-                setlinebuf(output);
-            break;
-
-            case 'O':
-                options.source_output = xfopen(optarg,"a");
+                    opts->port = tmp;
             break;
 
             case 'l':
-                tmp = (int) strtol(optarg, NULL, 10);
-
-                if( !IN_RANGE(tmp, 1, 65535) )
-                    die("-l, --listen error: set a valide port (1 .. 65535)",0);
-                else
-                    options.listen = (size_t) tmp;
+                opts->listen = 1;
             break;
 
+            case 'S':
+                opts->get_source = 1;
+            break;
+
+            case 'f':
+                opts->remote_filename = optarg;
+            break;
+
+            case 'O':
+                opts->source_output = xfopen(optarg,"a");
+            break;
+
+
             default:
-                abort();
-
+                exit(EXIT_FAILURE);
         }
-
     }
 
-    if(options.reverse_shell && options.bind_shell)
-        die("error: reverse connection & bind connection are enabled",0);
+    if(!opts->url && !opts->list)
+        die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help", 0);
 
-    if(options.reverse_shell && !options.listen)
-        die("error: -r,reverse-shell required -l, --listen option",0);
+    if(opts->get_source){
+        if(!opts->url)
+            die("error: -S, --get-source requires -u", 0);
+        if(!opts->remote_filename)
+            die("error: -S, --get-source requires -f", 0);
+        if(!opts->parameter)
+            die("error: -S, --get-source requires --parameter", 0);
+    }
 
-    if(options.threads && !options.url_list)
-        die("error: --threads required -U, --url-list option",0);
+    if(opts->shell){
+        if(!opts->url)
+            die("error: -s, --shell requires -u", 0);
+        if(!opts->technique)
+            die("error: -s, --shell requires -T", 0);
+    }
 
-    if(!xpl.p_name && xpl.tech == DATA)
-        die("error: RCE data type required --inject-at option",0);
+    if(opts->listen){
+        if(!opts->port)
+            die("error: -l, --listen requires -p", 0);
+    }
 
-    if(!options.url && !options.url_list && !xpl.vuln_uri)
-        die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help",0);
+    if(opts->connect){
+        if(!opts->port)
+            die("error: --connect requires -p", 0);
+    }
+
+    if(opts->phpcode){
+        if(!opts->url)
+            die("error: -C, --code requires -u", 0);
+        if(!opts->technique)
+            die("error: -C, --code requires -T", 0);
+    }
+
+    if(opts->cmd){
+        if(!opts->url)
+            die("error: -c, --cmd requires -u", 0);
+        if(!opts->technique)
+            die("error: -c, --cmd requires -T", 0);
+    }
+
+    if(opts->technique == DATA && !opts->parameter){
+        die("error: -T data requires --parameter", 0);
+    }
+
+    if(!opts->get_source && !opts->shell && !opts->cmd
+        && !opts->phpcode){
+        opts->scan = 1;
+        opts->technique = 0;
+    }
 
 }
 
@@ -288,69 +288,65 @@ void banner(void){
 }
 
 void help(void){
-    printf("Options:\n\
-  -h, --help                    Display this help menu\n\
-\n\
-  Request:\n\
-    -B, --cookie STRING         Set custom HTTP Cookie header\n\
-    -A, --user-agent STRING     User-Agent to send to server\n\
-    --connect-timeout SECONDS   Maximum time allowed for connection\n\
-    --retry-times NUMBER        number of times to retry if connection fails\n\
-    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port\n\
-\n\
-  Scanner:\n\
-    -u, --url STRING            Single URI to scan\n\
-    -U, --url-list FILE         File contains URIs to scan\n\
-    -o, --output FILE           File to save output results\n\
-    --threads NUMBER            Number of threads (2..1000)\n\
-\n\
-  Explotation:\n\
-    -t, --target STRING         Vulnerable Target to exploit\n\
-    --injec-at STRING           Parameter name to inject exploit\n\
-                                (only need with RCE data and source disclosure)\n\
-\n\
-  RCE:\n\
-    -X, --rce-technique=TECH    LFI to RCE technique to use\n\
-    -C, --code STRING           Custom PHP code to execute, with php brackets\n\
-    -c, --cmd STRING            Execute system command on vulnerable target system\n\
-    -s, --shell                 Simple command shell interface through HTTP Request\n\
-\n\
-    -r, --reverse-shell         Try spawn a reverse shell connection.\n\
-    -l, --listen NUMBER         Port to listen\n\
-\n\
-    -b, --bind-shell            Try connect to a bind-shell\n\
-    -i, --connect-to STRING     Ip/Hostname to connect\n\
-    -p, --port NUMBER           Port number to connect\n\
-    --b-proxy STRING            IP/Hostname of socks5 proxy\n\
-    --b-port NUMBER             Port number of socks5 proxy\n\
-\n\
-    --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)\n\
-    --ssh-target STRING         Set the SSH Host\n\
-\n\
-    RCE Available techniques\n\
-\n\
-      environ                   Try run PHP Code using /proc/self/environ\n\
-      input                     Try run PHP Code using php://input\n\
-      auth                      Try run PHP Code using /var/log/auth.log\n\
-      data                      Try run PHP Code using data://text\n\
-\n\
-    Source Disclosure:\n\
-      -G, --get-source          Try get the source files using filter://\n\
-      -f, --filename STRING     Set filename to grab source [REQUIRED]\n\
-      -O FILE                   Set output file (Default: stdout)\n\
-\n");
-exit(0);
+    static const char help_msg[]=
+        "Options:\n"
+        "  -h, --help                    Display this help menu\n\n"
+
+        "  Request:\n"
+        "    -B, --cookie STRING         Set custom HTTP Cookie header\n"
+        "    -A, --user-agent STRING     User-Agent to send to server\n"
+        "    --connect-timeout SECONDS   Maximum time allowed for connection\n"
+        "    --retry-times NUMBER        number of times to retry if connection fails\n"
+        "    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port\n\n"
+
+        "  Scanner:\n"
+        "    -u, --url STRING            URL to scan/exploit\n"
+        "    -U, --url-list FILE         File contains url list to scan\n"
+        "    -o, --output FILE           File to save output results\n"
+        "    -t, -threads NUMBER         Number of threads (2..1000)\n\n"
+
+        "  Explotation:\n"
+        "    --parameter STRING          Parameter name to inject exploit\n"
+        "                                (only needed by RCE data and source disclosure)\n\n"
+
+        "  RCE:\n"
+        "    -T, --technique=TECH        LFI to RCE technique to use\n"
+        "    -C, --code STRING           Custom PHP code to execute, with php brackets\n"
+        "    -c, --cmd STRING            Execute system command on vulnerable target system\n"
+        "    -s, --shell                 Simple command shell interface through HTTP Request\n\n"
+
+        "    --connect STRING            Ip/Hostname to connect\n"
+        "    -p, --port NUMBER           Port number to connect or listen\n"
+        "    -l, --listen                Bind and listen for incoming connections\n\n"
+
+        "    --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)\n"
+        "    --ssh-target STRING         Set the SSH Host\n\n"
+
+        "    RCE Available techniques\n\n"
+
+        "      environ                   Try run PHP Code using /proc/self/environ\n"
+        "      input                     Try run PHP Code using php://input\n"
+        "      auth                      Try run PHP Code using /var/log/auth.log\n"
+        "      data                      Try run PHP Code using data://text\n\n"
+
+        "    Source Disclosure:\n"
+        "      -S, --get-source          Try get the source file using filter://\n"
+        "      -f, --filename STRING     Set filename to grab source [REQUIRED]\n"
+        "      -O FILE                   Set output file (Default: stdout)\n";
+
+    puts(help_msg);
+    exit(EXIT_SUCCESS);
 }
 
-void scan_url_list(void){
+void scan_url_list(struct kadimus_opts *opts){
     size_t n = 0, i, thread_count = 0;
     pthread_t *thrs = NULL;
     char *line = NULL;
     ssize_t nread;
     pcre *re;
 
-    if(options.threads){
-        if((thrs = calloc(options.threads, sizeof(pthread_t))) == NULL)
+    if(opts->threads){
+        if((thrs = calloc(opts->threads, sizeof(pthread_t))) == NULL)
             die("calloc() error",1);
 
         init_locks();
@@ -359,7 +355,7 @@ void scan_url_list(void){
 
     re = xpcre_compile(URL_REGEX, PCRE_NO_AUTO_CAPTURE);
 
-    while((nread = getline(&line, &n, options.url_list)) != -1){
+    while((nread = getline(&line, &n, opts->list)) != -1){
         if(nread == -1)
             break;
 
@@ -372,7 +368,7 @@ void scan_url_list(void){
         if(regex_match_v2(re, line, nread-1, 0))
             continue;
 
-        if(!options.threads){
+        if(!opts->threads){
             scan(line);
             continue;
         }
@@ -380,8 +376,8 @@ void scan_url_list(void){
         pthread_create(&thrs[thread_count], 0, thread_scan, (void *) xstrdup(line));
         thread_count++;
 
-        if(thread_count == options.threads){
-            for(i=0; i < options.threads; i++){
+        if(thread_count == opts->threads){
+            for(i=0; i < opts->threads; i++){
                 pthread_join(thrs[i], NULL);
                 thrs[i] = 0;
             }
@@ -389,8 +385,8 @@ void scan_url_list(void){
         }
     }
 
-    if(options.threads){
-        for(i=0; i<options.threads; i++){
+    if(opts->threads){
+        for(i=0; i<opts->threads; i++){
             if(thrs[i])
                 pthread_join(thrs[i], NULL);
         }
@@ -398,108 +394,108 @@ void scan_url_list(void){
         kill_locks();
     }
 
-    xfree(line);
+    free(line);
     pcre_free(re);
-    fclose(options.url_list);
+    fclose(opts->list);
 }
 
-
-
-int main(int argc, char **argv){
-    pid_t bg_listen = 0;
-
-    banner();
-    parser_opts(argc, argv);
-
+void init_global_structs(struct kadimus_opts *opts){
     curl_global_init(CURL_GLOBAL_ALL);
     srand(time(NULL));
 
-    if(options.url){
-        scan(options.url);
-    }
+    global.useragent = opts->useragent;
+    global.cookies = opts->cookies;
+    global.proxy = opts->proxy;
+    global.timeout = opts->connection_timeout;
+    global.retry = opts->retry;
 
-    if(options.url_list){
-        scan_url_list();
-    }
+    output = opts->output;
+    thread_on = (opts->threads) ? 1 : 0;
 
-    if(options.get_source && xpl.vuln_uri && options.filename && xpl.p_name){
-        source_disclosure_get(xpl.vuln_uri, options.filename, xpl.p_name, options.source_output);
-    }
+}
 
-    if(xpl.tech==AUTH){
-        printf("[*] Checking /var/log/auth.log poison ...\n");
-        if( check_auth_poison(xpl.vuln_uri) ){
-            printf("[+] Ok\n\n");
+int kadimus(struct kadimus_opts *opts){
+    pid_t pid;
+
+    if(opts->scan)
+        scan(opts->url);
+
+    if(opts->list)
+        scan_url_list(opts);
+
+    if(opts->get_source)
+        source_disclosure_get(opts->url, opts->remote_filename,
+            opts->parameter, opts->source_output);
+
+    if(opts->technique == AUTH){
+        info_all("checking /var/log/auth.log poison ...\n");
+        if(check_auth_poison(opts->url)){
+            good_all("ok\n");
         } else {
-            printf("[-] error, try inject in log file ...\n");
-
-            if( ssh_log_poison(xpl.ssh_host, xpl.ssh_port) ){
-
-                printf("[+] Log injection OK, checking file ...\n");
-
-                if( check_auth_poison(xpl.vuln_uri) ){
-                    printf("[+] Injection Sucessfull\n\n");
+            info_all("error, trying inject code in log file ...\n");
+            if(ssh_log_poison(opts->ssh_target, opts->ssh_port)){
+                info_all("log injection done, checking file ...\n");
+                if(check_auth_poison(opts->url)){
+                    good_all("injection sucessfull\n");
                 } else {
-                    printf("[-] error\n\n");
+                    error_all("error\n");
                     exit(1);
                 }
+            } else {
+                error_all("error\n");
             }
-
-            else {
-                printf("[-] error\n\n");
-            }
-
-
         }
-
     }
 
-    if(xpl.vuln_uri && options.shell && xpl.tech){
-        rce_http_shell(xpl.vuln_uri, xpl.tech, xpl.p_name);
-    }
 
-    if(options.reverse_shell){
-        bg_listen = fork();
+    if(opts->shell)
+        rce_http_shell(opts->url, opts->technique, opts->parameter);
 
-        if(bg_listen == 0){
-            reverse_shell(options.listen);
-            return 0;
+
+
+    if(opts->listen){
+        pid = fork();
+        if(pid == 0){
+            reverse_shell(opts->port);
+            exit(0);
+        } else if(pid == -1){
+            die("fork() error", 1);
         }
-
-        else if(bg_listen < 0){
-            die("fork() error",1);
-        }
-
-        sleep(1);
+        //sleep(1);
     }
 
-    if(xpl.code && xpl.vuln_uri && xpl.tech){
-        xpl.cmdx = false;
-        exec_phpcode(xpl.vuln_uri, xpl.p_name, xpl.code, xpl.tech);
+    if(opts->phpcode)
+        exec_phpcode(opts->url, opts->parameter, opts->phpcode, opts->technique);
 
+
+    if(opts->cmd){
+        /* do some modifications */
+        exec_phpcode(opts->url, opts->parameter, opts->cmd, opts->technique);
     }
 
-    if(xpl.cmd && xpl.vuln_uri && xpl.tech){
-        printf("***-c disabled***\n");
-        /*xpl.cmdx = true;
-        exec_php(xpl);*/
+    if(opts->connect){
+        /* do some modifications */
+        bind_shell(opts->connect, opts->port, NULL, 0);
     }
 
-    if(options.bind_shell && options.ip_addr && options.port){
-        bind_shell(options.ip_addr, options.port, options.b_proxy, options.b_port);
-    }
+    if(opts->listen)
+        wait(NULL);
 
-    if(options.reverse_shell){
-        waitpid(bg_listen, NULL, 0);
-    }
-
-    if(output)
-        fclose(output);
-
-    curl_global_cleanup();
-
+    if(opts->output)
+        fclose(opts->output);
 
     return 0;
+}
 
+int main(int argc, char **argv){
+    banner();
 
+    struct kadimus_opts options;
+    parser_opts(argc, argv, &options);
+
+    /* init global structs */
+    init_global_structs(&options);
+
+    /* start */
+    return kadimus(&options);
 }

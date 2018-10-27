@@ -1,13 +1,12 @@
 #include "kadimus_request.h"
 
-char *UA, *cookies, *proxy;
-size_t timeout, retry_times;
+struct request_opts global;
 
 bool HttpRequest(CURL *curl){
     CURLcode res;
     size_t i;
 
-    for(i=0; i<=retry_times; i++){
+    for(i=0; i<=global.retry; i++){
         res = curl_easy_perform(curl);
 
         if(res != CURLE_OK){
@@ -52,17 +51,13 @@ CURL *init_curl(void *ptr, bool write_on){
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, (curl_write_callback) writefunc);
     }
 
-    curl_easy_setopt(curl, CURLOPT_USERAGENT, UA);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, global.useragent);
     curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout);
-    curl_easy_setopt(curl, CURLOPT_PROXY, proxy);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, global.timeout);
+    curl_easy_setopt(curl, CURLOPT_PROXY, global.proxy);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0);
-
-    //curl_easy_setopt(curl, CURLOPT_BUFFERSIZE, 1000000);
-
-    if(cookies)
-        curl_easy_setopt(curl, CURLOPT_COOKIE, cookies);
+    curl_easy_setopt(curl, CURLOPT_COOKIE, global.cookies);
 
     return curl;
 }

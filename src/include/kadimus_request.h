@@ -10,8 +10,15 @@
 #include "kadimus_mem.h"
 #include "kadimus_common.h"
 
-extern char *UA, *cookies, *proxy;
-extern size_t timeout, retry_times;
+extern struct request_opts global;
+
+struct request_opts {
+    char *useragent;
+    char *cookies;
+    char *proxy;
+    size_t timeout;
+    size_t retry;
+};
 
 struct request {
     char *ptr;

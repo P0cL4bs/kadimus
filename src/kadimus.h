@@ -3,26 +3,47 @@
 
 #define VERSION "1.1"
 #define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
-#define OPTS "hB:A:u:U:t:X:C:F:c:srbi:p:Gf:o:nl:O:"
+#define OPTS "hB:A:u:U:o:t:T:C:c:sp:lSf:O:"
 
-struct all_opts {
+struct kadimus_opts {
+    /* request options */
+    char *cookies;
+    char *useragent;
+    long connection_timeout;
+    int retry;
+    char *proxy;
+
+    /* scan options */
     char *url;
-    char *ip_addr;
-    char *filename;
-    char *b_proxy;
-    FILE *url_list;
-    FILE *source_output;
-    size_t port;
-    size_t listen;
+    FILE *list;
+    FILE *output;
     size_t threads;
-    int b_port;
-    bool bind_shell;
-    bool reverse_shell;
-    bool shell;
-    bool get_source;
+    char *parameter;
+
+    int technique;
+    char *phpcode;
+    char *cmd;
+    /* new char *cmdfunction on future ? */
+    int shell;
+    /* new ttyshell on future ? */
+
+    char *connect;
+    /* char *connect_proxy; */
+    unsigned short port;
+    int listen;
+
+    unsigned short ssh_port;
+    char *ssh_target;
+
+    int get_source;
+    FILE *source_output;
+    char *remote_filename;
+
+    int scan;
 };
 
-void parser_opts(int argc, char **argv);
+
+void parser_opts(int argc, char **argv, struct kadimus_opts *opts);
 void banner(void);
 void help(void);
 int main(int argc, char **argv);
