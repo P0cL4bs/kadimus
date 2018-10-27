@@ -59,7 +59,5 @@ extern FILE *output;
 extern bool thread_on;
 
 void die(const char *err, int x);
-//FILE *xfopen(const char *file, const char *mode);
-void hex_print(const char *x);
 
 #endif

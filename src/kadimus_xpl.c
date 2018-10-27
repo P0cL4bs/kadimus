@@ -774,8 +774,8 @@ int disclosure_check(const char *uri, const char *xuri){
         result = 1;
 
         if(!thread_on){
-            good_all("target probably vulnerable\n");
-            hex_print(b64decoded.ptr);
+            good_all("target probably vulnerable, hexdump: \n\n");
+            hexdump(b64decoded.ptr, b64decoded.len);
             print_all("\n");
         }
 
