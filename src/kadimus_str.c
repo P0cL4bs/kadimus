@@ -47,32 +47,33 @@ char *b64encode(const char *data, int len){
     return ret;
 }
 
-int b64decode(const char *encoded, char **out){
+int b64decode(const char *encoded, struct dynptr *out){
     size_t i = 0, j = 0, length;
 
     length = strlen(encoded);
     if(!isb64valid(encoded, length))
         return 0;
 
-    *out = malloc((length*0.75)+1);
+    out->ptr = malloc((length*0.75)+1);
 
     while(i<length){
-        (*out)[j++] = b64pos(encoded[i]) << 2 | b64pos(encoded[i+1]) >> 4;
+        out->ptr[j++] = b64pos(encoded[i]) << 2 | b64pos(encoded[i+1]) >> 4;
 
         if(encoded[i+2] == '=')
             break;
 
-        (*out)[j++] = b64pos(encoded[i+1]) << 4 | b64pos(encoded[i+2]) >> 2;
+        out->ptr[j++] = b64pos(encoded[i+1]) << 4 | b64pos(encoded[i+2]) >> 2;
 
         if(encoded[i+3] == '=')
             break;
 
-        (*out)[j++] = b64pos(encoded[i+2]) << 6 | b64pos(encoded[i+3]);
+        out->ptr[j++] = b64pos(encoded[i+2]) << 6 | b64pos(encoded[i+3]);
 
         i += 4;
     }
 
-    (*out)[j] = 0x0;
+    out->ptr[j] = 0x0;
+    out->len = j;
 
     return 1;
 }

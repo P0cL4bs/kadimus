@@ -413,7 +413,8 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 void source_disclosure_get(const char *url, const char *filename, const char *pname, FILE *out){
     struct request body1, body2;
     struct parameter_list plist = {0};
-    char *base, *url_filter, *filter, *content_diff, *b64;
+    char *base, *url_filter, *filter, *content_diff;
+    struct dynptr b64;
     size_t pos = 0;
 
     if(!get_element_pos(&plist, &base, url, pname, &pos)){
@@ -460,14 +461,14 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
     if(b64decode(content_diff, &b64)){
         good_single("valid base64 returned:\n");
         if(out){
-            fprintf(out, "%s", b64);
+            fwrite(b64.ptr, b64.len, 1, out);
             fclose(out);
             info_single("check the output file\n");
         } else {
-            printf("%s\n", b64);
+            fwrite(b64.ptr, b64.len, 1, stdout);
         }
         printf("\n");
-        free(b64);
+        free(b64.ptr);
     } else {
         error_single("invalid base64 detected\n");
         info_single("try use null byte poison, or set filename without extension\n");
@@ -743,8 +744,9 @@ int common_error_check(const char *uri){
 }
 
 int disclosure_check(const char *uri, const char *xuri){
-    char *b64 = NULL, *b64_dec = NULL;
     struct request body1, body2;
+    struct dynptr b64decoded;
+    char *b64 = NULL;
     int result = 0;
 
     CURL *ch1 = init_curl(&body1, true);
@@ -768,25 +770,25 @@ int disclosure_check(const char *uri, const char *xuri){
 
     trim_string(&b64);
 
-    if(b64decode(b64, &b64_dec)){
+    if(b64decode(b64, &b64decoded)){
         result = 1;
 
         if(!thread_on){
             good_all("target probably vulnerable\n");
-            hex_print(b64_dec);
+            hex_print(b64decoded.ptr);
             print_all("\n");
         }
 
-        xfree(b64_dec);
+        free(b64decoded.ptr);
     }
 
-    xfree(b64);
+    free(b64);
 
     end:
         curl_easy_cleanup(ch1);
         curl_easy_cleanup(ch2);
-        xfree(body1.ptr);
-        xfree(body2.ptr);
+        free(body1.ptr);
+        free(body2.ptr);
 
     return result;
 }

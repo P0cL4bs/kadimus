@@ -24,6 +24,11 @@ struct parameter {
     int value_size;
 };
 
+struct dynptr {
+    char *ptr;
+    size_t len;
+};
+
 enum {
     replace_string,
     append_after,
@@ -34,7 +39,7 @@ char *random_string(char *s, const size_t len);
 void extract_url(const char *url, char **base_uri, char **parameters);
 char *diff(const char *x, const char *y);
 void trim_string(char **diff_str);
-int b64decode(const char *encoded, char **out);
+int b64decode(const char *encoded, struct dynptr *out);
 char *b64encode(const char *data, int len);
 int isb64valid(const char *encoded, size_t length);
 void chomp_all(char *str);
