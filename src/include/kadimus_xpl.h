@@ -29,24 +29,6 @@ typedef enum {
     DATA
 } rce_type;
 
-/*typedef enum {
-    SCAN,
-    PHP_CODE,
-    CMD_CODE,
-    SHELL
-} op_type;*/
-
-typedef struct {
-    char *ssh_host;
-    char *vuln_uri;
-    char *p_name;
-    char *code;
-    char *cmd;
-    size_t ssh_port;
-    rce_type tech;
-    bool cmdx;
-} xpl_parameters;
-
 #define FILTER_WRAP "php://filter/convert.base64-encode/resource="
 #define DATA_WRAP "data://text/plain;base64,"
 #define ERROR_FILE "./resource/errors.txt"
