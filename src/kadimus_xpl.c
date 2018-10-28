@@ -905,6 +905,68 @@ void scan(const char *target_uri){
 
 }
 
+void scan_list(struct kadimus_opts *opts){
+    size_t n = 0, i, thread_count = 0;
+    pthread_t *thrs = NULL;
+    char *line = NULL;
+    ssize_t nread;
+    pcre *re;
+
+    if(opts->threads){
+        if((thrs = calloc(opts->threads, sizeof(pthread_t))) == NULL)
+            die("calloc() error",1);
+
+        init_locks();
+        thread_on = true;
+    }
+
+    re = xpcre_compile(URL_REGEX, PCRE_NO_AUTO_CAPTURE);
+
+    while((nread = getline(&line, &n, opts->list)) != -1){
+        if(nread == -1)
+            break;
+
+        if(nread <= 1)
+            continue;
+
+        if(line[nread-1] == '\n')
+            line[nread-1] = 0x0;
+
+        if(regex_match_v2(re, line, nread-1, 0))
+            continue;
+
+        if(!opts->threads){
+            scan(line);
+            continue;
+        }
+
+        pthread_create(&thrs[thread_count], 0, thread_scan, (void *) xstrdup(line));
+        thread_count++;
+
+        if(thread_count == opts->threads){
+            for(i=0; i < opts->threads; i++){
+                pthread_join(thrs[i], NULL);
+                thrs[i] = 0;
+            }
+            thread_count = 0;
+        }
+    }
+
+    if(opts->threads){
+        for(i=0; i<opts->threads; i++){
+            if(thrs[i])
+                pthread_join(thrs[i], NULL);
+        }
+        xfree(thrs);
+        kill_locks();
+    }
+
+    free(line);
+    pcre_free(re);
+    fclose(opts->list);
+}
+
+
 void *thread_scan(void *url){
     char *target_uri = ((char *) url);
     char *base_uri = NULL, *parameters = NULL;

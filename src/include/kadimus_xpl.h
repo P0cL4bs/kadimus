@@ -14,13 +14,14 @@
 #endif
 #include <sys/mman.h>
 
-
 #include "kadimus_request.h"
 #include "kadimus_mem.h"
 #include "kadimus_str.h"
 #include "kadimus_common.h"
 #include "kadimus_regex.h"
 #include "kadimus_io.h"
+
+#include "kadimus.h"
 
 typedef enum {
     INPUT = 1,
@@ -42,6 +43,7 @@ int is_dynamic(const char *url);
 int common_error_check(const char *uri);
 int disclosure_check(const char *uri, const char *xuri);
 void scan(const char *target_uri);
+void scan_list(struct kadimus_opts *opts);
 void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name);
 void exec_phpcode(const char *url, const char *parameter, const char *code, int type);
 void *thread_scan(void *url);
