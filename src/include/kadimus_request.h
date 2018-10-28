@@ -30,7 +30,7 @@ struct request {
 bool HttpRequest(CURL *curl);
 void init_str(struct request *x);
 size_t writefunc(void *ptr, size_t size, size_t nmemb, struct request *s);
-CURL *init_curl(void *ptr, bool write_on);
+CURL *init_curl(void *ptr);
 
 void init_locks(void);
 void kill_locks(void);

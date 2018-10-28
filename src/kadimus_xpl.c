@@ -18,7 +18,7 @@ bool check_auth_poison(const char *target){
     if( (x = get_random_file(10, random_file)) == NULL)
         die("error while generate tmp file",0);
 
-    curl = init_curl(NULL, false);
+    curl = init_curl(NULL);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
     curl_easy_setopt(curl, CURLOPT_URL, target);
 
@@ -171,8 +171,8 @@ int is_dynamic(const char *url){
     int result = 0;
     struct request body1, body2;
 
-    CURL *ch1 = init_curl(&body1, true);
-    CURL *ch2 = init_curl(&body2, true);
+    CURL *ch1 = init_curl(&body1);
+    CURL *ch2 = init_curl(&body2);
 
 
     curl_easy_setopt(ch1, CURLOPT_URL, url);
@@ -243,7 +243,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     FILE *auth_scan_file;
 
-    CURL *curl = init_curl(&body, true);
+    CURL *curl = init_curl(&body);
 
     random_string(random_str, R_SIZE);
     build_regex(regex, random_str, "Vulnerable");
@@ -286,7 +286,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     /* proc/self/environ test */
     info_single("testing /proc/self/environ ...\n");
 
-    curl = init_curl(&body, true);
+    curl = init_curl(&body);
 
     for(i=0; environ_t[i]!=NULL; i++){
         init_str(&body);
@@ -322,7 +322,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     /* start wrap scanner */
 
-    curl = init_curl(&body, true);
+    curl = init_curl(&body);
     init_str(&body);
 
     info_single("testing data wrap ...\n");
@@ -355,7 +355,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     /* auth.log scan */
     //curl = init_curl(&body);
 
-    curl = init_curl(NULL, false);
+    curl = init_curl(NULL);
     ret = 0;
 
     info_single("testing /var/log/auth.log ...\n");
@@ -434,8 +434,8 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
     free(plist.trash);
     free(plist.parameter);
 
-    CURL *ch1 = init_curl(&body1, true);
-    CURL *ch2 = init_curl(&body2, true);
+    CURL *ch1 = init_curl(&body1);
+    CURL *ch2 = init_curl(&body2);
 
     init_str(&body1);
     init_str(&body2);
@@ -491,7 +491,7 @@ int check_files(char *base, struct parameter_list *plist, int p){
     ssize_t nread;
 
     FILE *fh = xfopen(CHECK_FILES, "r");
-    CURL *ch = init_curl(&body, true);
+    CURL *ch = init_curl(&body);
 
     while((nread = getline(&line, &n, fh)) != -1){
         if(nread < 3 || line[0] == '#' || line[0] == ':')
@@ -554,7 +554,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     int len = 0;
 
     init_str(&body);
-    curl = init_curl(&body, true);
+    curl = init_curl(&body);
 
     info_single("trying exec code ...\n");
 
@@ -618,9 +618,9 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
     CURL *curl=NULL;
 
     if(tech != AUTH){
-        curl = init_curl(&body, true);
+        curl = init_curl(&body);
     } else {
-        curl = init_curl(NULL, false);
+        curl = init_curl(NULL);
     }
 
     if(tech != DATA){
@@ -725,7 +725,7 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
 int common_error_check(const char *uri){
     int result = 0;
     struct request body;
-    CURL *ch = init_curl(&body, true);
+    CURL *ch = init_curl(&body);
 
     init_str(&body);
 
@@ -749,8 +749,8 @@ int disclosure_check(const char *uri, const char *xuri){
     char *b64 = NULL;
     int result = 0;
 
-    CURL *ch1 = init_curl(&body1, true);
-    CURL *ch2 = init_curl(&body2, true);
+    CURL *ch1 = init_curl(&body1);
+    CURL *ch2 = init_curl(&body2);
 
     init_str(&body1);
     init_str(&body2);

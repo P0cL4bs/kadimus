@@ -39,14 +39,14 @@ size_t writefunc(void *ptr, size_t size, size_t nmemb, struct request *s){
     return size*nmemb;
 }
 
-CURL *init_curl(void *ptr, bool write_on){
+CURL *init_curl(void *ptr){
     CURL *curl = curl_easy_init();
 
     if(!curl)
         die("curl_easy_init() error",0);
 
 
-    if(write_on){
+    if(ptr){
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, ptr);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, (curl_write_callback) writefunc);
     }
