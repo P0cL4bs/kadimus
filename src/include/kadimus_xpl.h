@@ -44,7 +44,7 @@ int common_error_check(const char *uri);
 int disclosure_check(const char *uri, const char *xuri);
 void scan(const char *target_uri);
 void scan_list(struct kadimus_opts *opts);
-void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name);
+void rce_http_shell(const char *url, const char *parameter, int technique);
 void exec_phpcode(const char *url, const char *parameter, const char *code, int type);
 void *thread_scan(void *url);
 void source_disclosure_get(const char *uri, const char *filename, const char *p_name, FILE *out_file);

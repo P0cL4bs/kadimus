@@ -390,7 +390,7 @@ int kadimus(struct kadimus_opts *opts){
 
 
     if(opts->shell)
-        rce_http_shell(opts->url, opts->technique, opts->parameter);
+        rce_http_shell(opts->url, opts->parameter, opts->technique);
 
 
 
