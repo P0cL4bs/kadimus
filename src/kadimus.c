@@ -103,7 +103,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                     if( valid_ip_hostname(optarg) )
                         opts->connect = optarg;
                     else
-                        die("-i, --connect-to error: Invalid IP/Hostname",0);
+                        die("--connect error: Invalid IP/hostname",0);
                 }
 
                 else if(!strcmp(optname, "parameter")){
@@ -308,7 +308,7 @@ void help(void){
         "    -u, --url STRING            URL to scan/exploit\n"
         "    -U, --url-list FILE         File contains url list to scan\n"
         "    -o, --output FILE           File to save output results\n"
-        "    -t, -threads NUMBER         Number of threads (2..1000)\n\n"
+        "    -t, -threads NUMBER         Number of threads\n\n"
 
         "  Explotation:\n"
         "    --parameter STRING          Parameter name to inject exploit\n"
