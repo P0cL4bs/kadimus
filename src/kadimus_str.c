@@ -216,7 +216,10 @@ char *random_string(char *s, const size_t len){
 }
 
 void extract_url(const char *url, char **base_uri, char **parameters){
-    size_t i = 0, end = 0, j = 0,
+    size_t i = 0, end = 0, j = 0, len;
+    if(!url)
+        return;
+
     len = strlen(url);
 
     for(i=0; i<len; i++){
