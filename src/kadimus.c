@@ -422,8 +422,7 @@ int kadimus(struct kadimus_opts *opts){
     }
 
     if(opts->connect){
-        /* do some modifications */
-        remote_connect(opts->connect, opts->port, NULL, 0);
+        remote_connect(opts->connect, opts->port, opts->proxy);
     }
 
     if(opts->listen)

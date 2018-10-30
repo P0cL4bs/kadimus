@@ -153,17 +153,25 @@ void start_bind_shell(int port){
 }
 
 
-void remote_connect(const char *con, int port, const char *proxy, int proxy_port){
+void remote_connect(const char *con, int port, const char *proxy){
     struct pollfd pfds[2];
-    int sockfd, status;
-    char *ip;
+    int sockfd, status, pport;
+    char *ip, *aux, *host, *ptr;
 
-    if( proxy != NULL && proxy_port != 0 ){
-        printf("[~] Trying connect to proxy server %s:%d\n", proxy, proxy_port);
+    if(proxy){
+        printf("[~] Trying connect to proxy server: %s\n", proxy);
 
-        if( (sockfd = kadimus_connect(proxy, (unsigned short)proxy_port, &ip)) == -1){
+        ptr = strdup(proxy);
+        host = strstr(ptr, "://")+3;
+        aux = strchr(host, ':');
+        *aux = 0x0;
+        pport = atoi(aux+1);
+
+        if( (sockfd = kadimus_connect(host, (unsigned short)pport, &ip)) == -1){
             die("connect() error",1);
         }
+
+        free(ptr);
 
         printf("[~] Connected to proxy server !!!\n");
         printf("[~] IP: %s\n", ip);
