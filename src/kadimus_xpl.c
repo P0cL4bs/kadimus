@@ -678,10 +678,14 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
                 fclose(fh);
                 fd = readonly(random_file);
                 mapsize = get_file_size(fd);
-                map = (char *) mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
-                match = regex_extract(regex, map, mapsize, PCRE_DOTALL, &len);
-                close(fd);
-                munmap(map, mapsize);
+                if(mapsize){
+                    map = (char *) mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
+                    match = regex_extract(regex, map, mapsize, PCRE_DOTALL, &len);
+                    close(fd);
+                    munmap(map, mapsize);
+                } else {
+                    len = 0;
+                }
             } else {
                 match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
             }
