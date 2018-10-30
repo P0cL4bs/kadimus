@@ -267,6 +267,10 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
         die("error: -T data requires --parameter", 0);
     }
 
+    if(opts->technique == AUTH && !opts->ssh_target){
+        die("error: -T auth requires --ssh-target", 0);
+    }
+
     if(!opts->get_source && !opts->shell && !opts->cmd
         && !opts->phpcode){
         opts->scan = 1;
@@ -384,6 +388,7 @@ int kadimus(struct kadimus_opts *opts){
                 }
             } else {
                 error_all("error\n");
+                exit(1);
             }
         }
     }
