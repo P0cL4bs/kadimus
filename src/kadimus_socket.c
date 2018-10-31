@@ -21,31 +21,31 @@ int valid_ip_hostname(const char *hostname){
 }
 
 int kadimus_connect(const char *hostname, unsigned short port, char **ip){
-    struct addrinfo hints, *servinfo, *i;
-    int status = 0, sockfd = 0;
+    struct addrinfo hints, *servinfo, *addr;
+    int status, sockfd, ret = -1;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_flags |= AI_CANONNAME;
 
-    if( (status = getaddrinfo(hostname, NULL, &hints, &servinfo)) != 0){
+    if((status = getaddrinfo(hostname, NULL, &hints, &servinfo))){
         fprintf(stderr, "[-] getaddrinfo: %s\n", gai_strerror(status));
         exit(1);
     }
 
-    for(i=servinfo; i != NULL; i = i->ai_next){
-        if((sockfd = socket(i->ai_family, i->ai_socktype, i->ai_protocol)) == -1)
+    for(addr=servinfo; addr; addr=addr->ai_next){
+        if((sockfd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol)) == -1)
             continue;
 
-        void *ai_addr = i->ai_addr;
-        if(i->ai_family == AF_INET){
+        void *ai_addr = addr->ai_addr;
+        if(addr->ai_family == AF_INET){
             ((struct sockaddr_in *)ai_addr)->sin_port = htons(port);
         } else {
             ((struct sockaddr_in6 *)ai_addr)->sin6_port = htons(port);
         }
 
-        if( connect(sockfd, i->ai_addr, i->ai_addrlen) == -1){
+        if(connect(sockfd, addr->ai_addr, addr->ai_addrlen) == -1){
             close(sockfd);
             continue;
         }
@@ -53,31 +53,25 @@ int kadimus_connect(const char *hostname, unsigned short port, char **ip){
         break;
     }
 
-    if(i){
-        if(ip != NULL){
+    if(!addr)
+        goto end;
 
-            if(i->ai_family == AF_INET){
-                *ip = xmalloc(INET_ADDRSTRLEN);
-                inet_ntop(AF_INET, &((struct sockaddr_in *)(i->ai_addr))->sin_addr, *ip, INET_ADDRSTRLEN);
-            }
-
-            else if(i->ai_family == AF_INET6){
-                *ip = xmalloc(INET6_ADDRSTRLEN);
-                inet_ntop(AF_INET6, &((struct sockaddr_in6 *)(i->ai_addr))->sin6_addr, *ip, INET6_ADDRSTRLEN);
-            }
-
+    if(ip){
+        if(addr->ai_family == AF_INET){
+            *ip = xmalloc(INET_ADDRSTRLEN);
+            inet_ntop(AF_INET, &((struct sockaddr_in *)(addr->ai_addr))->sin_addr, *ip, INET_ADDRSTRLEN);
         }
 
-        freeaddrinfo(servinfo);
+        else if(addr->ai_family == AF_INET6){
+            *ip = xmalloc(INET6_ADDRSTRLEN);
+            inet_ntop(AF_INET6, &((struct sockaddr_in6 *)(addr->ai_addr))->sin6_addr, *ip, INET6_ADDRSTRLEN);
+        }
     }
 
-    else {
-        freeaddrinfo(servinfo);
-        return -1;
-    }
-
-    return sockfd;
-
+    ret = sockfd;
+    end:
+    freeaddrinfo(servinfo);
+    return ret;
 }
 
 void start_listen(int *sock_fd, int port){
