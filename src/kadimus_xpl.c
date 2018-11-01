@@ -412,27 +412,20 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
 void source_disclosure_get(const char *url, const char *filename, const char *pname, FILE *out){
     struct request body1, body2;
-    struct parameter_list plist = {0};
-    char *base, *url_filter, *filter, *content_diff;
+    char *urlfilter, *filter, *content_diff;
     struct dynptr b64;
-    size_t pos = 0;
-
-    if(!get_element_pos(&plist, &base, url, pname, &pos)){
-        error_single("parameter %s not found !!!\n", pname);
-        return;
-    }
 
     filter = xmalloc(strlen(filename)+sizeof(FILTER_WRAP));
     memcpy(filter, FILTER_WRAP, sizeof(FILTER_WRAP));
     strcat(filter, filename);
 
-    url_filter = build_url(base, &plist, pos, filter, replace_string);
-
+    urlfilter = build_url_simple(url, pname, filter, replace_string);
     free(filter);
-    free(base);
 
-    free(plist.trash);
-    free(plist.parameter);
+    if(!urlfilter){
+        error_single("parameter %s not found !!!\n", pname);
+        return;
+    }
 
     CURL *ch1 = init_curl(&body1);
     CURL *ch2 = init_curl(&body2);
@@ -441,8 +434,8 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
     init_str(&body2);
 
     curl_easy_setopt(ch1, CURLOPT_URL, url);
-    curl_easy_setopt(ch2, CURLOPT_URL, url_filter);
-    free(url_filter);
+    curl_easy_setopt(ch2, CURLOPT_URL, urlfilter);
+    free(urlfilter);
 
     info_single("trying get source code of file: %s\n", filename);
 
