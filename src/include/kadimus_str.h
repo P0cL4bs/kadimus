@@ -50,6 +50,7 @@ bool get_element_pos(struct parameter_list *plist, char **base, const char *url,
 char *urlencode(const char *str);
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
 char *build_url_simple(const char *url, const char *parameter, const char *newstring, int opt);
+int parameter_exists(const char *url, const char *parameter);
 void tokenize(const char *parameters, struct parameter_list *plist);
 void hexdump(const char *ptr, size_t len);
 

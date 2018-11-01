@@ -578,8 +578,34 @@ char *build_url_simple(const char *url, const char *parameter, const char *newst
     return ret;
 }
 
-int parameter_exist(const char *url, const char *parameter){
-    
+int parameter_exists(const char *url, const char *parameter){
+    int ret = 0;
+    char *pstart;
+    size_t len;
+
+    if(!url)
+        goto end;
+
+    if((pstart = strchr(url, '?')) == NULL)
+        goto end;
+
+    len = strlen(parameter);
+    while(1){
+        int status = strncmp(pstart, parameter, len);
+        if(status || (pstart[len] != '&' && pstart[len] != '=' && pstart[len] != 0x0)){
+            pstart = strchr(pstart, '&');
+            if(!pstart)
+                goto end;
+
+            pstart++;
+        } else {
+            ret = 1;
+            break;
+        }
+    }
+
+    end:
+    return ret;
 }
 
 void hexdump(const char *ptr, size_t len){
