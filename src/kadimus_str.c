@@ -589,6 +589,10 @@ int parameter_exists(const char *url, const char *parameter){
     if((pstart = strchr(url, '?')) == NULL)
         goto end;
 
+    pstart++;
+    if(!*pstart)
+        goto end;
+
     len = strlen(parameter);
     while(1){
         int status = strncmp(pstart, parameter, len);
