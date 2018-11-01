@@ -497,6 +497,91 @@ char *build_url(const char *base, struct parameter_list *plist, int pos, const c
     return ret;
 }
 
+char *build_url_simple(const char *url, const char *parameter, const char *newstring, int opt){
+    char *ret = NULL, *pstart, *urlend, *aux, *rest = NULL;
+    size_t len, nlen, alloc, endlen, restlen = 0;
+
+    if((pstart = strchr(url, '?')) == NULL)
+        goto end;
+
+    pstart++;
+    if(!*pstart)
+        goto end;
+
+    len = strlen(parameter);
+    if(!len)
+        goto end;
+
+    while(1){
+        int status = strncmp(pstart, parameter, len);
+        if(status || (pstart[len] != '&' && pstart[len] != '=' && pstart[len] != 0x0)){
+            pstart = strchr(pstart, '&');
+            if(!pstart)
+                goto end;
+
+            pstart++;
+            continue;
+        }
+
+        urlend = strchr(pstart, '&');
+        if(urlend){
+            endlen = strlen(urlend);
+            if(opt != replace_string ){
+                rest = pstart+len;
+                if(*rest == '=')
+                    rest++;
+
+                restlen = urlend-rest;
+            }
+        } else {
+            endlen = 0;
+        }
+
+        break;
+    }
+
+    nlen = strlen(newstring);
+    size_t basesize = pstart-url+len;
+    alloc = basesize+1+nlen;
+
+    aux = ret = malloc(alloc+endlen+restlen+1);
+
+    memcpy(aux, url, basesize);
+    aux[basesize] = '=';
+    aux += basesize+1;
+
+    switch(opt){
+        case replace_string:
+            memcpy(aux, newstring, nlen);
+            aux += nlen;
+        break;
+        case append_before:
+            memcpy(aux, newstring, nlen);
+            aux += nlen;
+
+            memcpy(aux, rest, restlen);
+            aux += restlen;
+        break;
+        case append_after:
+            memcpy(aux, rest, restlen);
+            aux += restlen;
+
+            memcpy(aux, newstring, nlen);
+            aux += nlen;
+        break;
+    }
+
+    memcpy(aux, urlend, endlen);
+    aux[endlen] = 0x0;
+
+    end:
+    return ret;
+}
+
+int parameter_exist(const char *url, const char *parameter){
+    
+}
+
 void hexdump(const char *ptr, size_t len){
     static const char hextable[]="0123456789abcdef";
     size_t i = 0, total;

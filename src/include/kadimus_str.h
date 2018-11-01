@@ -49,6 +49,7 @@ char *make_code(const char *mark, const char *code, bool auth);
 bool get_element_pos(struct parameter_list *plist, char **base, const char *url, const char *parameter, size_t *pos);
 char *urlencode(const char *str);
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
+char *build_url_simple(const char *url, const char *parameter, const char *newstring, int opt);
 void tokenize(const char *parameters, struct parameter_list *plist);
 void hexdump(const char *ptr, size_t len);
 
