@@ -389,38 +389,6 @@ char *make_code(const char *mark, const char *code, bool auth){
     return ret;
 }
 
-bool get_element_pos(struct parameter_list *plist, char **base, const char *url,
-    const char *parameter, size_t *pos){
-    char *parameters=NULL;
-    size_t i;
-
-    extract_url(url, base, &parameters);
-
-    if(!*base || !parameters){
-        xfree(*base);
-        xfree(parameters);
-        return false;
-    }
-
-    tokenize(parameters, plist);
-    xfree(parameters);
-
-    for(i=0; i<plist->len; i++){
-        if(!strcmp(parameter, plist->parameter[i].key) &&
-            plist->parameter[i].value){
-            *pos = i;
-            return true;
-        }
-    }
-
-    xfree(*base);
-    free(plist->trash);
-    free(plist->parameter);
-
-    return false;
-
-}
-
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action){
     size_t baselen, newlen, total, i;
     int j;

