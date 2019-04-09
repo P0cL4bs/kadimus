@@ -2,7 +2,7 @@
 
 struct request_opts global;
 
-bool HttpRequest(CURL *curl){
+bool http_request(CURL *curl){
     CURLcode res;
     size_t i;
 
