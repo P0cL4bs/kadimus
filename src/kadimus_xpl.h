@@ -20,6 +20,7 @@
 #include "kadimus_common.h"
 #include "kadimus_regex.h"
 #include "kadimus_io.h"
+#include "hexdump.h"
 
 #include "kadimus.h"
 

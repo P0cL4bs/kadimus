@@ -51,6 +51,5 @@ char *build_url(const char *base, struct parameter_list *plist, int pos, const c
 char *build_url_simple(const char *url, const char *parameter, const char *newstring, int opt);
 int parameter_exists(const char *url, const char *parameter);
 void tokenize(const char *parameters, struct parameter_list *plist);
-void hexdump(const char *ptr, size_t len);
 
 #endif

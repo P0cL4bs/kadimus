@@ -11,6 +11,7 @@ OBJS =		$(OBJ_DIR)/kadimus_common.o \
 		$(OBJ_DIR)/kadimus_regex.o \
 		$(OBJ_DIR)/kadimus_socket.o \
 		$(OBJ_DIR)/kadimus_io.o \
+		$(OBJ_DIR)/hexdump.o \
 		$(OBJ_DIR)/kadimus.o
 
 kadimus: $(OBJS)
