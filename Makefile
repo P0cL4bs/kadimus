@@ -1,5 +1,5 @@
-override CFLAGS+=-Wall -Wextra -O2 -Isrc/include
-LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
+override CFLAGS+=-Wall -Wextra -O2 -Isrc
+override LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 SRC_DIR=src
 OBJ_DIR=bin
 
