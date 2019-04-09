@@ -551,7 +551,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     info_single("result: \n");
 
     if(len > 0){
-        printf("\n%s\n\n", match[0]);
+        printf("%s\n", match[0]);
         regex_free(match);
     } else {
         error_single("nothing to show !\n");
