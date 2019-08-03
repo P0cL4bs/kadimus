@@ -1,25 +1,23 @@
 override CFLAGS+=-Wall -Wextra -O2 -Isrc
 override LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
-SRC_DIR=src
-OBJ_DIR=bin
 
-OBJS =		$(OBJ_DIR)/kadimus_common.o \
-		$(OBJ_DIR)/kadimus_mem.o \
-		$(OBJ_DIR)/kadimus_request.o \
-		$(OBJ_DIR)/kadimus_str.o \
-		$(OBJ_DIR)/kadimus_xpl.o \
-		$(OBJ_DIR)/kadimus_regex.o \
-		$(OBJ_DIR)/kadimus_socket.o \
-		$(OBJ_DIR)/kadimus_io.o \
-		$(OBJ_DIR)/hexdump.o \
-		$(OBJ_DIR)/kadimus.o
+SOURCES := $(wildcard src/*.c) $(wildcard src/*/*.c)
+OBJS := $(addprefix bin/,$(SOURCES:src/%.c=%.o))
+
+SUBFOLDERS := $(wildcard src/*/.)
+FOLDERS := $(addprefix bin/,$(SUBFOLDERS:src/%/.=%/))
 
 kadimus: $(OBJS)
-	$(CC) -o kadimus $(OBJS) $(LDFLAGS) $(CFLAGS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+$(OBJS): $(FOLDERS)
+
+bin/%/:
+	@mkdir $@
+
+bin/%.o: src/%.c src/%.h
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-
+.PHONY: clean
 clean:
-	rm -f $(OBJS) kadimus
+	rm -f bin/*/*.o bin/*.o kadimus
