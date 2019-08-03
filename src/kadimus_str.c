@@ -1,128 +1,6 @@
 #include "kadimus_str.h"
 #include "string/urlencode.h"
-
-#define b64pos(ch) (strchr(b64, ch)-b64)
-
-static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-
-char *b64encode(const char *data, int len){
-    char ch[3], *ret = NULL, *aux;
-    int i = 0, j = 0, pad;
-
-    if(!len)
-        goto end;
-
-    aux = malloc(((len+2)/3)*4+1);
-
-    while(i<len){
-        ch[1] = ch[2] = 0;
-        ch[0] = data[i++];
-
-        if(i < len){
-            ch[1] = data[i++];
-            if(i < len){
-                ch[2] = data[i++];
-            }
-        }
-
-        aux[j] = b64[ch[0] >> 2];
-        aux[j+1] = b64[(ch[0] & 3) << 4 | ch[1] >> 4];
-        aux[j+2] = b64[(ch[1] & 0xf) << 2 | ch[2] >> 6];
-        aux[j+3] = b64[ch[2] & 0x3f];
-
-        j += 4;
-    }
-
-    pad = len%3;
-
-    if(pad){
-        aux[j-1] = '=';
-        if(pad == 1)
-            aux[j-2] = '=';
-    }
-
-    aux[j] = 0x0;
-    ret = urlencode(aux);
-    free(aux);
-
-    end:
-    return ret;
-}
-
-int b64decode(const char *encoded, struct dynptr *out){
-    size_t i = 0, j = 0, length;
-
-    length = strlen(encoded);
-    if(!isb64valid(encoded, length))
-        return 0;
-
-    out->ptr = malloc((length*0.75)+1);
-
-    while(i<length){
-        out->ptr[j++] = b64pos(encoded[i]) << 2 | b64pos(encoded[i+1]) >> 4;
-
-        if(encoded[i+2] == '=')
-            break;
-
-        out->ptr[j++] = b64pos(encoded[i+1]) << 4 | b64pos(encoded[i+2]) >> 2;
-
-        if(encoded[i+3] == '=')
-            break;
-
-        out->ptr[j++] = b64pos(encoded[i+2]) << 6 | b64pos(encoded[i+3]);
-
-        i += 4;
-    }
-
-    out->ptr[j] = 0x0;
-    out->len = j;
-
-    return 1;
-}
-
-int isb64valid(const char *encoded, size_t length){
-    size_t i;
-    int ret = 0;
-    int pos;
-
-    if(!length || length%4)
-        goto end;
-
-    for(i=0; i<length; i+=4){
-        if(!(strchr(b64, encoded[i])) || !(strchr(b64, encoded[i+1]))){
-            goto end;
-        }
-
-        if(length != i+4){
-            if(!(strchr(b64, encoded[i+2])) || !(strchr(b64, encoded[i+3]))){
-                goto end;
-            }
-        }
-    }
-
-    if(encoded[i-2] == '='){
-        if(encoded[i-1] != '='){
-            goto end;
-        }
-
-        /* check if the first 4 bits are set */
-        pos = strchr(b64, encoded[i-3])-b64;
-
-        if(pos & 0xf)
-            goto end;
-
-    } else if(encoded[i-1] == '='){
-        pos = strchr(b64, encoded[i-2])-b64;
-        if(pos & 3)
-            goto end;
-    }
-
-
-    ret = 1;
-
-    end:
-    return ret;
-}
+#include "string/base64.h"
 
 void tokenize(const char *parameters, struct parameter_list *plist){
     struct parameter *aux;
@@ -320,7 +198,7 @@ void build_regex(char regex[], char *r_str, char *middle){
 }
 
 char *make_code(const char *mark, const char *code, bool auth){
-    char *ret = NULL, *b64x=NULL, *xpl_auth;
+    char *ret = NULL, *b64, *xpl_auth, *urlencoded;
     size_t len = 0, encode_auth_len;
 
     if(!auth){
@@ -330,19 +208,17 @@ char *make_code(const char *mark, const char *code, bool auth){
     } else {
         ret = xmalloc( strlen(mark)*2+17*2+strlen(code)+2 );
         sprintf(ret, "<?php echo \"%s\"; ?>%s<?php echo \"%s\"; ?>", mark, code, mark);
-        b64x = b64encode(ret, strlen(ret));
+        b64 = b64encode(ret, strlen(ret));
+        urlencoded = urlencode(b64);
+        xfree(b64);
 
-        //encode_auth_len  = strlen(lol);
-        //encode_auth = urlencode(lol);
+        encode_auth_len = strlen(urlencoded)+18+1;
 
-        encode_auth_len = strlen(b64x)+18+1;
+        xpl_auth = strcpy(xmalloc(encode_auth_len + 1), "stairway_to_heaven=");
+        strcat(xpl_auth, urlencoded);
 
-        xpl_auth = strcpy( xmalloc( (encode_auth_len+1) ), "stairway_to_heaven=");
-        strcat(xpl_auth, b64x);
-
-        //xfree(encode_auth);
+        xfree(urlencoded);
         xfree(ret);
-        xfree(b64x);
         return xpl_auth;
     }
 
