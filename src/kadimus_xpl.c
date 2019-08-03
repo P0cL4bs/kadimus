@@ -2,6 +2,7 @@
 #include "string/base64.h"
 #include "string/urlencode.h"
 #include "string/hexdump.h"
+#include "string/diff.h"
 
 char *build_datawrap(const char *phpcode){
     char *ret, *b64, *url;

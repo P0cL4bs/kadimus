@@ -84,37 +84,6 @@ void extract_url(const char *url, char **base_uri, char **parameters){
 
 }
 
-char *diff(const char *x, const char *y){
-    char *ret = NULL;
-    int j = 0, i = 0, len_x = strlen(x), len_y = strlen(y),
-    tmp = 0, tmp2 = 0, alloc_size = 0;
-
-
-    if(len_x == 0 || len_y == 0)
-        return NULL;
-    //printf("len_x %d , len_y %d\n",len_x, len_y);
-
-    for(i=0; x[i] && y[i] && x[i] == y[i]; i++);
-    tmp = i;
-
-    for(i=len_x-1 , j=len_y-1; j >= 0 && x[i] == y[j]; i--, j--);
-    j++;
-    tmp2 = j;
-
-    if(tmp2 <= tmp)
-        return NULL;
-
-    alloc_size = 1+tmp2-tmp;
-
-    ret = xmalloc( alloc_size );
-
-    for( i=tmp, j=0; i < tmp2 ; i++, j++)
-        ret[j] = y[i];
-    ret[j] = 0x0;
-
-    return ret;
-}
-
 void trim_string(char **diff_str){
     size_t i = 0, j = 0, start = 0, end = 0;
     char *aux = NULL;
