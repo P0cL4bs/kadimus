@@ -1,4 +1,6 @@
 #include "kadimus_str.h"
+#include "string/urlencode.h"
+
 #define b64pos(ch) (strchr(b64, ch)-b64)
 
 static const char b64[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -120,48 +122,6 @@ int isb64valid(const char *encoded, size_t length){
 
     end:
     return ret;
-}
-
-
-static inline int isokay(const char ch){
-    return ((ch >= 'a' && ch <= 'z') ||
-        (ch >= 'A' && ch <= 'Z') ||
-        (ch >= '0' && ch <= '9'));
-}
-
-char *urlencode(const char *str){
-    static const char hextable[]="0123456789abcdef";
-
-    char *ret, ch;
-    int i, j = 0;
-
-    for(i=0; (ch = str[i]); i++){
-        if(isokay(ch))
-            j++;
-
-        else
-            j += 3;
-    }
-
-    ret = malloc(j+1);
-    i = 0;
-
-    while((ch = *str++)){
-        if(isokay(ch)){
-            ret[i++] = ch;
-        } else {
-            ret[i] = '%';
-            ret[i+1] = hextable[((ch/16)%16)];
-            ret[i+2] = hextable[ch%16];
-
-            i+=3;
-        }
-    }
-
-    ret[i] = 0x0;
-
-    return ret;
-
 }
 
 void tokenize(const char *parameters, struct parameter_list *plist){
