@@ -58,7 +58,6 @@ static const struct option long_options[] = {
     {0, 0, 0, 0}
 };
 
-
 void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
     char *optname;
     int optc, option_index = 0;
@@ -68,10 +67,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
     opts->connection_timeout = 10;
     opts->retry = 5;
 
-    while((optc = getopt_long(argc, argv, OPTS, long_options, &option_index))
-        != -1){
-
-
+    while((optc = getopt_long(argc, argv, OPTS, long_options, &option_index)) != -1){
         switch(optc){
             case 0:
                 optname = (char *) long_options[option_index].name;
@@ -79,7 +75,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 if(!strcmp(optname, "connect-timeout")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(tmp < 0)
-                        die("--connect-timeout error: value must be between bigger than -1",0);
+                        die("--connect-timeout error: value must be between bigger than -1", 0);
                     else
                         opts->connection_timeout = (long)tmp;
                 }
@@ -87,23 +83,23 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if(!strcmp(optname, "retry-times")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(tmp < 0)
-                        die("--retry-times error: value must be between bigger than -1",0);
+                        die("--retry-times error: value must be between bigger than -1", 0);
                     else
                         opts->retry = tmp;
                 }
 
                 else if(!strcmp(optname, "proxy")){
-                    if( regex_match(PROXY_REGEX, optarg, 0, 0) )
+                    if(regex_match(PROXY_REGEX, optarg, 0, 0))
                         opts->proxy = optarg;
                     else
                         die("--proxy invalid syntax", 0);
                 }
 
                 else if(!strcmp(optname, "connect")){
-                    if( valid_ip_hostname(optarg) )
+                    if(valid_ip_hostname(optarg))
                         opts->connect = optarg;
                     else
-                        die("--connect error: Invalid IP/hostname",0);
+                        die("--connect error: Invalid IP/hostname", 0);
                 }
 
                 else if(!strcmp(optname, "parameter")){
@@ -113,7 +109,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if(!strcmp(optname, "ssh-port")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(!IN_RANGE(tmp, 1, 65535))
-                        die("--ssh-port error: set a valide port (1 .. 65535)",0);
+                        die("--ssh-port error: set a valide port (1 .. 65535)", 0);
                     else
                         opts->ssh_port = tmp;
                 }
@@ -122,7 +118,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                     if(valid_ip_hostname(optarg))
                         opts->ssh_target = optarg;
                     else
-                        die("--ssh-target error: invalid ip/hostname",0);
+                        die("--ssh-target error: invalid ip/hostname", 0);
                 }
             break;
 
@@ -139,10 +135,10 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
             break;
 
             case 'u':
-                if( regex_match(URL_REGEX, optarg, 0, 0) )
+                if(regex_match(URL_REGEX, optarg, 0, 0))
                     opts->url = optarg;
                 else
-                    die("-u, --url URL Have invalid syntax",0);
+                    die("-u, --url URL Have invalid syntax", 0);
             break;
 
             case 'U':
@@ -157,7 +153,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
             case 't':
                 opts->threads = strtol(optarg, NULL, 10);
                 if(opts->threads < 2)
-                    die("--threads error: set a valide value (>= 2)",0);
+                    die("--threads error: set a valide value (>= 2)", 0);
             break;
 
             case 'T':
@@ -170,7 +166,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if (!strcmp("data", optarg))
                     tmp = DATA;
                 else
-                    die("-T, --technique invalid",0);
+                    die("-T, --technique invalid", 0);
 
                 opts->technique = tmp;
             break;
@@ -179,7 +175,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 if(regex_match("^\\s*?\\<\\?.+\\?\\>\\s*?$", optarg, 0, PCRE_DOTALL))
                     opts->phpcode = optarg;
                 else
-                    die("-C, --code parameter must contain php brackets",0);
+                    die("-C, --code parameter must contain php brackets", 0);
             break;
 
             case 'c':
@@ -192,8 +188,8 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
 
             case 'p':
                 tmp = (int) strtol(optarg, NULL, 10);
-                if( !IN_RANGE(tmp, 1, 65535) )
-                    die("-p, --port error: set a valide port (1 .. 65535)",0);
+                if(!IN_RANGE(tmp, 1, 65535))
+                    die("-p, --port error: set a valide port (1 .. 65535)", 0);
                 else
                     opts->port = tmp;
             break;
@@ -271,8 +267,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
         die("error: -T auth requires --ssh-target", 0);
     }
 
-    if(!opts->get_source && !opts->shell && !opts->cmd
-        && !opts->phpcode){
+    if(!opts->get_source && !opts->shell && !opts->cmd && !opts->phpcode){
         opts->scan = 1;
         opts->technique = 0;
     }
