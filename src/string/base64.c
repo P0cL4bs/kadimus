@@ -65,7 +65,9 @@ char *b64decode(const char *encoded, size_t *len){
         return NULL;
     }
 
-    if((ret = malloc((strsize * 0.75) + 1))){
+    ret = malloc((strsize * 0.75) + 1);
+
+    if(ret == NULL){
         return NULL;
     }
 
