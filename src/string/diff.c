@@ -1,4 +1,5 @@
-#include "diff.h"
+#include "string/diff.h"
+#include "string/utils.h"
 #include "kadimus_mem.h"
 
 #include <string.h>

@@ -1,6 +1,7 @@
 #include "kadimus_str.h"
 #include "string/urlencode.h"
 #include "string/base64.h"
+#include "string/utils.h"
 
 void tokenize(const char *parameters, struct parameter_list *plist){
     struct parameter *aux;
@@ -82,43 +83,6 @@ void extract_url(const char *url, char **base_uri, char **parameters){
 
     (*parameters)[j] = 0x0;
 
-}
-
-void trim_string(char **diff_str){
-    size_t i = 0, j = 0, start = 0, end = 0;
-    char *aux = NULL;
-
-    for(i=0; (*diff_str)[i]; i++)
-        if((*diff_str)[i] != '\n' && (*diff_str)[i] != ' ' && (*diff_str)[i] != '\t')
-            break;
-
-    //if(! (*diff_str)[i] )
-    //    return;
-
-    start = i;
-
-    for(i=start; (*diff_str)[i]; i++)
-        if((*diff_str)[i] != '\n' && (*diff_str)[i] != ' ' && (*diff_str)[i] != '\t')
-            break;
-
-    end = i;
-
-    if(end-start == 0)
-        return;
-
-    aux = xmalloc( 1+end-start );
-
-    for(i=start, j=0; i < end; i++, j++)
-        aux[j] = (*diff_str)[i];
-
-    aux[j] = 0x0;
-    xfree(diff_str);
-
-    *diff_str = xstrdup(aux);
-
-    xfree(aux);
-
-    return;
 }
 
 char *make_code(const char *mark, const char *code, bool auth){

@@ -4,6 +4,7 @@
 #include "string/hexdump.h"
 #include "string/diff.h"
 #include "string/concat.h"
+#include "string/utils.h"
 
 char *build_datawrap(const char *phpcode){
     char *ret, *b64, *url;
@@ -445,7 +446,7 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
         goto end;
     }
 
-    trim_string(&content_diff);
+    trim(&content_diff);
 
     if((decoded = b64decode(content_diff, &len))){
         good_single("valid base64 returned:\n");
@@ -718,7 +719,7 @@ int disclosure_check(const char *uri, const char *xuri){
     if(!b64)
         goto end;
 
-    trim_string(&b64);
+    trim(&b64);
 
     if((decoded = b64decode(b64, &len))){
         result = 1;
