@@ -744,7 +744,7 @@ int disclosure_check(const char *uri, const char *xuri){
     return result;
 }
 
-void scan(const char *target_uri){
+void scan(const char *target){
     char *base_uri = NULL, *parameters = NULL;
     char *source_disc = NULL, *error_uri = NULL;
     char random_str[R_SIZE];
@@ -754,7 +754,7 @@ void scan(const char *target_uri){
     bool dynamic = false, previous_error = false;
     struct parameter_list plist = { .len = 0, .parameter = 0, .trash = 0};
 
-    extract_url(target_uri, &base_uri, &parameters);
+    extract_url(target, &base_uri, &parameters);
 
     if(!base_uri || !parameters)
         goto end;
@@ -763,9 +763,9 @@ void scan(const char *target_uri){
     xfree(parameters);
 
 
-    info_all("starting scanning the URL: %s\n", target_uri);
+    info_all("starting scanning the URL: %s\n", target);
     info_all("testing if URL have dynamic content ...\n");
-    result = is_dynamic(target_uri);
+    result = is_dynamic(target);
 
     if(result == -1){
         error_all("no connection with the target URL, exiting ...\n");
@@ -819,7 +819,7 @@ void scan(const char *target_uri){
             info_all("starting source disclosure test ...\n");
 
             source_disc = build_url(base_uri, &plist, i, FILTER_WRAP, append_before);
-            result = disclosure_check(target_uri, source_disc);
+            result = disclosure_check(target, source_disc);
 
             if(result == -1)
                 goto end;
@@ -844,16 +844,15 @@ void scan(const char *target_uri){
     }
 
     end:
-        free(plist.trash);
-        free(plist.parameter);
-        xfree(base_uri);
-        xfree(parameters);
-        xfree(error_uri);
-        xfree(source_disc);
+    free(plist.trash);
+    free(plist.parameter);
+    xfree(base_uri);
+    xfree(parameters);
+    xfree(error_uri);
+    xfree(source_disc);
 
-        info_all("scan finish !!!\n\n");
-        return;
-
+    info_all("scan finish !!!\n\n");
+    return;
 }
 
 void scan_list(struct kadimus_opts *opts){
