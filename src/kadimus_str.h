@@ -39,8 +39,6 @@ char *random_string(char *s, const size_t len);
 void extract_url(const char *url, char **base_uri, char **parameters);
 void trim_string(char **diff_str);
 void chomp_all(char *str);
-char *cookie_append(const char *x, const char *y);
-void build_regex(char regex[], char *r_str, char *middle);
 char *make_code(const char *mark, const char *code, bool auth);
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
 char *build_url_simple(const char *url, const char *parameter, const char *newstring, int opt);

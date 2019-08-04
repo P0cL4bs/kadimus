@@ -130,42 +130,6 @@ void chomp_all(char *str){
     }
 }
 
-char *cookie_append(const char *x, const char *y){
-    char *ret = NULL;
-    size_t i,j;
-    ret = xmalloc( strlen(x)+strlen(y)+2 );
-
-    for(i=0, j=0; x[i]; i++, j++)
-        ret[j] = x[i];
-
-    ret[j] = '&';
-    j++;
-
-    for(i=0; y[i]; i++, j++)
-        ret[j] = y[i];
-
-    ret[j] = 0x0;
-
-    return ret;
-}
-
-void build_regex(char regex[], char *r_str, char *middle){
-    size_t i , j;
-
-    for(i=0,j=0; r_str[i]; i++, j++)
-        regex[j] = r_str[i];
-
-    for(i=0; middle[i]; i++, j++)
-        regex[j] = middle[i];
-
-    for(i=0; r_str[i]; i++, j++)
-        regex[j] = r_str[i];
-
-    regex[j] = 0x0;
-
-
-}
-
 char *make_code(const char *mark, const char *code, bool auth){
     char *ret = NULL, *b64, *xpl_auth, *urlencoded;
     size_t len = 0, encode_auth_len;
