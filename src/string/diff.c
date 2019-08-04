@@ -1,5 +1,5 @@
 #include "diff.h"
-#include "../kadimus_mem.h"
+#include "kadimus_mem.h"
 
 #include <string.h>
 
@@ -10,8 +10,12 @@ char *diff(const char *string1, const char *string2){
     len1 = strlen(string1);
     len2 = strlen(string2);
 
-    if(!len1 || !len2){
+    if(!len1 && !len2){
         return NULL;
+    }
+
+    if(!len1){
+        return xstrdup(string2);
     }
 
     for(i = 0; i < len1 && i < len2; i++){
