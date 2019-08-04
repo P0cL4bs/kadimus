@@ -5,18 +5,21 @@ SOURCES := $(wildcard src/*.c) $(wildcard src/*/*.c)
 OBJS := $(addprefix bin/,$(SOURCES:src/%.c=%.o))
 
 SUBFOLDERS := $(wildcard src/*/.)
-FOLDERS := $(addprefix bin/,$(SUBFOLDERS:src/%/.=%/))
+FOLDERS := $(addprefix bin/,$(SUBFOLDERS:src/%/.=%))
+
+all: $(FOLDERS) kadimus
 
 kadimus: $(OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	@echo "  CC $@"
 
-$(OBJS): $(FOLDERS)
-
-bin/%/:
+$(FOLDERS):
 	@mkdir $@
+	@echo "  MKDIR $@"
 
 bin/%.o: src/%.c src/%.h
-	$(CC) $(CFLAGS) -c -o $@ $<
+	@$(CC) $(CFLAGS) -c -o $@ $<
+	@echo "  CC $@"
 
 .PHONY: clean
 clean:
