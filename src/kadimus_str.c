@@ -121,15 +121,6 @@ void trim_string(char **diff_str){
     return;
 }
 
-
-void chomp_all(char *str){
-    while(*str){
-        if(*str == '\n')
-            *str = ' ';
-        str++;
-    }
-}
-
 char *make_code(const char *mark, const char *code, bool auth){
     char *ret = NULL, *b64, *xpl_auth, *urlencoded;
     size_t len = 0, encode_auth_len;
