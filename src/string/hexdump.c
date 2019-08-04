@@ -3,42 +3,59 @@
 #include <string.h>
 #include <stdio.h>
 
-static const char hextable[]="0123456789abcdef";
+static const unsigned char hextable[]="0123456789abcdef";
 
-void hexdump(const char *ptr, size_t len){
-    char hex[80], *aux, ch;
+void hexdump(void *data, size_t len, int squeez){
+    char hex[69], *prev = NULL;
+    unsigned ch;
 
-    size_t i = 0, total;
-    int offset, ch_offset;
-    unsigned int count = 0;
+    size_t i = 0, total, hexoffset, choffset;
+    int asterisk = 0;
 
-    while(i<len){
-        offset = sprintf(hex, "0x%08x:  ", count);
-        aux = hex+offset;
-        ch_offset = 41;
-        offset = 0;
+    while(i < len){
+        hexoffset = 11;
+        choffset = 52;
 
-        total = i+16;
-        if(total > len)
+        sprintf(hex, "%08x:", (unsigned int)i);
+        memset(hex+9, ' ', 43);
+
+        total = i + 16;
+        if(total > len){
             total = len;
+        } else if(squeez && prev){
+            if(memcmp(prev, (char *)data + i, 16) == 0x0){
+                prev = (char *)data + i;
+                i += 16;
 
-        for(; i<total; i++){
-            ch = ptr[i];
-            aux[offset++] = hextable[ch/16];
-            aux[offset++] = hextable[ch%16];
-            aux[ch_offset++] = (ch > ' ' && ch <= '~') ? ch : '.';
+                if(!asterisk){
+                    puts("*");
+                    asterisk = 1;
+                }
 
-            if(i%2)
-                aux[offset++] = ' ';
+                continue;
+            } else {
+                asterisk = 0;
+            }
         }
 
-        aux[ch_offset] = 0x0;
-        memset(aux+offset, ' ', 41-offset);
+        prev = (char *)data + i;
+
+        while(i < total){
+            ch = ((unsigned char *)data)[i];
+            hex[choffset++] = (ch > ' ' && ch <= '~') ? ch : '.';
+
+            hex[hexoffset++] = hextable[ch / 16];
+            hex[hexoffset++] = hextable[ch % 16];
+
+            if(i % 2) hexoffset++;
+
+            i++;
+        }
+
+        hex[choffset] = 0x0;
 
         puts(hex);
-        count += 16;
-
-
-        i = total;
     }
+
+    printf("%08x\n", (unsigned int)i);
 }

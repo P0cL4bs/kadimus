@@ -3,6 +3,6 @@
 
 #include <stddef.h>
 
-void hexdump(const char *ptr, size_t len);
+void hexdump(void *data, size_t len, int squeez);
 
 #endif
