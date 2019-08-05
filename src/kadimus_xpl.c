@@ -7,19 +7,14 @@
 #include "string/utils.h"
 
 char *build_datawrap(const char *phpcode){
-    char *ret, *b64, *url;
-    size_t len;
+    char *ret, *b64, *b64safe;
 
     b64 = b64encode(phpcode, strlen(phpcode));
-    url = urlencode(b64);
+    b64safe = urlencode(b64);
     free(b64);
 
-    len = strlen(url);
-
-    ret = xmalloc(len + DATAWRAPLEN + 1);
-    memcpy(ret, DATA_WRAP, DATAWRAPLEN);
-    memcpy(ret+DATAWRAPLEN, url, len);
-    ret[len+DATAWRAPLEN] = 0x0;
+    ret = concatl(DATA_WRAP, b64safe, NULL);
+    free(b64safe);
 
     return ret;
 }
