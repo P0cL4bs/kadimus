@@ -55,3 +55,20 @@ char *xstrdup(const char *string){
     size_t len = strlen(string);
     return xstrdupn(string, len);
 }
+
+char *randomstr(char *buf, int len){
+    static const char alphanum[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz"
+        "0123456789";
+
+    int i;
+
+    for(i = 0; i < len-1; i++){
+        buf[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    buf[i] = 0x0;
+
+    return buf;
+}

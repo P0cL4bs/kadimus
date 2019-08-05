@@ -34,26 +34,6 @@ void tokenize(const char *parameters, struct parameter_list *plist){
     } while((prev = next));
 }
 
-char *random_string(char *s, const size_t len){
-    static const char alphanum[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        "abcdefghijklmnopqrstuvwxyz"
-        "0123456789";
-
-    size_t i;
-
-    if(!len)
-        return s;
-
-    for(i=0; i<len-1; i++){
-        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
-    }
-
-    s[i] = 0x0;
-
-    return s;
-}
-
 void extract_url(const char *url, char **base_uri, char **parameters){
     size_t i = 0, end = 0, j = 0, len;
     if(!url)

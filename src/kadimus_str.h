@@ -35,7 +35,6 @@ enum {
     append_before
 };
 
-char *random_string(char *s, const size_t len);
 void extract_url(const char *url, char **base_uri, char **parameters);
 char *make_code(const char *mark, const char *code, bool auth);
 char *build_url(const char *base, struct parameter_list *plist, int pos, const char *new, int action);
