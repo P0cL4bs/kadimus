@@ -1,9 +1,3 @@
-// Coded by MMxM (@hc0d3r)
-// P0cl4bs Team: Mh4x0f, N4sss , Kwrnel, MovCode, joridos, Brenords
-// Greetz to:
-// Cyclone, xstpl, rafiki, Dennis, susp3it0virtual, kodo no kami, chuck kill, Wulf
-// janissaries team
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
