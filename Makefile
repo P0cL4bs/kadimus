@@ -10,16 +10,16 @@ FOLDERS := $(addprefix bin/,$(SUBFOLDERS:src/%/.=%))
 all: $(FOLDERS) kadimus
 
 kadimus: $(OBJS)
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 	@echo "  CC $@"
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
 
 $(FOLDERS):
-	@mkdir $@
 	@echo "  MKDIR $@"
+	@mkdir $@
 
 bin/%.o: src/%.c src/%.h
-	@$(CC) $(CFLAGS) -c -o $@ $<
 	@echo "  CC $@"
+	@$(CC) $(CFLAGS) -c -o $@ $<
 
 .PHONY: clean
 clean:
