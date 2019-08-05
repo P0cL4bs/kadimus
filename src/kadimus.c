@@ -351,7 +351,7 @@ int kadimus(struct kadimus_opts *opts){
     pid_t pid;
     char *cmd;
 
-    if(opts->scan)
+    if(opts->scan && opts->url)
         scan(opts->url);
 
     if(opts->list)
