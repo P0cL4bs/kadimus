@@ -1,7 +1,5 @@
 #include "kadimus_request.h"
 
-struct request_opts global;
-
 bool http_request(CURL *curl){
     CURLcode res;
     size_t i;

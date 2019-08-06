@@ -16,6 +16,7 @@
 #include "kadimus_regex.h"
 #include "kadimus_socket.h"
 #include "kadimus_io.h"
+#include "globals.h"
 
 
 static const struct option long_options[] = {
