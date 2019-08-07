@@ -15,7 +15,7 @@
 #include <sys/mman.h>
 
 #include "kadimus_request.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include "kadimus_str.h"
 #include "output.h"
 #include "kadimus_regex.h"

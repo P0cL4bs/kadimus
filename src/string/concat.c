@@ -1,5 +1,5 @@
 #include "string/concat.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,7 @@ char *concatl(const char *str, ...){
 
     do {
         len = strlen(str);
-        string = xrealloc(string, (len + size + 1));
+        xrealloc(string, string, (len + size + 1));
         memcpy(string + size, str, len);
         size += len;
     } while((str = va_arg(vl, char *)));

@@ -1,6 +1,6 @@
 #include "string/url.h"
 #include "string/utils.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include <string.h>
 
 #define copyvalue(ptr, aux, value, size) do { \
@@ -25,7 +25,7 @@ void urlparser(url_t *url, const char *string){
     key = xstrdup(aux + 1);
 
     do {
-        url->parameters = xrealloc(url->parameters,
+        xrealloc(url->parameters, url->parameters,
             (url->plen + 1) * sizeof(parameter_t));
         parameter = url->parameters + url->plen;
 
@@ -104,7 +104,7 @@ char *buildurl(url_t *url, int action, const char *newstr, int pos){
     len += strlen(url->base);
 
     // write the new string
-    ret = xmalloc(len + 1);
+    xmalloc(ret, len + 1);
 
     memcpy(ret, url->base, basesize);
     j = basesize;

@@ -4,8 +4,9 @@
 #include <time.h>
 #include <stdint.h>
 #include <curl/curl.h>
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include <stdbool.h>
+#include <string.h>
 
 #define R_SIZE 20
 #define M_ALL_SIZE (R_SIZE-1)*2+5

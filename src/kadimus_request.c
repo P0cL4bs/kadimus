@@ -21,14 +21,14 @@ bool http_request(CURL *curl){
 
 void init_str(struct request *x){
     x->len = 0;
-    x->ptr = xmalloc(1);
+    xmalloc(x->ptr, 1);
     x->ptr[0] = 0x0;
 }
 
 size_t writefunc(void *ptr, size_t size, size_t nmemb, struct request *s){
     size_t new_len = s->len + size*nmemb;
 
-    s->ptr = xrealloc(s->ptr, new_len+1);
+    xrealloc(s->ptr, s->ptr, new_len+1);
 
     memcpy(s->ptr+s->len, ptr, size*nmemb);
     s->ptr[new_len] = 0x0;

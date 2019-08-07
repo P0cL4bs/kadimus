@@ -408,7 +408,7 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
     char *urlfilter, *filter, *content_diff, *decoded;
     size_t len;
 
-    filter = xmalloc(strlen(filename)+sizeof(FILTER_WRAP));
+    xmalloc(filter, strlen(filename)+sizeof(FILTER_WRAP));
     memcpy(filter, FILTER_WRAP, sizeof(FILTER_WRAP));
     strcat(filter, filename);
 
@@ -597,7 +597,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
     randomstr(rbuf, sizeof(rbuf));
     concatlb(regex, rbuf, "(.*)", rbuf, NULL);
 
-    aux = xmalloc(600);
+    xmalloc(aux, 600);
 
     while(1){
         printf("(kadimus~shell)> ");

@@ -1,7 +1,10 @@
 #include "kadimus_regex.h"
+#include "memory/alloc.h"
+#include "output.h"
 
 char **regex_extract(const char *regex, const char *data, int size, int opts, int *len){
     pcre *re;
+    char **matches;
     int vet[VETSIZE] = {0}, errnb, i, j = 0, alloc, start, end, rc;
 
     const char *error;
@@ -19,7 +22,7 @@ char **regex_extract(const char *regex, const char *data, int size, int opts, in
 
     *len = rc;
 
-    char **matches = xmalloc(rc * sizeof(char *));
+    xmalloc(matches, rc * sizeof(char *));
 
     for(i=1;i<rc;i++){
         start = vet[i*2];
@@ -27,7 +30,7 @@ char **regex_extract(const char *regex, const char *data, int size, int opts, in
 
         alloc = end-start;
 
-        matches[j] = xmalloc(alloc+1);
+        xmalloc(matches[j], alloc+1);
         memcpy(matches[j], data+start, alloc);
         matches[j][alloc] = 0x0;
         j++;

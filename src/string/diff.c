@@ -1,6 +1,6 @@
 #include "string/diff.h"
 #include "string/utils.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 
 #include <string.h>
 
@@ -40,7 +40,7 @@ char *diff(const char *string1, const char *string2){
     }
 
     size = j - aux;
-    ret = xmalloc(size + 1);
+    xmalloc(ret, size + 1);
     memcpy(ret, string2 + aux, size);
     ret[size] = 0x0;
 

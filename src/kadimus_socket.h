@@ -8,9 +8,10 @@
 #include <arpa/inet.h>
 #include <sys/poll.h>
 #include <unistd.h>
+#include <string.h>
 
 #include "output.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 
 #define LISTEN_TIMEOUT 120
 

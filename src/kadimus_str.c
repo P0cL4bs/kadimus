@@ -9,18 +9,18 @@ char *make_code(const char *mark, const char *code, bool auth){
 
     if(!auth){
         len = strlen(mark)*2+strlen(code)+2;
-        ret = xmalloc( len );
+        xmalloc(ret, len );
         snprintf(ret, len, "%s%s%s",mark,code,mark);
     } else {
-        ret = xmalloc( strlen(mark)*2+17*2+strlen(code)+2 );
+        xmalloc(ret, strlen(mark)*2+17*2+strlen(code)+2 );
         sprintf(ret, "<?php echo \"%s\"; ?>%s<?php echo \"%s\"; ?>", mark, code, mark);
         b64 = b64encode(ret, strlen(ret));
         urlencoded = urlencode(b64);
         xfree(b64);
 
         encode_auth_len = strlen(urlencoded)+18+1;
-
-        xpl_auth = strcpy(xmalloc(encode_auth_len + 1), "stairway_to_heaven=");
+        xmalloc(xpl_auth, encode_auth_len + 1);
+        strcpy(xpl_auth, "stairway_to_heaven=");
         strcat(xpl_auth, urlencoded);
 
         xfree(urlencoded);
@@ -78,7 +78,8 @@ char *build_url_simple(const char *url, const char *parameter, const char *newst
     size_t basesize = pstart-url+len;
     alloc = basesize+1+nlen;
 
-    aux = ret = malloc(alloc+endlen+restlen+1);
+    xmalloc(ret, alloc+endlen+restlen+1);
+    aux = ret;
 
     memcpy(aux, url, basesize);
     aux[basesize] = '=';

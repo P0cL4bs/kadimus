@@ -5,9 +5,10 @@
 #include <stdbool.h>
 #include <openssl/crypto.h>
 #include <pthread.h>
+#include <string.h>
 
 
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include "output.h"
 #include "globals.h"
 

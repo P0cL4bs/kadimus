@@ -2,8 +2,7 @@
 #define KAD_REG
 
 #include <pcre.h>
-#include "kadimus_mem.h"
-#include "output.h"
+#include <string.h>
 
 #define VETSIZE 30
 #define URL_REGEX "^(https?://)?.+/.*\\?.+$"

