@@ -8,7 +8,7 @@
 
 
 #include "kadimus_mem.h"
-#include "kadimus_common.h"
+#include "output.h"
 #include "globals.h"
 
 struct request {

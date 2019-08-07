@@ -8,7 +8,6 @@
 
 #include "kadimus.h"
 
-#include "kadimus_common.h"
 #include "kadimus_str.h"
 #include "kadimus_mem.h"
 #include "kadimus_request.h"
@@ -17,6 +16,7 @@
 #include "kadimus_socket.h"
 #include "kadimus_io.h"
 #include "globals.h"
+#include "output.h"
 
 
 static const struct option long_options[] = {
@@ -70,7 +70,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 if(!strcmp(optname, "connect-timeout")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(tmp < 0)
-                        die("--connect-timeout error: value must be between bigger than -1", 0);
+                        die("--connect-timeout error: value must be between bigger than -1\n");
                     else
                         opts->connection_timeout = (long)tmp;
                 }
@@ -78,7 +78,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if(!strcmp(optname, "retry-times")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(tmp < 0)
-                        die("--retry-times error: value must be between bigger than -1", 0);
+                        die("--retry-times error: value must be between bigger than -1\n");
                     else
                         opts->retry = tmp;
                 }
@@ -87,14 +87,14 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                     if(regex_match(PROXY_REGEX, optarg, 0, 0))
                         opts->proxy = optarg;
                     else
-                        die("--proxy invalid syntax", 0);
+                        die("--proxy invalid syntax\n");
                 }
 
                 else if(!strcmp(optname, "connect")){
                     if(valid_ip_hostname(optarg))
                         opts->connect = optarg;
                     else
-                        die("--connect error: Invalid IP/hostname", 0);
+                        die("--connect error: Invalid IP/hostname\n");
                 }
 
                 else if(!strcmp(optname, "parameter")){
@@ -104,7 +104,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if(!strcmp(optname, "ssh-port")){
                     tmp = (int) strtol(optarg, NULL, 10);
                     if(!IN_RANGE(tmp, 1, 65535))
-                        die("--ssh-port error: set a valide port (1 .. 65535)", 0);
+                        die("--ssh-port error: set a valide port (1 .. 65535)\n");
                     else
                         opts->ssh_port = tmp;
                 }
@@ -113,7 +113,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                     if(valid_ip_hostname(optarg))
                         opts->ssh_target = optarg;
                     else
-                        die("--ssh-target error: invalid ip/hostname", 0);
+                        die("--ssh-target error: invalid ip/hostname\n");
                 }
             break;
 
@@ -133,7 +133,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 if(regex_match(URL_REGEX, optarg, 0, 0))
                     opts->url = optarg;
                 else
-                    die("-u, --url URL Have invalid syntax", 0);
+                    die("-u, --url URL Have invalid syntax\n");
             break;
 
             case 'U':
@@ -148,7 +148,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
             case 't':
                 opts->threads = strtol(optarg, NULL, 10);
                 if(opts->threads < 2)
-                    die("--threads error: set a valide value (>= 2)", 0);
+                    die("--threads error: set a valide value (>= 2)\n");
             break;
 
             case 'T':
@@ -161,7 +161,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 else if (!strcmp("data", optarg))
                     tmp = DATA;
                 else
-                    die("-T, --technique invalid", 0);
+                    die("-T, --technique invalid\n");
 
                 opts->technique = tmp;
             break;
@@ -170,7 +170,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 if(regex_match("^\\s*?\\<\\?.+\\?\\>\\s*?$", optarg, 0, PCRE_DOTALL))
                     opts->phpcode = optarg;
                 else
-                    die("-C, --code parameter must contain php brackets", 0);
+                    die("-C, --code parameter must contain php brackets\n");
             break;
 
             case 'c':
@@ -184,7 +184,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
             case 'p':
                 tmp = (int) strtol(optarg, NULL, 10);
                 if(!IN_RANGE(tmp, 1, 65535))
-                    die("-p, --port error: set a valide port (1 .. 65535)", 0);
+                    die("-p, --port error: set a valide port (1 .. 65535)\n");
                 else
                     opts->port = tmp;
             break;
@@ -212,54 +212,54 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
     }
 
     if(!opts->url && !opts->list)
-        die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help", 0);
+        die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help\n");
 
     if(opts->get_source){
         if(!opts->url)
-            die("error: -S, --get-source requires -u", 0);
+            die("error: -S, --get-source requires -u\n");
         if(!opts->remote_filename)
-            die("error: -S, --get-source requires -f", 0);
+            die("error: -S, --get-source requires -f\n");
         if(!opts->parameter)
-            die("error: -S, --get-source requires --parameter", 0);
+            die("error: -S, --get-source requires --parameter\n");
     }
 
     if(opts->shell){
         if(!opts->url)
-            die("error: -s, --shell requires -u", 0);
+            die("error: -s, --shell requires -u\n");
         if(!opts->technique)
-            die("error: -s, --shell requires -T", 0);
+            die("error: -s, --shell requires -T\n");
     }
 
     if(opts->listen){
         if(!opts->port)
-            die("error: -l, --listen requires -p", 0);
+            die("error: -l, --listen requires -p\n");
     }
 
     if(opts->connect){
         if(!opts->port)
-            die("error: --connect requires -p", 0);
+            die("error: --connect requires -p\n");
     }
 
     if(opts->phpcode){
         if(!opts->url)
-            die("error: -C, --code requires -u", 0);
+            die("error: -C, --code requires -u\n");
         if(!opts->technique)
-            die("error: -C, --code requires -T", 0);
+            die("error: -C, --code requires -T\n");
     }
 
     if(opts->cmd){
         if(!opts->url)
-            die("error: -c, --cmd requires -u", 0);
+            die("error: -c, --cmd requires -u\n");
         if(!opts->technique)
-            die("error: -c, --cmd requires -T", 0);
+            die("error: -c, --cmd requires -T\n");
     }
 
     if(opts->technique == DATA && !opts->parameter){
-        die("error: -T data requires --parameter", 0);
+        die("error: -T data requires --parameter\n");
     }
 
     if(opts->technique == AUTH && !opts->ssh_target){
-        die("error: -T auth requires --ssh-target", 0);
+        die("error: -T auth requires --ssh-target\n");
     }
 
     if(!opts->get_source && !opts->shell && !opts->cmd && !opts->phpcode){
@@ -344,8 +344,7 @@ void init_global_structs(struct kadimus_opts *opts){
     global.retry = opts->retry;
 
     output = opts->output;
-    thread_on = (opts->threads) ? 1 : 0;
-
+    thread_enable = opts->threads;
 }
 
 int kadimus(struct kadimus_opts *opts){
@@ -363,21 +362,21 @@ int kadimus(struct kadimus_opts *opts){
             opts->parameter, opts->source_output);
 
     if(opts->technique == AUTH){
-        info_all("checking /var/log/auth.log poison ...\n");
+        info("checking /var/log/auth.log poison ...\n");
         if(check_auth_poison(opts->url)){
-            good_all("ok\n");
+            good("ok\n");
         } else {
-            info_all("error, trying inject code in log file ...\n");
+            info("error, trying inject code in log file ...\n");
             if(ssh_log_poison(opts->ssh_target, opts->ssh_port)){
-                info_all("log injection done, checking file ...\n");
+                info("log injection done, checking file ...\n");
                 if(check_auth_poison(opts->url)){
-                    good_all("injection sucessfull\n");
+                    good("injection sucessfull\n");
                 } else {
-                    error_all("error\n");
+                    error("error\n");
                     exit(1);
                 }
             } else {
-                error_all("error\n");
+                error("error\n");
                 exit(1);
             }
         }
@@ -395,7 +394,7 @@ int kadimus(struct kadimus_opts *opts){
             start_bind_shell(opts->port);
             exit(0);
         } else if(pid == -1){
-            die("fork() error", 1);
+            xdie("fork() failed\n");
         }
         //sleep(1);
     }

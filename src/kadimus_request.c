@@ -8,7 +8,7 @@ bool http_request(CURL *curl){
         res = curl_easy_perform(curl);
 
         if(res != CURLE_OK){
-            error_single("request failed: %s\n", curl_easy_strerror(res));
+            xerror("request failed: %s\n", curl_easy_strerror(res));
             continue;
         }
 
@@ -41,7 +41,7 @@ CURL *init_curl(void *ptr){
     CURL *curl = curl_easy_init();
 
     if(!curl)
-        die("curl_easy_init() error",0);
+        die("curl_easy_init() error\n");
 
 
     if(ptr){

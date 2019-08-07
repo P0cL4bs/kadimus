@@ -4,7 +4,7 @@ void *xmalloc(size_t len){
     void *ptr = malloc(len);
 
     if(ptr == NULL)
-        die("malloc() error",1);
+        xdie("malloc() failed\n");
 
     return ptr;
 }
@@ -21,7 +21,7 @@ void *xrealloc(void *ptr, size_t len){
     void *new_ptr = realloc(ptr, len);
 
     if(new_ptr == NULL)
-        die("xrealloc() error",1);
+        xdie("xrealloc() failed\n");
 
     return new_ptr;
 }

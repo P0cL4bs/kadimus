@@ -3,7 +3,7 @@
 
 #include <pcre.h>
 #include "kadimus_mem.h"
-#include "kadimus_common.h"
+#include "output.h"
 
 #define VETSIZE 30
 #define URL_REGEX "^(https?://)?.+/.*\\?.+$"

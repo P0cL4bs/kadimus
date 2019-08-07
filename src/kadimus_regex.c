@@ -56,7 +56,7 @@ pcre *xpcre_compile(const char *pattern, int options){
     int offset;
     pcre *re = pcre_compile(pattern, options, &error, &offset, NULL);
     if(!re)
-        die(error, 0);
+        die("%s\n", error);
 
     return re;
 }

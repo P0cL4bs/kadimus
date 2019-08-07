@@ -5,7 +5,7 @@
 #include <assert.h>
 #include <string.h>
 
-#include "kadimus_common.h"
+#include "output.h"
 
 #define xfree(x) _xfree((void **)&x);
 

@@ -3,8 +3,7 @@
 FILE *xfopen(const char *file, const char *mode){
     FILE *x = NULL;
     if( (x = fopen(file,mode)) == NULL) {
-        fprintf(stderr, "(%s)",file);
-        die(" fopen() error ",1);
+        xdie("fopen('%s') failed\n", file);
     }
 
     return x;
@@ -35,7 +34,7 @@ int get_file_size(int fd){
     struct stat s;
 
     if(fstat(fd, &s) == -1){
-        die("fstat() error",1);
+        xdie("fstat() failed\n");
     }
 
     return s.st_size;
@@ -46,7 +45,7 @@ int readonly(const char *name){
     int ret = open(name, O_RDONLY);
 
     if(ret == -1)
-        die("open() error",1);
+        xdie("open() failed\n");
 
     return ret;
 }

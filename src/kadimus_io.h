@@ -10,7 +10,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "kadimus_common.h"
+#include "output.h"
 
 FILE *xfopen(const char *file, const char *mode);
 FILE *get_random_file(size_t retry, char tmp_name[]);

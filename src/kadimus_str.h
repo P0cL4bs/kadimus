@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <curl/curl.h>
 #include "kadimus_mem.h"
-#include "kadimus_common.h"
+#include <stdbool.h>
 
 #define R_SIZE 20
 #define M_ALL_SIZE (R_SIZE-1)*2+5

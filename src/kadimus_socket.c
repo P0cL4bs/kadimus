@@ -79,7 +79,7 @@ void start_listen(int *sock_fd, int port){
     int optval = 1;
 
     if( (*sock_fd = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-        die("socket() error",1);
+        xdie("socket() failed\n");
 
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(port);
@@ -87,13 +87,13 @@ void start_listen(int *sock_fd, int port){
     bzero(&(server_addr.sin_zero), 8);
 
     if(setsockopt(*sock_fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof optval) == -1)
-        die("setsockopt() error",1);
+        xdie("setsockopt() failed\n");
 
     if(bind(*sock_fd, (struct sockaddr *)&server_addr, sizeof(struct sockaddr)) == -1)
-        die("bind() error",1);
+        xdie("bind() failed\n");
 
     if(listen(*sock_fd,1) == -1)
-        die("listen() error",1);
+        xdie("listen() failed\n");
 
 }
 
@@ -111,20 +111,20 @@ void start_bind_shell(int port){
     pfds[0].events = POLLIN;
 
     pid = getpid();
-    info_all("[pid: %d] listen on port: %d\n", pid, port);
-    info_all("[pid: %d] waiting connection ...\n", pid);
+    info("[pid: %d] listen on port: %d\n", pid, port);
+    info("[pid: %d] waiting connection ...\n", pid);
 
     ret = poll(pfds, 1, LISTEN_TIMEOUT*1000);
 
     if(ret == -1)
-        die("poll() error",1);
+        xdie("poll() failed\n");
     else if(!ret){
-        error_all("[pid: %d] connection timeout %d !!!\n", pid, LISTEN_TIMEOUT);
+        error("[pid: %d] connection timeout %d !!!\n", pid, LISTEN_TIMEOUT);
         exit(0);
     }
 
     if((sockfd = accept(sock, (struct sockaddr *) &cli_addr, &sockaddr_len)) == -1 )
-        die("accept() error",1);
+        xdie("accept() failed\n");
 
     if(cli_addr.sa_family == AF_INET){
         inet_ntop(AF_INET, &((struct sockaddr_in *)&cli_addr)->sin_addr, ip_connection, INET_ADDRSTRLEN);
@@ -134,7 +134,7 @@ void start_bind_shell(int port){
         strcpy(ip_connection, "unknow");
     }
 
-    good_all("[pid: %d] new connection from: %s\n", pid, ip_connection);
+    good("[pid: %d] new connection from: %s\n", pid, ip_connection);
 
     pfds[0].fd = sockfd;
     pfds[0].events = POLLIN;
@@ -162,7 +162,7 @@ void remote_connect(const char *con, int port, const char *proxy){
         pport = atoi(aux+1);
 
         if( (sockfd = kadimus_connect(host, (unsigned short)pport, &ip)) == -1){
-            die("connect() error",1);
+            xdie("connect() failed\n");
         }
 
         free(ptr);
@@ -184,13 +184,13 @@ void remote_connect(const char *con, int port, const char *proxy){
 
     else {
 
-        info_all("trying connect to %s:%d\n", con, port);
+        info("trying connect to %s:%d\n", con, port);
 
         if((sockfd = kadimus_connect(con, (unsigned short)port, &ip)) == -1){
-            die("connect() error", 1);
+            xdie("connect() failed\n");
         }
 
-        good_all("connected, ip: %s!!!\n", ip);
+        good("connected, ip: %s!!!\n", ip);
     }
 
     pfds[1].fd = 0;

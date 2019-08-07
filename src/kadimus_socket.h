@@ -9,7 +9,7 @@
 #include <sys/poll.h>
 #include <unistd.h>
 
-#include "kadimus_common.h"
+#include "output.h"
 #include "kadimus_mem.h"
 
 #define LISTEN_TIMEOUT 120
