@@ -14,7 +14,7 @@
 #include "kadimus_xpl.h"
 #include "kadimus_regex.h"
 #include "kadimus_socket.h"
-#include "kadimus_io.h"
+#include "io/utils.h"
 #include "globals.h"
 #include "output.h"
 

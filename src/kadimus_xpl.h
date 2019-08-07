@@ -19,7 +19,7 @@
 #include "kadimus_str.h"
 #include "output.h"
 #include "kadimus_regex.h"
-#include "kadimus_io.h"
+#include "io/utils.h"
 
 #include "kadimus.h"
 

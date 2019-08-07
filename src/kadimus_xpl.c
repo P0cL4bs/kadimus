@@ -59,7 +59,7 @@ bool check_auth_poison(const char *target){
     CURL *curl;
     FILE *fh;
 
-    if((fh = get_random_file(10, rfile)) == NULL)
+    if((fh = randomfile(rfile, 10)) == NULL)
         die("error while generate tmp file\n");
 
     curl = init_curl(NULL);
@@ -75,9 +75,9 @@ bool check_auth_poison(const char *target){
     if(http_request(curl)){
         fclose(fh);
 
-        fd = readonly(rfile);
+        fd = openro(rfile);
 
-        fsize = get_file_size(fd);
+        fsize = getfdsize(fd);
         if(fsize){
             mapfile = (char *) mmap(0, fsize, PROT_READ, MAP_PRIVATE, fd, 0);
 
@@ -360,7 +360,7 @@ int rce_scan(url_t *url, int pos){
     for(i=0; auth_t[i]!=NULL; i++){
         rce_uri = buildurl(url, string_replace, auth_t[i], pos);
 
-        if( (auth_scan_file = get_random_file(10, random_file)) == NULL)
+        if( (auth_scan_file = randomfile(random_file, 10)) == NULL)
             die("error while generate tmp file\n");
 
         curl_easy_setopt(curl, CURLOPT_URL, rce_uri);
@@ -371,8 +371,8 @@ int rce_scan(url_t *url, int pos){
             xerror("request error\n");
         } else {
             fflush(auth_scan_file);
-            fd = readonly(random_file);
-            size_file = get_file_size(fd);
+            fd = openro(random_file);
+            size_file = getfdsize(fd);
 
             if(size_file){
                 mmap_str = (char *) mmap(0, size_file, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -623,7 +623,7 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
         if(technique != AUTH){
             init_str(&body);
         } else {
-            if((fh = get_random_file(10, random_file)) == NULL)
+            if((fh = randomfile(random_file, 10)) == NULL)
                 die("error while generate random file\n");
 
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, fh);
@@ -634,8 +634,8 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
         if(http_request(curl)){
             if(technique == AUTH){
                 fclose(fh);
-                fd = readonly(random_file);
-                mapsize = get_file_size(fd);
+                fd = openro(random_file);
+                mapsize = getfdsize(fd);
                 if(mapsize){
                     map = (char *) mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
                     match = regex_extract(regex, map, mapsize, PCRE_DOTALL, &len);
