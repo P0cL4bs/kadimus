@@ -145,7 +145,7 @@ bool check_error(const char *body){
         if(line[nread-1] == '\n')
             line[nread-1] = 0x0;
 
-        if(regex_match(line, body, 0, 0)){
+        if(regex_match(line, body, strlen(body), 0)){
             xgood("regex match: ( %s )\n", line);
             ret = true;
             break;
@@ -253,7 +253,7 @@ int rce_scan(url_t *url, int pos){
         if(!http_request(curl)){
             xerror("request error\n");
         } else {
-            if(regex_match(regex, body.ptr, 0, 0)){
+            if(regex_match(regex, body.ptr, body.len, 0)){
                 print_thread("[RCE-INPUT] %s\n", rce_uri);
                 xgood("target vulnerable: %s !!!\n", rce_uri);
 
@@ -291,7 +291,7 @@ int rce_scan(url_t *url, int pos){
         if(!http_request(curl)){
             xerror("request error\n");
         } else {
-            if( regex_match(regex, body.ptr, 0, 0) ){
+            if( regex_match(regex, body.ptr, body.len, 0) ){
                 print_thread("[RCE-ENVIRON] %s\n", rce_uri);
                 xgood("target vulnerable !!!\n");
 
@@ -328,7 +328,7 @@ int rce_scan(url_t *url, int pos){
         //print_single("[-] Request error\n");
         //print_single("[-] probably not vulnerable\n");
     } else {
-        if( regex_match(regex, body.ptr, 0, 0) ){
+        if( regex_match(regex, body.ptr, body.len, 0) ){
 
             print_thread("[RCE-DATA-WRAP] %s\n", datawrap);
             xgood("%s\n", datawrap);
@@ -550,14 +550,14 @@ void exec_phpcode(const char *url, const char *parameter, const char *code, int 
     concatlb(regex, rbuf, "(.*)", rbuf, NULL);
 
     if(http_request(curl)){
-        match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
+        match = regex_extract(&len, regex, body.ptr, body.len, PCRE_DOTALL);
     }
 
     xinfo("result: \n");
 
     if(len > 0){
         printf("%s\n", match[0]);
-        regex_free(match);
+        regex_free(match, len);
     } else {
         xerror("nothing to show !\n");
     }
@@ -638,19 +638,19 @@ void rce_http_shell(const char *url, const char *parameter, int technique){
                 mapsize = getfdsize(fd);
                 if(mapsize){
                     map = (char *) mmap(0, mapsize, PROT_READ, MAP_PRIVATE, fd, 0);
-                    match = regex_extract(regex, map, mapsize, PCRE_DOTALL, &len);
+                    match = regex_extract(&len, regex, map, mapsize, PCRE_DOTALL);
                     close(fd);
                     munmap(map, mapsize);
                 } else {
                     len = 0;
                 }
             } else {
-                match = regex_extract(regex, body.ptr, body.len, PCRE_DOTALL, &len);
+                match = regex_extract(&len, regex, body.ptr, body.len, PCRE_DOTALL);
             }
 
             if(len > 0) {
                 printf("%s", match[0]);
-                regex_free(match);
+                regex_free(match, len);
             }
 
         }
@@ -853,7 +853,7 @@ void scan_list(struct kadimus_opts *opts){
         thread_enable = 1;
     }
 
-    re = xpcre_compile(URL_REGEX, PCRE_NO_AUTO_CAPTURE);
+    re = xpcre_compile("^(https?://)?.+/.*\\?.+$", PCRE_NO_AUTO_CAPTURE);
 
     while((nread = getline(&line, &n, opts->list)) != -1){
         if(nread == -1)
@@ -865,7 +865,7 @@ void scan_list(struct kadimus_opts *opts){
         if(line[nread-1] == '\n')
             line[nread-1] = 0x0;
 
-        if(regex_match_v2(re, line, nread-1, 0))
+        if(regex_matchv2(re, line, nread-1, 0))
             continue;
 
         if(!opts->threads){

@@ -18,7 +18,7 @@
 #include "memory/alloc.h"
 #include "kadimus_str.h"
 #include "output.h"
-#include "kadimus_regex.h"
+#include "regex/pcre.h"
 #include "io/utils.h"
 
 #include "kadimus.h"

@@ -12,7 +12,7 @@
 #include "memory/alloc.h"
 #include "kadimus_request.h"
 #include "kadimus_xpl.h"
-#include "kadimus_regex.h"
+#include "regex/pcre.h"
 #include "kadimus_socket.h"
 #include "io/utils.h"
 #include "globals.h"
@@ -130,7 +130,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
             break;
 
             case 'u':
-                if(regex_match(URL_REGEX, optarg, 0, 0))
+                if(regex_match("^(https?://)?.+/.*\\?.+$", optarg, 0, 0))
                     opts->url = optarg;
                 else
                     die("-u, --url URL Have invalid syntax\n");
