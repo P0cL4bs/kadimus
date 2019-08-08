@@ -13,7 +13,7 @@
 #include "kadimus_request.h"
 #include "kadimus_xpl.h"
 #include "regex/pcre.h"
-#include "kadimus_socket.h"
+#include "net/utils.h"
 #include "io/utils.h"
 #include "globals.h"
 #include "output.h"
@@ -91,10 +91,11 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 }
 
                 else if(!strcmp(optname, "connect")){
-                    if(valid_ip_hostname(optarg))
-                        opts->connect = optarg;
-                    else
+                    if(checkhostname(optarg)){
                         die("--connect error: Invalid IP/hostname\n");
+                    }
+
+                    opts->connect = optarg;
                 }
 
                 else if(!strcmp(optname, "parameter")){
@@ -110,10 +111,11 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                 }
 
                 else if(!strcmp(optname, "ssh-target")){
-                    if(valid_ip_hostname(optarg))
-                        opts->ssh_target = optarg;
-                    else
+                    if(checkhostname(optarg)){
                         die("--ssh-target error: invalid ip/hostname\n");
+                    }
+
+                    opts->ssh_target = optarg;
                 }
             break;
 
@@ -391,7 +393,7 @@ int kadimus(struct kadimus_opts *opts){
     if(opts->listen){
         pid = fork();
         if(pid == 0){
-            start_bind_shell(opts->port);
+            bindshell(opts->port);
             exit(0);
         } else if(pid == -1){
             xdie("fork() failed\n");
@@ -411,7 +413,7 @@ int kadimus(struct kadimus_opts *opts){
     }
 
     if(opts->connect){
-        remote_connect(opts->connect, opts->port, opts->proxy);
+        remote_connect(opts->proxy, opts->connect, opts->port);
     }
 
     if(opts->listen)
