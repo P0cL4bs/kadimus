@@ -1,4 +1,6 @@
 #include "io/utils.h"
+#include "output.h"
+
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <fcntl.h>
@@ -48,4 +50,28 @@ int openro(const char *name){
     }
 
     return fd;
+}
+
+void ioredirect(struct pollfd pfd[2]){
+    char buf[1024];
+    ssize_t n;
+
+    int i, success = 1;
+
+    while(success){
+        if(poll(pfd, 2, -1) == -1)
+            break;
+
+        for(i = 0; i < 2; i++){
+            if(pfd[i].revents & POLLIN){
+                n = read(pfd[i].fd, buf, sizeof(buf));
+                if(n <= 0){
+                    success = 0;
+                    break;
+                }
+
+                write(pfd[(i + 1) % 2].fd, buf, n);
+            }
+        }
+    }
 }
