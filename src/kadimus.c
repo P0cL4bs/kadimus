@@ -360,8 +360,8 @@ int kadimus(struct kadimus_opts *opts){
         scan_list(opts);
 
     if(opts->get_source)
-        source_disclosure_get(opts->url, opts->remote_filename,
-            opts->parameter, opts->source_output);
+        phpfilter_dumpfile(opts->source_output, opts->url,
+            opts->remote_filename, opts->parameter);
 
     if(opts->technique == AUTH){
         info("checking /var/log/auth.log poison ...\n");

