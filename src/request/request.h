@@ -3,6 +3,12 @@
 
 #include <curl/curl.h>
 
+#define request_resetbody(x) do { \
+    free((x).body.ptr); \
+    (x).body.ptr = NULL; \
+    (x).body.len = 0; \
+} while(0)
+
 typedef struct {
     char *ptr;
     size_t len;
