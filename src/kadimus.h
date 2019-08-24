@@ -3,7 +3,7 @@
 
 #define VERSION "1.1"
 #define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
-#define OPTS "hB:A:u:U:o:t:T:C:c:sp:lSf:O:"
+#define OPTS "hB:A:u:o:t:T:C:c:sp:lSf:O:"
 
 struct kadimus_opts {
     /* request options */
@@ -15,7 +15,6 @@ struct kadimus_opts {
 
     /* scan options */
     char *url;
-    FILE *list;
     FILE *output;
     size_t threads;
     char *parameter;

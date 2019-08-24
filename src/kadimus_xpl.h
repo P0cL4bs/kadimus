@@ -43,10 +43,8 @@ int is_dynamic(const char *url);
 int common_error_check(const char *uri);
 void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, const char *pname);
 void scan(const char *target_uri);
-void scan_list(struct kadimus_opts *opts);
 void rce_http_shell(const char *url, const char *parameter, int technique);
 void exec_phpcode(const char *url, const char *parameter, const char *code, int type);
-void *thread_scan(void *url);
 bool ssh_log_poison(const char *target, int port);
 bool check_auth_poison(const char *target);
 

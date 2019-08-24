@@ -29,7 +29,6 @@ static const struct option long_options[] = {
     {"proxy", required_argument, 0, 0},
 
     {"url", required_argument, 0, 'u'},
-    {"url-list", required_argument, 0, 'U'},
     {"output", required_argument, 0, 'o'},
     {"threads", required_argument, 0, 't'},
 
@@ -138,10 +137,6 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
                     die("-u, --url URL Have invalid syntax\n");
             break;
 
-            case 'U':
-                opts->list = xfopen(optarg,"r");
-            break;
-
             case 'o':
                 opts->output = xfopen(optarg,"a");
                 setlinebuf(output);
@@ -213,7 +208,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
         }
     }
 
-    if(!opts->url && !opts->list)
+    if(!opts->url)
         die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help\n");
 
     if(opts->get_source){
@@ -298,7 +293,6 @@ void help(void){
 
         "  Scanner:\n"
         "    -u, --url STRING            URL to scan/exploit\n"
-        "    -U, --url-list FILE         File contains url list to scan\n"
         "    -o, --output FILE           File to save output results\n"
         "    -t, -threads NUMBER         Number of threads\n\n"
 
@@ -355,9 +349,6 @@ int kadimus(struct kadimus_opts *opts){
 
     if(opts->scan && opts->url)
         scan(opts->url);
-
-    if(opts->list)
-        scan_list(opts);
 
     if(opts->get_source)
         phpfilter_dumpfile(opts->source_output, opts->url,
