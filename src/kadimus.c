@@ -417,6 +417,8 @@ int kadimus(struct kadimus_opts *opts){
 }
 
 int main(int argc, char **argv){
+    setbuf(stdout, NULL);
+
     banner();
 
     struct kadimus_opts options;
