@@ -7,7 +7,8 @@
 #include "regex/pcre.h"
 #include "output.h"
 
-char *datawrap_rce(url_t *url, const char *code, int pos){
+char *datawrap_rce(url_t *url, const char *code, int pos)
+{
 	char *b64, *b64quoted, *wrap, *target, *ret = NULL,
 		*regex, *aux, mark[8], **matches;
 

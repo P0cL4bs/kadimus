@@ -7,13 +7,14 @@
 
 size_t cbwrite(char *data, size_t size, size_t nmemb, body_t *body);
 
-void request_init(request_t *request){
+void request_init(request_t *request)
+{
 	CURL *curl;
 
 	memset(request, 0x0, sizeof(request_t));
 
 	curl = request->ch = curl_easy_init();
-	if(!curl)
+	if (!curl)
 		die("curl_easy_init() error\n");
 
 	curl_easy_setopt(curl, CURLOPT_USERAGENT, global.useragent);
@@ -49,7 +50,8 @@ void request_init_fh(request_t *request)
 
 }
 
-int request_exec(request_t *request){
+int request_exec(request_t *request)
+{
 	CURLcode res;
 
 	for (size_t i = 0; i <= global.retry; i++) {
@@ -69,12 +71,14 @@ int request_exec(request_t *request){
 	return 1;
 }
 
-void request_free(request_t *request){
+void request_free(request_t *request)
+{
 	curl_easy_cleanup(request->ch);
 	free(request->body.ptr);
 }
 
-size_t cbwrite(char *data, size_t size, size_t nmemb, body_t *body){
+size_t cbwrite(char *data, size_t size, size_t nmemb, body_t *body)
+{
 	size_t newsize = body->len + size * nmemb;
 
 	xrealloc(body->ptr, body->ptr, newsize + 1);

@@ -49,7 +49,7 @@ void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, con
 
 	urlparser(&url, target);
 	for (i = 0; i < url.plen; i++) {
-		if(!strcmp(url.parameters[i].key, pname)){
+		if (!strcmp(url.parameters[i].key, pname)) {
 			pos = i;
 			break;
 		}
@@ -86,6 +86,6 @@ void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, con
 
 	free(b64);
 
-	end:
+end:
 	urlfree(&url);
 }

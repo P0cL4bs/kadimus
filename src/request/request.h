@@ -7,7 +7,7 @@
 	free((x).body.ptr); \
 	(x).body.ptr = NULL; \
 	(x).body.len = 0; \
-} while(0)
+} while (0)
 
 typedef struct {
 	char *ptr;

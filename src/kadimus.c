@@ -55,7 +55,8 @@ static const struct option long_options[] = {
 	{0, 0, 0, 0}
 };
 
-void parser_opts(int argc, char **argv, struct kadimus_opts *opts){
+void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
+{
 	char *optname;
 	int optc, option_index = 0;
 	int tmp = 0;
@@ -381,10 +382,10 @@ int kadimus(struct kadimus_opts *opts)
 
 	if (opts->listen) {
 		pid = fork();
-		if (pid == 0){
+		if (pid == 0) {
 			bindshell(opts->port);
 			exit(0);
-		} else if (pid == -1){
+		} else if (pid == -1) {
 			xdie("fork() failed\n");
 		}
 		//sleep(1);

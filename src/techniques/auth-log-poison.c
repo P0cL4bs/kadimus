@@ -86,7 +86,7 @@ char *auth_log_rce(const char *target, const char *code)
 		mapfile = (char *) mmap(0, size, PROT_READ, MAP_PRIVATE, fd, 0);
 		if (mapfile != MAP_FAILED) {
 			matches = regex_extract(&len, regex, mapfile, size, PCRE_DOTALL);
-			if(len > 0){
+			if (len > 0) {
 				res = xstrdup(matches[0]);
 				regex_free(matches, len);
 			}

@@ -4,22 +4,22 @@
 #include <stddef.h>
 
 enum {
-    string_replace,
-    string_prepend,
-    string_append
+	string_replace,
+	string_prepend,
+	string_append
 };
 
 typedef struct {
-    char *key;
-    size_t keysize;
-    char *value;
-    size_t valuesize;
+	char *key;
+	size_t keysize;
+	char *value;
+	size_t valuesize;
 } parameter_t;
 
 typedef struct {
-    char *base;
-    int plen;
-    parameter_t *parameters;
+	char *base;
+	int plen;
+	parameter_t *parameters;
 } url_t;
 
 void urlparser(url_t *url, const char *string);

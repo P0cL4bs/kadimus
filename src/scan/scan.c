@@ -134,8 +134,8 @@ int lfi_error_check(scan_t *scan, const char *target)
 		if (line.nread <= 1)
 			continue;
 
-		if (line.buf[line.nread-1] == '\n') {
-			line.buf[line.nread-1] = 0x0;
+		if (line.buf[line.nread - 1] == '\n') {
+			line.buf[line.nread - 1] = 0x0;
 		}
 
 		if (regex_match(line.buf, req.body.ptr, req.body.len, 0)) {
@@ -147,7 +147,7 @@ int lfi_error_check(scan_t *scan, const char *target)
 
 	fclose(fh);
 
-	end:
+end:
 	request_free(&req);
 	free(line.buf);
 
@@ -177,7 +177,7 @@ int isdynamic(scan_t *scan, const char *target)
 		result = 1;
 	}
 
-	end:
+end:
 	request_free(&req1);
 	request_free(&req2);
 
