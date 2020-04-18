@@ -66,10 +66,14 @@ void bindshell(uint16_t port)
 
 	good("[pid: %d] new connection from: %s\n", pid, ipstr);
 
+	pfd[0].fd = cli;
+
 	pfd[1].fd = 0;
 	pfd[1].events = POLLIN;
 
 	ioredirect(pfd);
+
+	close(cli);
 	close(fd);
 
 	exit(0);
