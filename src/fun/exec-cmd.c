@@ -1,5 +1,6 @@
 #include "fun/exec-cmd.h"
 #include "fun/exec-php-code.h"
+#include "techniques/rce.h"
 #include "memory/alloc.h"
 #include "string/base64.h"
 
@@ -8,6 +9,9 @@
 
 char *exec_cmd(const char *url, const char *parameter, const char *code, int technique)
 {
+	if (technique == expect_tech)
+		return expect_rce(url, parameter, code);
+
 	char *finalcode;
 	char *b64cmd = b64encode(code, strlen(code));
 

