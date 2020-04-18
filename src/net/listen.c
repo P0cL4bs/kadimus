@@ -26,14 +26,6 @@ int start_listen(uint16_t port)
 		return -1;
 	}
 
-#ifdef SO_REUSEPORT
-	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &enable, sizeof(int)) < 0) {
-		close(sockfd);
-		return -1;
-	}
-#endif
-
-
 	if (bind(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
 		close(sockfd);
 		return -1;
