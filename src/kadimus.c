@@ -388,12 +388,10 @@ int kadimus(struct kadimus_opts *opts)
 		} else if (pid == -1) {
 			xdie("fork() failed\n");
 		}
-		//sleep(1);
 	}
 
 	if (opts->phpcode)
 		exec_code(opts->url, opts->parameter, opts->phpcode, opts->technique);
-
 
 	if (opts->cmd) {
 		xinfo("trying exec code ...\n");
