@@ -1,7 +1,7 @@
 override CFLAGS+=-Wall -Wextra -O2 -Isrc
 override LDFLAGS+=-lcurl -lpcre -lpthread -lssh -ldl -lcrypto
 
-SOURCES := $(wildcard src/*.c) $(wildcard src/*/*.c)
+SOURCES := $(wildcard src/*/*.c) $(wildcard src/*.c)
 OBJS := $(addprefix bin/,$(SOURCES:src/%.c=%.o))
 
 SUBFOLDERS := $(wildcard src/*/.)
