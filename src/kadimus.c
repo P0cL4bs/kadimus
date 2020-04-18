@@ -34,7 +34,7 @@ static const struct option long_options[] = {
 
 	{"url", required_argument, 0, 'u'},
 	{"output", required_argument, 0, 'o'},
-	{"threads", required_argument, 0, 't'},
+	//{"threads", required_argument, 0, 't'},
 
 	{"parameter", required_argument, 0, 0},
 
@@ -152,11 +152,11 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
 				setlinebuf(output);
 			break;
 
-			case 't':
+			/*case 't':
 				opts->threads = strtol(optarg, NULL, 10);
 				if (opts->threads < 2)
 					die("--threads error: set a valide value (>= 2)\n");
-			break;
+			break;*/
 
 			case 'T':
 				if (!strcmp("environ", optarg)) {
@@ -315,8 +315,8 @@ void help(void)
 		"  Scanner:\n"
 		"    -u, --url STRING            URL to scan/exploit\n"
 		"    -o, --output FILE           File to save output results\n"
-		"    -t, -threads NUMBER         Number of threads\n\n"
-
+		//"    -t, -threads NUMBER         Number of threads\n\n"
+		"\n"
 		"  Explotation:\n"
 		"    --parameter STRING          Parameter name to inject exploit\n"
 		"                                (only needed by RCE data and source disclosure)\n\n"
