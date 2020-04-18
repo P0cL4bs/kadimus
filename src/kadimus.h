@@ -6,39 +6,39 @@
 #define OPTS "hB:A:u:o:t:T:C:c:sp:lSf:O:"
 
 struct kadimus_opts {
-    /* request options */
-    char *cookies;
-    char *useragent;
-    long connection_timeout;
-    int retry;
-    char *proxy;
+	/* request options */
+	char *cookies;
+	char *useragent;
+	long connection_timeout;
+	int retry;
+	char *proxy;
 
-    /* scan options */
-    char *url;
-    FILE *output;
-    size_t threads;
-    char *parameter;
+	/* scan options */
+	char *url;
+	FILE *output;
+	size_t threads;
+	char *parameter;
 
-    int technique;
-    char *phpcode;
-    char *cmd;
-    /* new char *cmdfunction on future ? */
-    int shell;
-    /* new ttyshell on future ? */
+	int technique;
+	char *phpcode;
+	char *cmd;
+	/* new char *cmdfunction on future ? */
+	int shell;
+	/* new ttyshell on future ? */
 
-    char *connect;
-    /* char *connect_proxy; */
-    unsigned short port;
-    int listen;
+	char *connect;
+	/* char *connect_proxy; */
+	unsigned short port;
+	int listen;
 
-    unsigned short ssh_port;
-    char *ssh_target;
+	unsigned short ssh_port;
+	char *ssh_target;
 
-    int get_source;
-    FILE *source_output;
-    char *remote_filename;
+	int get_source;
+	FILE *source_output;
+	char *remote_filename;
 
-    int scan;
+	int scan;
 };
 
 
