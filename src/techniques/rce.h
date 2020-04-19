@@ -4,7 +4,7 @@
 #include "techniques/auth-log-poison.h"
 #include "techniques/datawrap.h"
 #include "techniques/php-input.h"
-
+#include "techniques/environ.h"
 #include "techniques/expect.h"
 
 enum {

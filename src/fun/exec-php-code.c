@@ -27,6 +27,9 @@ char *exec_php_code(const char *url, const char *parameter, const char *code, in
 		case php_input_tech:
 			rce = php_input_rce(url, code);
 			break;
+		case proc_environ_tech:
+			rce = proc_env_rce(url, code);
+			break;
 		case datawrap_tech:
 			rce = data_wrap_rce(url, parameter, code);
 			break;
