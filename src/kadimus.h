@@ -1,7 +1,7 @@
 #ifndef KADIMUS_H
 #define KADIMUS_H
 
-#define VERSION "1.1"
+#define VERSION "1.5"
 #define IN_RANGE(a,b,c) ((a >= b && a <= c) ? 1 : 0)
 #define OPTS "hB:A:u:o:t:T:C:c:sp:lSf:O:"
 
