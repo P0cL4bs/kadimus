@@ -11,7 +11,7 @@ all: $(FOLDERS) kadimus
 
 kadimus: $(OBJS)
 	@echo "  CC $@"
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $^
+	@$(CC) -o $@ $^ $(CFLAGS) $(LDFLAGS)
 
 $(FOLDERS):
 	@echo "  MKDIR $@"
