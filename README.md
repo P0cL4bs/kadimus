@@ -47,7 +47,7 @@ Options:
     -B, --cookie STRING         Set custom HTTP Cookie header
     -A, --user-agent STRING     User-Agent to send to server
     --connect-timeout SECONDS   Maximum time allowed for connection
-    --retry-times NUMBER        number of times to retry if connection fails
+    --retry NUMBER              Number of times to retry if connection fails
     --proxy STRING              Proxy to connect, syntax: protocol://hostname:port
 
   Scanner:
@@ -80,7 +80,7 @@ Options:
       expect                    Try run a command using expect://cmd
 
     Source Disclosure:
-      -S, --get-source          Try get the source file using filter://
+      -S, --source              Try get the source file using filter://
       -f, --filename STRING     Set filename to grab source [REQUIRED]
       -O FILE                   Set output file (Default: stdout)
 

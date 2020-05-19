@@ -31,13 +31,13 @@ static void check_opts(struct kadimus_opts *opts)
 
 	if (opts->get_source) {
 		if (!opts->url)
-			die("error: -S, --get-source requires -u\n");
+			die("error: -S, --source requires -u\n");
 
 		if (!opts->remote_filename)
-			die("error: -S, --get-source requires -f\n");
+			die("error: -S, --source requires -f\n");
 
 		if (!opts->parameter)
-			die("error: -S, --get-source requires --parameter\n");
+			die("error: -S, --source requires --parameter\n");
 	}
 
 	if (opts->shell) {
@@ -147,7 +147,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
 		{"cookie", &(global.cookies), NULL, optstring, 'B'},
 		{"user-agent", &(global.useragent), NULL, optstring, 'A'},
 		{"connect-timeout", &(global.timeout), NULL, optlong, 0},
-		{"retry-times", &(global.retry), NULL, optint, 0},
+		{"retry", &(global.retry), NULL, optint, 0},
 		{"proxy", &(global.proxy), NULL, optstring, 0},
 
 		{"url", &(opts->url), NULL, optstring, 'u'},
@@ -167,7 +167,7 @@ void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
 		{"ssh-port", &(opts->ssh_port), NULL, optint, 0},
 		{"ssh-target", &(opts->ssh_target), NULL, optstring, 0},
 
-		{"get-source", &(opts->get_source), NULL, optbool, 'S'},
+		{"source", &(opts->get_source), NULL, optbool, 'S'},
 		{"filename", &(opts->remote_filename), NULL, optstring, 'f'},
 		{NULL, &(opts->source_output), setoutput, optcustom, 'O'}
 	};
@@ -203,13 +203,12 @@ void help(void *no, const char *thing)
 		"    -B, --cookie STRING         Set custom HTTP Cookie header\n"
 		"    -A, --user-agent STRING     User-Agent to send to server\n"
 		"    --connect-timeout SECONDS   Maximum time allowed for connection\n"
-		"    --retry-times NUMBER        number of times to retry if connection fails\n"
+		"    --retry NUMBER              Number of times to retry if connection fails\n"
 		"    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port\n\n"
 
 		"  Scanner:\n"
 		"    -u, --url STRING            URL to scan/exploit\n"
 		"    -o, --output FILE           File to save output results\n"
-		//"    -t, -threads NUMBER         Number of threads\n\n"
 		"\n"
 		"  Explotation:\n"
 		"    --parameter STRING          Parameter name to inject exploit\n"
@@ -237,7 +236,7 @@ void help(void *no, const char *thing)
 		"      expect                    Try run a command using expect://cmd\n"
 		"\n"
 		"    Source Disclosure:\n"
-		"      -S, --get-source          Try get the source file using filter://\n"
+		"      -S, --source              Try get the source file using filter://\n"
 		"      -f, --filename STRING     Set filename to grab source [REQUIRED]\n"
 		"      -O FILE                   Set output file (Default: stdout)\n";
 
