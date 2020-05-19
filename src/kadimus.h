@@ -44,7 +44,7 @@ struct kadimus_opts {
 
 void parser_opts(int argc, char **argv, struct kadimus_opts *opts);
 void banner(void);
-void help(void);
+void help(void *, const char *);
 int main(int argc, char **argv);
 
 #endif
