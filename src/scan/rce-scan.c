@@ -12,7 +12,7 @@ void php_input_scan(url_t *url, int pos)
 {
 	char *rce, *target;
 
-	xinfo("testing php://input ...\n");
+	xinfo("testing php://input...\n");
 	target = buildurl(url, string_replace, "php://input", pos);
 
 	xinfo("requesting: %s\n", target);
@@ -48,7 +48,7 @@ end:
 
 void data_wrap_scan(url_t *url, int pos)
 {
-	xinfo("testing data wrap ...\n");
+	xinfo("testing data wrap...\n");
 
 	char *rce = datawrap_rce(url, "<?php echo 'vulnerable'; ?>", pos);
 	if (rce && !strcmp(rce, "vulnerable")) {
@@ -80,7 +80,7 @@ void auth_log_scan(url_t *url, int pos)
 		request_t req;
 
 		if ((fh = randomfile(filename, 10)) == NULL) {
-			die("error while generate tmp file\n");
+			die("error while generating tmp file\n");
 		}
 
 		char *target = buildurl(url, string_replace, auth[i], pos);
@@ -118,12 +118,12 @@ void auth_log_scan(url_t *url, int pos)
 	}
 
 	if (!skip) xwarn("probably not vulnerable\n");
-	xinfo("/var/log/auth.log test finish\n");
+	xinfo("/var/log/auth.log test finished\n");
 }
 
 void expect_scan(url_t *url, int pos)
 {
-	xinfo("testing expect://cmd rce ...\n");
+	xinfo("testing expect://cmd rce...\n");
 
 	char *rce = expect_url(url, "echo -n vuln", pos);
 	if (rce && !strcmp(rce, "vuln")) {
@@ -147,7 +147,7 @@ void proc_env_scan(url_t *url, int pos)
 
 	int skip = 0;
 
-	xinfo("testing /proc/self/environ rce ...\n");
+	xinfo("testing /proc/self/environ rce...\n");
 
 	for (int i = 0; !skip && environ[i]; i++) {
 		char *target = buildurl(url, string_replace, environ[i], pos);

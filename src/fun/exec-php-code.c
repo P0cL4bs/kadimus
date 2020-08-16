@@ -4,7 +4,7 @@
 
 void exec_code(const char *url, const char *parameter, const char *code, int technique)
 {
-	xinfo("trying exec code ...\n");
+	xinfo("trying exec code...\n");
 	char *rce = exec_php_code(url, parameter, code, technique);
 
 	xinfo("result:\n");

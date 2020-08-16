@@ -5,7 +5,7 @@
 # kadimus
 LFI Scan &amp; Exploit Tool
 --
-kadimus is a tool to check and exploit lfi vulnerability focus on PHP systems
+kadimus is a tool to check for and exploit LFI vulnerabilities, with a focus on PHP systems.
 
 Features:
 
@@ -16,14 +16,13 @@ Features:
 - [x] data://text RCE
 - [x] expect://cmd RCE
 - [x] Source code disclosure
-- [x] Command shell interface through HTTP Request
+- [x] Command shell interface through HTTP request
 - [x] Proxy support (socks4://, socks4a://, socks5:// ,socks5h:// and http://)
 - [x] Proxy socks5 support for remote connections
 
 ## Compile:
 
-First, make sure you have all dependencies installed in your system.
-Dependencies: libcurl, libopenssl, libpcre and libssh
+First, make sure you have all dependencies installed in your system: `libcurl`, `libopenssl`, `libpcre` and `libssh`.
 
 Then you can clone the repository, to get the source code:
 ```sh
@@ -44,11 +43,11 @@ Options:
   -h, --help                    Display this help menu
 
   Request:
-    -B, --cookie STRING         Set custom HTTP Cookie header
+    -B, --cookie STRING         Set custom HTTP cookie header
     -A, --user-agent STRING     User-Agent to send to server
     --connect-timeout SECONDS   Maximum time allowed for connection
     --retry NUMBER              Number of times to retry if connection fails
-    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port
+    --proxy STRING              Proxy to connect (syntax: protocol://hostname:port)
 
   Scanner:
     -u, --url STRING            URL to scan/exploit
@@ -62,27 +61,27 @@ Options:
     -T, --technique=TECH        LFI to RCE technique to use
     -C, --code STRING           Custom PHP code to execute, with php brackets
     -c, --cmd STRING            Execute system command on vulnerable target system
-    -s, --shell                 Simple command shell interface through HTTP Request
+    -s, --shell                 Simple command shell interface through HTTP request
 
-    --connect STRING            Ip/Hostname to connect
-    -p, --port NUMBER           Port number to connect or listen
+    --connect STRING            IP/hostname to connect to
+    -p, --port NUMBER           Port number to connect to or listen on
     -l, --listen                Bind and listen for incoming connections
 
-    --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)
-    --ssh-target STRING         Set the SSH Host
+    --ssh-port NUMBER           Set the SSH port to try command injection (default: 22)
+    --ssh-target STRING         Set the SSH host
 
     RCE Available techniques
 
-      environ                   Try run PHP Code using /proc/self/environ
-      input                     Try run PHP Code using php://input
-      auth                      Try run PHP Code using /var/log/auth.log
-      data                      Try run PHP Code using data://text
-      expect                    Try run a command using expect://cmd
+      environ                   Try to run PHP code using /proc/self/environ
+      input                     Try to run PHP code using php://input
+      auth                      Try to run PHP code using /var/log/auth.log
+      data                      Try to run PHP code using data://text
+      expect                    Try to run a command using expect://cmd
 
     Source Disclosure:
-      -S, --source              Try get the source file using filter://
+      -S, --source              Try to get the source file using filter://
       -f, --filename STRING     Set filename to grab source [REQUIRED]
-      -O FILE                   Set output file (Default: stdout)
+      -O FILE                   Set output file (default: stdout)
 
 ```
 
@@ -110,8 +109,8 @@ Options:
 
 ### Checking for RFI:
 
-You can also check for RFI errors, just put the remote url on resource/common_files.txt
-and the regex to identify this, example:
+You can also check for RFI errors -- just put the remote URL in resource/common_files.txt
+and the regex to identify them, example:
 
 ```php
 /* http://bad-url.com/shell.txt */
@@ -130,8 +129,8 @@ http://bad-url.com/shell.txt?:scorpion say get over here
 
 Contributing
 ------------
-You can help with code, or donating money.
-If you wanna help with code, use the kernel code style as a reference.
+You can help with code, or by donating.
+If you want to help with code, use the kernel code style as a reference.
 
 Paypal: [![](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=RAG26EKAYHQSY&currency_code=BRL&source=url)
 

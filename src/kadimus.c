@@ -27,7 +27,7 @@
 static void check_opts(struct kadimus_opts *opts)
 {
 	if (!opts->url)
-		die("kadimus: try 'kadimus -h' or 'kadimus --help' for display help\n");
+		die("kadimus: try 'kadimus -h' or 'kadimus --help' to display help\n");
 
 	if (opts->get_source) {
 		if (!opts->url)
@@ -86,22 +86,22 @@ static void check_opts(struct kadimus_opts *opts)
 	}
 
 	if (opts->proxy && regex_match("^.+:\\/\\/.+\\:(\\d+)$", opts->proxy, 0, 0))
-		die("--proxy invalid syntax\n");
+		die("--proxy error: invalid syntax\n");
 
 	if (opts->connect && checkhostname(opts->connect))
-		die("--connect error: Invalid IP/hostname\n");
+		die("--connect error: invalid IP/hostname\n");
 
 	if (opts->ssh_target && checkhostname(opts->ssh_target)) {
-		die("--ssh-target error: invalid ip/hostname\n");
+		die("--ssh-target error: invalid IP/hostname\n");
 	}
 
 	// check url
 	if (!regex_match("^(https?://)?.+/.*\\?.+$", opts->url, 0, 0)) {
-		die("-u, --url URL Have invalid syntax\n");
+		die("-u, --url error: invalid syntax\n");
 	}
 
 	if (opts->phpcode && !regex_match("^\\s*?\\<\\?.+\\?\\>\\s*?$", opts->phpcode, 0, PCRE_DOTALL)) {
-		die("-C, --code parameter must contain php brackets\n");
+		die("error: -C, --code parameter must contain php brackets\n");
 	}
 }
 
@@ -133,7 +133,7 @@ static void check_technique(void *out, const char *tech)
 		}
 	}
 
-	die("-T, --technique invalid\n");
+	die("-T, --technique: invalid format\n");
 }
 
 void parser_opts(int argc, char **argv, struct kadimus_opts *opts)
@@ -200,11 +200,11 @@ void help(void *no, const char *thing)
 		"  -h, --help                    Display this help menu\n\n"
 
 		"  Request:\n"
-		"    -B, --cookie STRING         Set custom HTTP Cookie header\n"
+		"    -B, --cookie STRING         Set custom HTTP cookie header\n"
 		"    -A, --user-agent STRING     User-Agent to send to server\n"
 		"    --connect-timeout SECONDS   Maximum time allowed for connection\n"
 		"    --retry NUMBER              Number of times to retry if connection fails\n"
-		"    --proxy STRING              Proxy to connect, syntax: protocol://hostname:port\n\n"
+		"    --proxy STRING              Proxy to connect (syntax: protocol://hostname:port)\n\n"
 
 		"  Scanner:\n"
 		"    -u, --url STRING            URL to scan/exploit\n"
@@ -220,25 +220,25 @@ void help(void *no, const char *thing)
 		"    -c, --cmd STRING            Execute system command on vulnerable target system\n"
 		"    -s, --shell                 Simple command shell interface through HTTP Request\n\n"
 
-		"    --connect STRING            Ip/Hostname to connect\n"
-		"    -p, --port NUMBER           Port number to connect or listen\n"
+		"    --connect STRING            IP/hostname to connect to\n"
+		"    -p, --port NUMBER           Port number to connect to or listen on\n"
 		"    -l, --listen                Bind and listen for incoming connections\n\n"
 
-		"    --ssh-port NUMBER           Set the SSH Port to try inject command (Default: 22)\n"
-		"    --ssh-target STRING         Set the SSH Host\n\n"
+		"    --ssh-port NUMBER           Set the SSH port to try command injection (default: 22)\n"
+		"    --ssh-target STRING         Set the SSH host\n\n"
 
 		"    RCE Available techniques\n\n"
 
-		"      environ                   Try run PHP Code using /proc/self/environ\n"
-		"      input                     Try run PHP Code using php://input\n"
-		"      auth                      Try run PHP Code using /var/log/auth.log\n"
-		"      data                      Try run PHP Code using data://text\n"
-		"      expect                    Try run a command using expect://cmd\n"
+		"      environ                   Try to run PHP code using /proc/self/environ\n"
+		"      input                     Try to run PHP code using php://input\n"
+		"      auth                      Try to run PHP code using /var/log/auth.log\n"
+		"      data                      Try to run PHP code using data://text\n"
+		"      expect                    Try to run a command using expect://cmd\n"
 		"\n"
 		"    Source Disclosure:\n"
-		"      -S, --source              Try get the source file using filter://\n"
+		"      -S, --source              Try to get the source file using filter://\n"
 		"      -f, --filename STRING     Set filename to grab source [REQUIRED]\n"
-		"      -O FILE                   Set output file (Default: stdout)\n";
+		"      -O FILE                   Set output file (default: stdout)\n";
 
 	puts(help_msg);
 	exit(EXIT_SUCCESS);
@@ -281,7 +281,7 @@ int kadimus(struct kadimus_opts *opts)
 		exec_code(opts->url, opts->parameter, opts->phpcode, opts->technique);
 
 	if (opts->cmd) {
-		xinfo("trying exec code ...\n");
+		xinfo("trying exec code...\n");
 		char *rce = exec_cmd(opts->url, opts->parameter, opts->cmd, opts->technique);
 
 		xinfo("result:\n");
