@@ -56,7 +56,7 @@ void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, con
 	}
 
 	if (pos == -1) {
-		xerror("parameter %s not found !!!\n", pname);
+		xerror("parameter %s not found!\n", pname);
 		goto end;
 	}
 
@@ -81,7 +81,7 @@ void phpfilter_dumpfile(FILE *out, const char *target, const char *filename, con
 		free(decoded);
 	} else {
 		xerror("invalid base64 detected\n");
-		xinfo("try use null byte poison, or set filename without extension\n");
+		xinfo("try using null byte poisoning, or set filename without extension\n");
 	}
 
 	free(b64);

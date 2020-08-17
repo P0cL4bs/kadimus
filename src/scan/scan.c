@@ -89,13 +89,13 @@ void check_file_list(scan_t *info, url_t *url, int pos)
 
 		curl_easy_setopt(req.ch, CURLOPT_URL, target);
 		if (request_exec(&req)) {
-			xerror("no connection with the target URL, exiting ...\n");
+			xerror("no connection with the target URL, exiting...\n");
 		}
 
 		else {
 			if (regex_match(regex, req.body.ptr, req.body.len, 0)) {
 				xgood("regex match: %s\n", regex);
-				xgood("check the url: %s\n", target);
+				xgood("check the URL: %s\n", target);
 			}
 		}
 
@@ -203,19 +203,19 @@ void kadimus_scan(const char *target)
 
 	urlparser(&url, target);
 
-	info("starting scanning the URL: %s\n", target);
-	info("testing if URL have dynamic content ...\n");
+	info("scanning URL: %s\n", target);
+	info("testing if URL has dynamic content...\n");
 
 	switch (isdynamic(&scan, target)) {
 		case 1:
-			warn("URL have dynamic content\n");
+			warn("URL has dynamic content\n");
 			warn("skipping source disclosure test\n");
 			break;
 		case 0:
-			info("URL dont have dynamic content\n");
+			info("URL doesn't have dynamic content\n");
 			break;
 		case -1:
-			error("no connection with the target URL, exiting ...\n");
+			error("no connection with the target URL, exiting...\n");
 			exit(1);
 	}
 
@@ -225,22 +225,22 @@ void kadimus_scan(const char *target)
 			continue;
 		}
 
-		info("analyzing '%s' parameter ...\n", parameter->key);
+		info("analyzing '%s' parameter...\n", parameter->key);
 		if (!scan.skip_error_check) {
-			info("checking for lfi error messages\n");
+			info("checking for LFI error messages\n");
 
 			targeturl = buildurl(&url, string_replace, randomstr(rbuf, sizeof(rbuf)) ,i);
-			info("using random url: %s\n", targeturl);
+			info("using random URL: %s\n", targeturl);
 
 			switch (lfi_error_check(&scan, targeturl)) {
 				case 1:
-					info("lfi error found !!!\n");
+					info("LFI error found!\n");
 					break;
 				case 0:
-					warn("lfi error not found\n");
+					warn("LFI error not found\n");
 					break;
 				case -1:
-					error("no connection with the target URL, exiting ...\n");
+					error("no connection with the target URL, exiting...\n");
 					exit(1);
 			}
 
@@ -248,28 +248,28 @@ void kadimus_scan(const char *target)
 		}
 
 		if (!scan.dynamic) {
-			info("starting source disclosure test ...\n");
+			info("starting source disclosure test...\n");
 
 			switch (phpfilter_scan(&scan, &url, i)) {
 				case 0:
-					warn("parameter does not seem vulnerable to source disclosure\n");
+					warn("parameter doesn't seem to be vulnerable to source disclosure\n");
 					break;
 
 				case -1:
-					error("no connection with the target URL, exiting ...\n");
+					error("no connection with the target URL, exiting...\n");
 					exit(1);
 					break;
 			}
 		}
 
 		if (!scan.skip_file_scan) {
-			info("checking common files ...\n");
+			info("checking common files...\n");
 			check_file_list(&scan, &url, i);
 			info("common files scan finished\n");
 		}
 
 		if (!scan.skip_rce_scan) {
-			info("checking RCE ...\n");
+			info("checking RCE...\n");
 			kadimus_rce_scan(&url, i);
 			info("RCE scan finished\n");
 		}

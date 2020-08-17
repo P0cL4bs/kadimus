@@ -48,7 +48,7 @@ void bindshell(uint16_t port)
 
 	pid = getpid();
 	info("[pid: %d] listen on port: %d\n", pid, port);
-	info("[pid: %d] waiting connection ...\n", pid);
+	info("[pid: %d] waiting connection...\n", pid);
 
 	switch (poll(pfd, 1, listen_timeout * 1000)) {
 		case 0:
